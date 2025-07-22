@@ -334,8 +334,8 @@ const EventDetails = () => {
                                  : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
                              }`}
                              style={{
-                                left: `${Math.max(1, Math.min(94, (table.position_x / 1200) * 94 + 1))}%`,
-                                top: `${Math.max(1, Math.min(94, (table.position_y / 500) * 94 + 1))}%`,
+                                left: `${5 + ((table.table_number - 1) % 6) * 15}%`,
+                                top: `${10 + Math.floor((table.table_number - 1) / 6) * 20}%`,
                                 width: `40px`,
                                 height: `55px`,
                                paddingTop: `4px`,

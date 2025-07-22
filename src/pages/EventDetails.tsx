@@ -328,18 +328,20 @@ const EventDetails = () => {
                           <button
                             key={table.id}
                             onClick={() => handleTableSelect(table)}
-                            className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md p-2 ${
+                            className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md py-1 px-1 ${
                               isReserved
                                 ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
                                 : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
                             }`}
                             style={{
-                               left: `${Math.max(3, Math.min(88, (table.position_x / 1200) * 88 + 3))}%`,
-                               top: `${Math.max(3, Math.min(88, (table.position_y / 500) * 88 + 3))}%`,
-                               width: `50px`,
-                               height: `50px`,
-                            }}
-                            disabled={isReserved}
+                               left: `${Math.max(1, Math.min(94, (table.position_x / 1200) * 94 + 1))}%`,
+                               top: `${Math.max(1, Math.min(94, (table.position_y / 500) * 94 + 1))}%`,
+                               width: `40px`,
+                               height: `40px`,
+                               paddingTop: `4px`,
+                               paddingBottom: `4px`,
+                             }}
+                             disabled={isReserved}
                           >
                             {isReserved && (
                               <X className="absolute inset-0 w-10 h-10 text-red-500 m-auto" strokeWidth={3} />

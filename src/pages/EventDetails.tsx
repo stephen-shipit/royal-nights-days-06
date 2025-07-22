@@ -300,35 +300,6 @@ const EventDetails = () => {
                   <p className="text-muted-foreground text-lg leading-relaxed">{event.description}</p>
                 </CardContent>
               </Card>
-              
-              {/* Disclaimers Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Important Information & Disclaimers</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold mb-2">Dress Code</h4>
-                    <p className="text-muted-foreground">
-                      Smart casual attire required. No athletic wear, flip-flops, or excessively casual clothing permitted.
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-semibold mb-2">Table Reservations & Cover Charges</h4>
-                    <p className="text-muted-foreground">
-                      <strong>Please note: Table reservations and event cover charges are separate fees.</strong> While the primary reservation holder is exempt from the cover charge, all accompanying guests are required to pay the standard event admission fee upon entry. Table reservation secures your seating but does not include general event admission for additional patrons.
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-semibold mb-2">General Terms</h4>
-                    <p className="text-muted-foreground">
-                      Management reserves the right to refuse service. All reservations are subject to availability and venue policies. Cancellation policies apply.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
             {/* Seating Chart */}

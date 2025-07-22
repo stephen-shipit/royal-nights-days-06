@@ -334,10 +334,10 @@ const EventDetails = () => {
                                 : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
                             }`}
                             style={{
-                               left: `${Math.max(5, Math.min(75, (table.position_x / 1200) * 75 + 5))}%`,
-                               top: `${Math.max(5, Math.min(75, (table.position_y / 500) * 75 + 5))}%`,
-                               width: `55px`,
-                               height: `55px`,
+                               left: `${Math.max(3, Math.min(88, (table.position_x / 1200) * 88 + 3))}%`,
+                               top: `${Math.max(3, Math.min(88, (table.position_y / 500) * 88 + 3))}%`,
+                               width: `50px`,
+                               height: `50px`,
                             }}
                             disabled={isReserved}
                           >

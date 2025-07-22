@@ -13,6 +13,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin } from "lucide-react";
+import { ImageUpload } from "@/components/ImageUpload";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -230,6 +231,7 @@ const MenuManagement = () => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [imageUrl, setImageUrl] = useState('');
 
   const { data: menuItems, isLoading } = useQuery({
     queryKey: ["menu-items"],
@@ -296,7 +298,7 @@ const MenuManagement = () => {
       description: formData.get("description") as string,
       price: formData.get("price") as string,
       category: formData.get("category") as string,
-      image_url: formData.get("image_url") as string,
+      image_url: imageUrl,
       ingredients: (formData.get("ingredients") as string).split(',').map(i => i.trim()),
       dietary: (formData.get("dietary") as string).split(',').map(d => d.trim()).filter(Boolean),
     };
@@ -310,6 +312,7 @@ const MenuManagement = () => {
 
   const handleEdit = (item: any) => {
     setEditingItem(item);
+    setImageUrl(item?.image_url || '');
     setIsEditing(true);
   };
 
@@ -361,9 +364,12 @@ const MenuManagement = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="image_url">Image URL</Label>
-                  <Input id="image_url" name="image_url" type="url" defaultValue={editingItem?.image_url || ""} />
+                <div className="md:col-span-2">
+                  <Label htmlFor="image_url">Image</Label>
+                  <ImageUpload 
+                    value={imageUrl || editingItem?.image_url || ""}
+                    onChange={setImageUrl}
+                  />
                 </div>
               </div>
               <div>
@@ -551,6 +557,7 @@ const EventManagement = () => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
+  const [eventImageUrl, setEventImageUrl] = useState('');
 
   const { data: events, isLoading } = useQuery({
     queryKey: ["events"],
@@ -622,7 +629,7 @@ const EventManagement = () => {
       price_range: formData.get("price_range") as string,
       host: formData.get("host") as string,
       dj: formData.get("dj") as string,
-      image_url: formData.get("image_url") as string,
+      image_url: eventImageUrl,
     };
     
     if (editingEvent) {
@@ -634,6 +641,7 @@ const EventManagement = () => {
 
   const handleEdit = (event: any) => {
     setEditingEvent(event);
+    setEventImageUrl(event?.image_url || '');
     setIsEditing(true);
   };
 
@@ -706,8 +714,11 @@ const EventManagement = () => {
                   <Input id="dj" name="dj" defaultValue={editingEvent?.dj || ""} />
                 </div>
                 <div className="md:col-span-2">
-                  <Label htmlFor="image_url">Image URL</Label>
-                  <Input id="image_url" name="image_url" type="url" defaultValue={editingEvent?.image_url || ""} />
+                  <Label htmlFor="image_url">Image</Label>
+                  <ImageUpload 
+                    value={eventImageUrl || editingEvent?.image_url || ""}
+                    onChange={setEventImageUrl}
+                  />
                 </div>
               </div>
               <div>
@@ -775,6 +786,7 @@ const GalleryManagement = () => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [galleryImageUrl, setGalleryImageUrl] = useState('');
 
   const { data: galleryItems, isLoading } = useQuery({
     queryKey: ["gallery-items"],
@@ -837,7 +849,7 @@ const GalleryManagement = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const itemData = {
-      src: formData.get("src") as string,
+      src: galleryImageUrl,
       alt: formData.get("alt") as string,
       category: formData.get("category") as string,
       gallery_type: formData.get("gallery_type") as string,
@@ -852,6 +864,7 @@ const GalleryManagement = () => {
 
   const handleEdit = (item: any) => {
     setEditingItem(item);
+    setGalleryImageUrl(item?.src || '');
     setIsEditing(true);
   };
 
@@ -880,41 +893,46 @@ const GalleryManagement = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="src">Image URL</Label>
-                  <Input id="src" name="src" type="url" defaultValue={editingItem?.src || ""} required />
+                  <Label htmlFor="image">Image</Label>
+                  <ImageUpload 
+                    value={galleryImageUrl || editingItem?.src || ""}
+                    onChange={setGalleryImageUrl}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="alt">Alt Text</Label>
                   <Input id="alt" name="alt" defaultValue={editingItem?.alt || ""} required />
                 </div>
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Select name="category" defaultValue={editingItem?.category || ""} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="atmosphere">Atmosphere</SelectItem>
-                      <SelectItem value="food">Food</SelectItem>
-                      <SelectItem value="events">Events</SelectItem>
-                      <SelectItem value="interior">Interior</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="gallery_type">Gallery Type</Label>
-                  <Select name="gallery_type" defaultValue={editingItem?.gallery_type || ""} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select gallery type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="main">Main Gallery</SelectItem>
-                      <SelectItem value="featured">Featured</SelectItem>
-                      <SelectItem value="archive">Archive</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select name="category" defaultValue={editingItem?.category || ""} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="atmosphere">Atmosphere</SelectItem>
+                        <SelectItem value="food">Food</SelectItem>
+                        <SelectItem value="events">Events</SelectItem>
+                        <SelectItem value="interior">Interior</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="gallery_type">Gallery Type</Label>
+                    <Select name="gallery_type" defaultValue={editingItem?.gallery_type || ""} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gallery type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="main">Main Gallery</SelectItem>
+                        <SelectItem value="featured">Featured</SelectItem>
+                        <SelectItem value="archive">Archive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
               <div className="flex gap-2">

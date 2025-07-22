@@ -59,14 +59,13 @@ const Footer = () => {
               <div className="flex items-center gap-3">
                 <MapPin className="w-4 h-4 text-secondary flex-shrink-0" />
                 <span className="text-primary-foreground/80">
-                  123 Royal Street<br />
-                  Downtown District<br />
-                  City, ST 12345
+                  4101 Belt Line Rd<br />
+                  Addison, TX 75001
                 </span>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-secondary flex-shrink-0" />
-                <span className="text-primary-foreground/80">(555) 123-4567</span>
+                <span className="text-primary-foreground/80">(214) 556-5711</span>
               </div>
             </div>
           </div>

@@ -328,31 +328,31 @@ const EventDetails = () => {
                           <button
                             key={table.id}
                             onClick={() => handleTableSelect(table)}
-                            className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-xs font-medium shadow-md p-1 ${
+                            className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md p-2 ${
                               isReserved
                                 ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
                                 : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
                             }`}
                             style={{
-                               left: `${Math.max(5, Math.min(70, (table.position_x / 1200) * 70))}%`,
-                               top: `${Math.max(5, Math.min(70, (table.position_y / 500) * 70))}%`,
-                               width: `48px`,
-                               height: `48px`,
+                               left: `${Math.max(2, Math.min(85, (table.position_x / 1200) * 85))}%`,
+                               top: `${Math.max(2, Math.min(85, (table.position_y / 500) * 85))}%`,
+                               width: `60px`,
+                               height: `60px`,
                             }}
                             disabled={isReserved}
                           >
                             {isReserved && (
-                              <X className="absolute inset-0 w-8 h-8 text-red-500 m-auto" strokeWidth={3} />
+                              <X className="absolute inset-0 w-10 h-10 text-red-500 m-auto" strokeWidth={3} />
                             )}
-                             <span className="text-[10px] font-bold">T{table.table_number}</span>
-                             <span className="text-[8px] leading-none">
+                             <span className="text-sm font-bold">T{table.table_number}</span>
+                             <span className="text-xs leading-none">
                                {isReserved 
                                  ? `${table.reserved_guests}/${table.max_guests}`
                                  : `${table.max_guests}`
                                }
                              </span>
                              {table.reservation_price > 0 && !isReserved && (
-                               <span className="text-[8px] text-primary font-semibold">
+                               <span className="text-xs text-primary font-semibold">
                                  ${(table.reservation_price / 100).toFixed(0)}
                                </span>
                              )}

@@ -449,15 +449,50 @@ const MenuManagement = () => {
 const ReservationManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // State for search, filters, and pagination
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  const { data: reservations, isLoading } = useQuery({
+  const { data: allReservations, isLoading } = useQuery({
     queryKey: ["reservations"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("table_reservations").select("*");
+      const { data, error } = await supabase.from("table_reservations").select("*").order('created_at', { ascending: false });
       if (error) throw error;
       return data;
     },
   });
+
+  // Filter and search reservations
+  const filteredReservations = allReservations?.filter(reservation => {
+    // Search by name or email
+    const matchesSearch = !searchTerm || 
+      reservation.guest_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reservation.guest_email.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Filter by status
+    const matchesStatus = statusFilter === 'all' || reservation.status === statusFilter;
+
+    // Filter by type
+    const matchesType = typeFilter === 'all' || reservation.reservation_type === typeFilter;
+
+    // Filter by date range
+    const reservationDate = new Date(reservation.created_at);
+    const matchesDateRange = (!startDate || reservationDate >= startDate) && 
+                            (!endDate || reservationDate <= endDate);
+
+    return matchesSearch && matchesStatus && matchesType && matchesDateRange;
+  }) || [];
+
+  // Pagination
+  const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedReservations = filteredReservations.slice(startIndex, startIndex + itemsPerPage);
 
   const updateReservationMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string, status: string }) => {
@@ -498,61 +533,216 @@ const ReservationManagement = () => {
     }
   };
 
+  const resetFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setTypeFilter('all');
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setCurrentPage(1);
+  };
+
   if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Reservation Management</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Reservation Management</h2>
+        <div className="text-sm text-muted-foreground">
+          {filteredReservations.length} of {allReservations?.length || 0} reservations
+        </div>
+      </div>
       
+      {/* Search and Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>All Reservations</CardTitle>
+          <CardTitle>Search & Filters</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Search Input */}
+            <div className="space-y-2">
+              <Label htmlFor="search">Search by Name or Email</Label>
+              <Input
+                id="search"
+                placeholder="Enter name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Type Filter */}
+            <div className="space-y-2">
+              <Label htmlFor="type">Type</Label>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="dining">Dining</SelectItem>
+                  <SelectItem value="event">Event</SelectItem>
+                  <SelectItem value="nightlife">Nightlife</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Reset Button */}
+            <div className="space-y-2">
+              <Label>&nbsp;</Label>
+              <Button variant="outline" onClick={resetFilters} className="w-full">
+                Reset Filters
+              </Button>
+            </div>
+          </div>
+
+          {/* Date Range */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Start Date</Label>
+              <Input
+                type="date"
+                value={startDate ? startDate.toISOString().split('T')[0] : ''}
+                onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>End Date</Label>
+              <Input
+                type="date"
+                value={endDate ? endDate.toISOString().split('T')[0] : ''}
+                onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Reservations Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Reservations</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Guest Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Guests</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Time Slot</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reservations?.map((reservation) => (
-                <TableRow key={reservation.id}>
-                  <TableCell className="font-medium">{reservation.guest_name}</TableCell>
-                  <TableCell>{reservation.guest_email}</TableCell>
-                  <TableCell>{reservation.guest_count}</TableCell>
-                  <TableCell>{reservation.reservation_type}</TableCell>
-                  <TableCell>{reservation.time_slot}</TableCell>
-                  <TableCell>
-                    <Select
-                      value={reservation.status}
-                      onValueChange={(value) => handleStatusChange(reservation.id, value)}
+          {paginatedReservations.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No reservations found matching your criteria.
+            </div>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Guest Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Guests</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Time Slot</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedReservations.map((reservation) => (
+                    <TableRow key={reservation.id}>
+                      <TableCell className="font-medium">{reservation.guest_name}</TableCell>
+                      <TableCell>{reservation.guest_email}</TableCell>
+                      <TableCell>{reservation.guest_count}</TableCell>
+                      <TableCell className="capitalize">{reservation.reservation_type}</TableCell>
+                      <TableCell>{reservation.time_slot}</TableCell>
+                      <TableCell>
+                        {new Date(reservation.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={reservation.status}
+                          onValueChange={(value) => handleStatusChange(reservation.id, value)}
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="confirmed">Confirmed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Button size="sm" variant="destructive" onClick={() => handleDelete(reservation.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredReservations.length)} of {filteredReservations.length} reservations
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
                     >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="confirmed">Confirmed</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(reservation.id)}>
-                      <Trash2 className="h-4 w-4" />
+                      Previous
                     </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        const pageNum = currentPage <= 3 ? i + 1 : 
+                                       currentPage >= totalPages - 2 ? totalPages - 4 + i :
+                                       currentPage - 2 + i;
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={pageNum === currentPage ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

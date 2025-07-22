@@ -328,7 +328,7 @@ const MenuManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Menu Management</h2>
-        <Button onClick={() => { setIsEditing(true); setEditingItem(null); }} className="flex items-center gap-2">
+        <Button onClick={() => { setIsEditing(true); setEditingItem(null); setImageUrl(''); }} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Add Menu Item
         </Button>
@@ -657,7 +657,7 @@ const EventManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Event Management</h2>
-        <Button onClick={() => { setIsEditing(true); setEditingEvent(null); }} className="flex items-center gap-2">
+        <Button onClick={() => { setIsEditing(true); setEditingEvent(null); setEventImageUrl(''); }} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Add Event
         </Button>
@@ -880,7 +880,7 @@ const GalleryManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gallery Management</h2>
-        <Button onClick={() => { setIsEditing(true); setEditingItem(null); }} className="flex items-center gap-2">
+        <Button onClick={() => { setIsEditing(true); setEditingItem(null); setGalleryImageUrl(''); }} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Add Image
         </Button>

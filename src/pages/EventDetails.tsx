@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar, Clock, MapPin, Music, Users, ArrowLeft } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, Clock, MapPin, Music, Users, ArrowLeft, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -36,7 +37,9 @@ type VenueTable = {
   width: number;
   height: number;
   is_available: boolean;
+  reservation_price: number;
   reserved_guests?: number;
+  reservation_type?: string;
 };
 
 type ReservationForm = {
@@ -44,6 +47,7 @@ type ReservationForm = {
   guest_email: string;
   guest_count: number;
   special_requests: string;
+  reservation_type: 'dining' | 'nightlife';
 };
 
 const EventDetails = () => {
@@ -58,7 +62,8 @@ const EventDetails = () => {
     guest_name: "",
     guest_email: "",
     guest_count: 1,
-    special_requests: ""
+    special_requests: "",
+    reservation_type: "dining"
   });
 
   useEffect(() => {
@@ -91,6 +96,19 @@ const EventDetails = () => {
     }
   };
 
+  const getCurrentTimeSlot = () => {
+    const now = new Date();
+    const hour = now.getHours();
+    // Nightlife: 9pm (21:00) to 5am (05:00)
+    // Dining: 3pm (15:00) to 9pm (21:00)
+    if (hour >= 21 || hour < 5) {
+      return 'nightlife';
+    } else if (hour >= 15 && hour < 21) {
+      return 'dining';
+    }
+    return 'dining'; // Default to dining
+  };
+
   const fetchVenueTables = async () => {
     try {
       // Get venue tables and their reservations for this event
@@ -104,10 +122,14 @@ const EventDetails = () => {
         return;
       }
 
+      const currentTimeSlot = getCurrentTimeSlot();
+      const timeSlotFilter = currentTimeSlot === 'nightlife' ? '9pm-5am' : '3pm-9pm';
+
       const { data: reservations, error: reservationsError } = await supabase
         .from('table_reservations')
-        .select('table_id, guest_count')
+        .select('table_id, guest_count, reservation_type, time_slot')
         .eq('event_id', eventId)
+        .eq('time_slot', timeSlotFilter)
         .eq('status', 'confirmed');
 
       if (reservationsError) {
@@ -120,7 +142,8 @@ const EventDetails = () => {
         const reservation = reservations?.find(r => r.table_id === table.id);
         return {
           ...table,
-          reserved_guests: reservation?.guest_count || 0
+          reserved_guests: reservation?.guest_count || 0,
+          reservation_type: reservation?.reservation_type
         };
       }) || [];
 
@@ -156,6 +179,19 @@ const EventDetails = () => {
       return;
     }
 
+    const timeSlot = reservationForm.reservation_type === 'nightlife' ? '9pm-5am' : '3pm-9pm';
+    const totalPrice = selectedTable.reservation_price || 0;
+
+    // For nightlife reservations, payment is required
+    if (reservationForm.reservation_type === 'nightlife' && totalPrice > 0) {
+      toast({
+        title: "Payment Required",
+        description: "Nightlife reservations require payment processing (feature coming soon)",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('table_reservations')
@@ -166,6 +202,9 @@ const EventDetails = () => {
           guest_email: reservationForm.guest_email,
           guest_count: reservationForm.guest_count,
           special_requests: reservationForm.special_requests,
+          reservation_type: reservationForm.reservation_type,
+          time_slot: timeSlot,
+          total_price: totalPrice,
           status: 'confirmed'
         });
 
@@ -177,16 +216,18 @@ const EventDetails = () => {
           variant: "destructive",
         });
       } else {
+        const priceText = totalPrice > 0 ? ` for $${(totalPrice / 100).toFixed(2)}` : '';
         toast({
           title: "Reservation Confirmed!",
-          description: `Table ${selectedTable.table_number} reserved for ${reservationForm.guest_count} guests`,
+          description: `Table ${selectedTable.table_number} reserved for ${reservationForm.guest_count} guests (${timeSlot})${priceText}`,
         });
         setSelectedTable(null);
         setReservationForm({
           guest_name: "",
           guest_email: "",
           guest_count: 1,
-          special_requests: ""
+          special_requests: "",
+          reservation_type: "dining"
         });
         fetchVenueTables(); // Refresh table availability
       }
@@ -297,43 +338,60 @@ const EventDetails = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="relative w-full h-96 bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg overflow-hidden">
-                    {venueTables.map((table) => (
-                      <button
-                        key={table.id}
-                        onClick={() => handleTableSelect(table)}
-                        className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-semibold ${
-                          table.reserved_guests && table.reserved_guests > 0
-                            ? 'bg-destructive/20 border-destructive/40 text-destructive cursor-not-allowed'
-                            : 'bg-background border-border hover:border-primary hover:bg-primary/10 cursor-pointer'
-                        }`}
-                        style={{
-                          left: `${(table.position_x / 1200) * 100}%`,
-                          top: `${(table.position_y / 500) * 100}%`,
-                          width: `${(table.width / 1200) * 100}%`,
-                          height: `${(table.height / 500) * 100}%`,
-                        }}
-                        disabled={table.reserved_guests ? table.reserved_guests > 0 : false}
-                      >
-                        <span className="text-lg font-bold">{table.table_number}</span>
-                        <span className="text-xs">
-                          {table.reserved_guests && table.reserved_guests > 0 
-                            ? `${table.reserved_guests} guests`
-                            : `${table.max_guests} guests max`
-                          }
-                        </span>
-                      </button>
-                    ))}
+                     {venueTables.map((table) => {
+                       const isReserved = table.reserved_guests && table.reserved_guests > 0;
+                       const isNightlifeReserved = isReserved && table.reservation_type === 'nightlife';
+                       const isDiningReserved = isReserved && table.reservation_type === 'dining';
+                       
+                       return (
+                         <button
+                           key={table.id}
+                           onClick={() => handleTableSelect(table)}
+                           className={`absolute rounded-md border transition-all duration-200 flex flex-col items-center justify-center p-1 text-xs font-medium ${
+                             isNightlifeReserved
+                               ? 'bg-purple-500/20 border-purple-400 text-purple-300 cursor-not-allowed'
+                               : isDiningReserved
+                               ? 'bg-orange-500/20 border-orange-400 text-orange-300 cursor-not-allowed'
+                               : 'bg-background border-border hover:border-primary hover:bg-primary/10 cursor-pointer'
+                           }`}
+                           style={{
+                             left: `${(table.position_x / 1200) * 100}%`,
+                             top: `${(table.position_y / 500) * 100}%`,
+                             width: `${(table.width / 1200) * 100}%`,
+                             height: `${(table.height / 500) * 100}%`,
+                           }}
+                           disabled={isReserved}
+                         >
+                           <span className="text-sm font-semibold">{table.table_number}</span>
+                           <span className="text-xs leading-tight">
+                             {isReserved 
+                               ? `${table.reserved_guests} guests`
+                               : `${table.max_guests} max`
+                             }
+                           </span>
+                           {table.reservation_price > 0 && !isReserved && (
+                             <span className="text-xs text-muted-foreground">
+                               ${(table.reservation_price / 100).toFixed(0)}
+                             </span>
+                           )}
+                         </button>
+                       );
+                     })}
                   </div>
                   
                   {/* Legend */}
-                  <div className="flex gap-4 mt-4 text-sm">
+                  <div className="flex flex-wrap gap-4 mt-4 text-sm">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 bg-background border-2 border-border rounded"></div>
                       <span>Available</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-destructive/20 border-2 border-destructive/40 rounded"></div>
-                      <span>Reserved</span>
+                      <div className="w-4 h-4 bg-orange-500/20 border-2 border-orange-400 rounded"></div>
+                      <span>Dining Reserved</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-purple-500/20 border-2 border-purple-400 rounded"></div>
+                      <span>Nightlife Reserved</span>
                     </div>
                   </div>
                 </CardContent>
@@ -373,19 +431,44 @@ const EventDetails = () => {
                 />
               </div>
             </div>
-            <div>
-              <Label htmlFor="guest_count">Number of Guests</Label>
-              <Input
-                id="guest_count"
-                type="number"
-                min="1"
-                max={selectedTable?.max_guests}
-                value={reservationForm.guest_count}
-                onChange={(e) => setReservationForm(prev => ({ ...prev, guest_count: parseInt(e.target.value) }))}
-              />
-              <p className="text-sm text-muted-foreground mt-1">
-                Maximum {selectedTable?.max_guests} guests for this table
-              </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="guest_count">Number of Guests</Label>
+                <Input
+                  id="guest_count"
+                  type="number"
+                  min="1"
+                  max={selectedTable?.max_guests}
+                  value={reservationForm.guest_count}
+                  onChange={(e) => setReservationForm(prev => ({ ...prev, guest_count: parseInt(e.target.value) }))}
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Maximum {selectedTable?.max_guests} guests for this table
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="reservation_type">Reservation Type</Label>
+                <Select
+                  value={reservationForm.reservation_type}
+                  onValueChange={(value: 'dining' | 'nightlife') => 
+                    setReservationForm(prev => ({ ...prev, reservation_type: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dining">Dining (3pm - 9pm)</SelectItem>
+                    <SelectItem value="nightlife">Nightlife (9pm - 5am)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {selectedTable?.reservation_price > 0 && reservationForm.reservation_type === 'nightlife' && (
+                  <p className="text-sm text-orange-400 mt-1 flex items-center gap-1">
+                    <DollarSign className="w-3 h-3" />
+                    ${(selectedTable.reservation_price / 100).toFixed(2)} payment required
+                  </p>
+                )}
+              </div>
             </div>
             <div>
               <Label htmlFor="special_requests">Special Requests (Optional)</Label>

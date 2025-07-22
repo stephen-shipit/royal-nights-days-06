@@ -139,9 +139,12 @@ export type Database = {
           guest_email: string
           guest_name: string
           id: string
+          reservation_type: string | null
           special_requests: string | null
           status: string
           table_id: string
+          time_slot: string | null
+          total_price: number | null
           updated_at: string
         }
         Insert: {
@@ -151,9 +154,12 @@ export type Database = {
           guest_email: string
           guest_name: string
           id?: string
+          reservation_type?: string | null
           special_requests?: string | null
           status?: string
           table_id: string
+          time_slot?: string | null
+          total_price?: number | null
           updated_at?: string
         }
         Update: {
@@ -163,9 +169,12 @@ export type Database = {
           guest_email?: string
           guest_name?: string
           id?: string
+          reservation_type?: string | null
           special_requests?: string | null
           status?: string
           table_id?: string
+          time_slot?: string | null
+          total_price?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -194,6 +203,7 @@ export type Database = {
           max_guests: number
           position_x: number
           position_y: number
+          reservation_price: number | null
           table_number: number
           updated_at: string
           width: number
@@ -206,6 +216,7 @@ export type Database = {
           max_guests?: number
           position_x?: number
           position_y?: number
+          reservation_price?: number | null
           table_number: number
           updated_at?: string
           width?: number
@@ -218,6 +229,7 @@ export type Database = {
           max_guests?: number
           position_x?: number
           position_y?: number
+          reservation_price?: number | null
           table_number?: number
           updated_at?: string
           width?: number

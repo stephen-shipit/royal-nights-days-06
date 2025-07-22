@@ -96,6 +96,8 @@ const EventDetails = () => {
 
   const fetchVenueTables = async () => {
     try {
+      console.log('Fetching venue tables for event:', eventId);
+      
       // Get venue tables and their reservations for this event
       const { data: tables, error: tablesError } = await supabase
         .from('venue_tables')
@@ -106,6 +108,8 @@ const EventDetails = () => {
         console.error('Error fetching tables:', tablesError);
         return;
       }
+
+      console.log('Fetched tables:', tables);
 
       const { data: reservations, error: reservationsError } = await supabase
         .from('table_reservations')
@@ -118,6 +122,8 @@ const EventDetails = () => {
         return;
       }
 
+      console.log('Fetched reservations:', reservations);
+
       // Combine tables with reservation data
       const tablesWithReservations = tables?.map(table => {
         const reservation = reservations?.find(r => r.table_id === table.id);
@@ -127,6 +133,7 @@ const EventDetails = () => {
         };
       }) || [];
 
+      console.log('Tables with reservations:', tablesWithReservations);
       setVenueTables(tablesWithReservations);
     } catch (error) {
       console.error('Error fetching venue data:', error);
@@ -301,58 +308,73 @@ const EventDetails = () => {
                   <p className="text-sm text-muted-foreground">
                     Click on an available table to make a reservation
                   </p>
+                  {venueTables.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Found {venueTables.length} tables
+                    </p>
+                  )}
                 </CardHeader>
                 <CardContent>
-                   <div className="relative w-full h-96 bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg overflow-hidden">
-                     {venueTables.map((table) => {
-                       const isReserved = table.reserved_guests && table.reserved_guests > 0;
-                       
-                       return (
-                         <button
-                           key={table.id}
-                           onClick={() => handleTableSelect(table)}
-                           className={`absolute rounded-md border transition-all duration-200 flex flex-col items-center justify-center text-xs font-medium relative ${
-                             isReserved
-                               ? 'bg-red-500/20 border-red-400 text-red-300 cursor-not-allowed'
-                               : 'bg-background border-border hover:border-primary hover:bg-primary/10 cursor-pointer'
-                           }`}
-                           style={{
-                             left: `${(table.position_x / 1200) * 100}%`,
-                             top: `${(table.position_y / 500) * 100}%`,
-                             width: `${(table.width / 1200) * 100}%`,
-                             height: `${(table.height / 500) * 100}%`,
-                           }}
-                           disabled={isReserved}
-                         >
-                           {isReserved && (
-                             <X className="absolute inset-0 w-full h-full text-red-400" strokeWidth={3} />
-                           )}
-                           <span className="text-xs font-semibold">{table.table_number}</span>
-                           <span className="text-xs leading-tight">
-                             {isReserved 
-                               ? `${table.reserved_guests} guests`
-                               : `${table.max_guests} max`
-                             }
-                           </span>
-                           {table.reservation_price > 0 && !isReserved && (
-                             <span className="text-xs text-muted-foreground">
-                               ${(table.reservation_price / 100).toFixed(0)}
-                             </span>
-                           )}
-                         </button>
-                       );
-                     })}
+                  <div className="relative w-full h-[500px] bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg overflow-hidden border border-border">
+                    {venueTables.length === 0 ? (
+                      <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                        Loading tables...
+                      </div>
+                    ) : (
+                      venueTables.map((table) => {
+                        const isReserved = table.reserved_guests && table.reserved_guests > 0;
+                        
+                        return (
+                          <button
+                            key={table.id}
+                            onClick={() => handleTableSelect(table)}
+                            className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md min-w-[60px] min-h-[60px] ${
+                              isReserved
+                                ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
+                                : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
+                            }`}
+                            style={{
+                              left: `${Math.max(0, Math.min(85, (table.position_x / 1200) * 100))}%`,
+                              top: `${Math.max(0, Math.min(85, (table.position_y / 500) * 100))}%`,
+                              width: `${Math.max(60, Math.min(120, (table.width / 1200) * 100 * 5))}px`,
+                              height: `${Math.max(60, Math.min(100, (table.height / 500) * 100 * 5))}px`,
+                            }}
+                            disabled={isReserved}
+                          >
+                            {isReserved && (
+                              <X className="absolute inset-0 w-8 h-8 text-red-500 m-auto" strokeWidth={3} />
+                            )}
+                            <span className="text-sm font-bold mb-1">T{table.table_number}</span>
+                            <span className="text-xs leading-tight">
+                              {isReserved 
+                                ? `${table.reserved_guests}/${table.max_guests}`
+                                : `${table.max_guests} max`
+                              }
+                            </span>
+                            {table.reservation_price > 0 && !isReserved && (
+                              <span className="text-xs text-primary font-semibold">
+                                ${(table.reservation_price / 100).toFixed(0)}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })
+                    )}
                   </div>
                   
                   {/* Legend */}
                   <div className="flex flex-wrap gap-4 mt-4 text-sm">
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-background border-2 border-border rounded"></div>
+                      <div className="w-4 h-4 bg-background border-2 border-primary rounded"></div>
                       <span>Available</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 bg-red-500/20 border-2 border-red-400 rounded"></div>
                       <span>Reserved</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-primary/10 border-2 border-primary rounded"></div>
+                      <span>Selected</span>
                     </div>
                   </div>
                 </CardContent>
@@ -425,7 +447,7 @@ const EventDetails = () => {
               className="w-full"
               disabled={!reservationForm.guest_name || !reservationForm.guest_email}
             >
-              Confirm Reservation
+              Confirm Reservation for Full Event Duration
             </Button>
           </div>
         </DialogContent>

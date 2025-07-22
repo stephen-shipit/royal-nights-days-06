@@ -13,6 +13,7 @@ import Events from "./pages/Events";
 import EventDetails from "./pages/EventDetails";
 import PlanEvent from "./pages/PlanEvent";
 import ThankYou from "./pages/ThankYou";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -59,6 +60,7 @@ const App = () => {
               <Route path="/events/:eventId" element={<EventDetails />} />
               <Route path="/plan-event" element={<PlanEvent />} />
               <Route path="/thank-you" element={<ThankYou />} />
+              <Route path="/admin" element={<Admin />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

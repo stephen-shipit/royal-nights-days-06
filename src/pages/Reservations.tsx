@@ -17,8 +17,8 @@ import { useEffect } from "react";
 const Reservations = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [reservationType, setReservationType] = useState("dining");
-  const [showSelectionModal, setShowSelectionModal] = useState(false);
-  const [selectedService, setSelectedService] = useState<string | null>("dining");
+  const [showSelectionModal, setShowSelectionModal] = useState(true);
+  const [selectedService, setSelectedService] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -119,16 +119,9 @@ const Reservations = () => {
               <p className="text-lg text-muted-foreground">
                 Book your table for an unforgettable dining or nightlife experience
               </p>
-              <Button 
-                onClick={openServiceModal}
-                className="mt-4"
-                variant="outline"
-              >
-                Change Reservation Type
-              </Button>
             </div>
 
-            {selectedService === "private" ? (
+            {selectedService && selectedService === "private" ? (
               <Card>
                 <CardHeader>
                   <CardTitle>Private Event Inquiry</CardTitle>
@@ -209,7 +202,7 @@ const Reservations = () => {
                   </form>
                 </CardContent>
               </Card>
-            ) : (
+            ) : selectedService ? (
               <Tabs value={reservationType} onValueChange={setReservationType} className="mb-8">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="dining">Restaurant (3PM - 9PM)</TabsTrigger>
@@ -361,7 +354,7 @@ const Reservations = () => {
                 </Card>
               </TabsContent>
             </Tabs>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

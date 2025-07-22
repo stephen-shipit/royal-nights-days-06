@@ -261,6 +261,7 @@ const MenuManagement = () => {
       toast({ title: "Menu item added successfully!" });
       setIsEditing(false);
       setEditingItem(null);
+      setImageUrl('');
     },
     onError: (error) => {
       toast({ title: "Error adding menu item", description: error.message, variant: "destructive" });
@@ -278,6 +279,7 @@ const MenuManagement = () => {
       toast({ title: "Menu item updated successfully!" });
       setIsEditing(false);
       setEditingItem(null);
+      setImageUrl('');
     },
     onError: (error) => {
       toast({ title: "Error updating menu item", description: error.message, variant: "destructive" });
@@ -320,8 +322,9 @@ const MenuManagement = () => {
 
   const handleEdit = (item: any) => {
     setEditingItem(item);
-    setImageUrl(item?.image_url || '');
     setIsEditing(true);
+    // Set the image URL to the existing item's image URL or empty string
+    setImageUrl(item?.image_url || '');
   };
 
   const handleDelete = (id: string) => {
@@ -375,7 +378,7 @@ const MenuManagement = () => {
                 <div className="md:col-span-2">
                   <Label htmlFor="image_url">Image</Label>
                   <ImageUpload 
-                    value={imageUrl || editingItem?.image_url || ""}
+                    value={imageUrl}
                     onChange={setImageUrl}
                   />
                 </div>
@@ -394,7 +397,11 @@ const MenuManagement = () => {
               </div>
               <div className="flex gap-2">
                 <Button type="submit">{editingItem ? "Update Item" : "Add Item"}</Button>
-                <Button type="button" variant="outline" onClick={() => { setIsEditing(false); setEditingItem(null); }}>
+                <Button type="button" variant="outline" onClick={() => { 
+                  setIsEditing(false); 
+                  setEditingItem(null); 
+                  setImageUrl('');
+                }}>
                   Cancel
                 </Button>
               </div>

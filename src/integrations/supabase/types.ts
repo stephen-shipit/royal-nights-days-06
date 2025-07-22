@@ -14,7 +14,123 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      events: {
+        Row: {
+          category: string
+          created_at: string
+          date: string
+          description: string
+          dj: string | null
+          host: string | null
+          id: string
+          image_url: string | null
+          price: string
+          price_range: string
+          time: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          date: string
+          description: string
+          dj?: string | null
+          host?: string | null
+          id?: string
+          image_url?: string | null
+          price: string
+          price_range: string
+          time: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string
+          dj?: string | null
+          host?: string | null
+          id?: string
+          image_url?: string | null
+          price?: string
+          price_range?: string
+          time?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gallery_items: {
+        Row: {
+          alt: string
+          category: string
+          created_at: string
+          gallery_type: string
+          id: string
+          src: string
+          updated_at: string
+        }
+        Insert: {
+          alt: string
+          category: string
+          created_at?: string
+          gallery_type: string
+          id?: string
+          src: string
+          updated_at?: string
+        }
+        Update: {
+          alt?: string
+          category?: string
+          created_at?: string
+          gallery_type?: string
+          id?: string
+          src?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      menu_items: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          dietary: string[]
+          id: string
+          image_url: string | null
+          ingredients: string[]
+          name: string
+          price: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          dietary: string[]
+          id?: string
+          image_url?: string | null
+          ingredients: string[]
+          name: string
+          price: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          dietary?: string[]
+          id?: string
+          image_url?: string | null
+          ingredients?: string[]
+          name?: string
+          price?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -90,7 +90,7 @@ const PlanEvent = () => {
       title: "Event Inquiry Submitted",
       description: "We'll contact you within 24 hours to discuss your event details.",
     });
-    navigate("/");
+    navigate("/thank-you");
   };
 
   const getStepTitle = (step: number) => {

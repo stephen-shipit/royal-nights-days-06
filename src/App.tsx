@@ -12,6 +12,7 @@ import Gallery from "./pages/Gallery";
 import Events from "./pages/Events";
 import EventDetails from "./pages/EventDetails";
 import PlanEvent from "./pages/PlanEvent";
+import ThankYou from "./pages/ThankYou";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -56,6 +57,7 @@ const App = () => {
               <Route path="/events" element={<Events />} />
               <Route path="/events/:eventId" element={<EventDetails />} />
               <Route path="/plan-event" element={<PlanEvent />} />
+              <Route path="/thank-you" element={<ThankYou />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

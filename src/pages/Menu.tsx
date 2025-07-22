@@ -1,104 +1,57 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 
-const menuData = {
-  appetizers: [
-    {
-      id: "grilled-octopus",
-      name: "Mediterranean Grilled Octopus",
-      description: "Tender octopus with olive oil, lemon, and herbs",
-      price: "$28",
-      image: "/api/placeholder/300/200",
-      ingredients: ["Octopus", "Olive Oil", "Lemon", "Herbs"],
-      dietary: ["Gluten-Free"]
-    },
-    {
-      id: "truffle-arancini",
-      name: "Truffle Arancini",
-      description: "Crispy risotto balls with black truffle and parmesan",
-      price: "$18",
-      image: "/api/placeholder/300/200",
-      ingredients: ["Arborio Rice", "Black Truffle", "Parmesan", "Herbs"],
-      dietary: ["Vegetarian"]
-    },
-    {
-      id: "tuna-tartare",
-      name: "Yellowfin Tuna Tartare",
-      description: "Fresh tuna with avocado, cucumber, and citrus",
-      price: "$24",
-      image: "/api/placeholder/300/200",
-      ingredients: ["Yellowfin Tuna", "Avocado", "Cucumber", "Citrus"],
-      dietary: ["Gluten-Free", "Dairy-Free"]
-    }
-  ],
-  mains: [
-    {
-      id: "ribeye-steak",
-      name: "Dry-Aged Ribeye",
-      description: "28-day aged ribeye with seasonal vegetables",
-      price: "$65",
-      image: "/api/placeholder/300/200",
-      ingredients: ["Ribeye Steak", "Seasonal Vegetables", "Herbs"],
-      dietary: ["Gluten-Free"]
-    },
-    {
-      id: "sea-bass",
-      name: "Mediterranean Sea Bass",
-      description: "Pan-seared with tomatoes, olives, and capers",
-      price: "$42",
-      image: "/api/placeholder/300/200",
-      ingredients: ["Sea Bass", "Tomatoes", "Olives", "Capers"],
-      dietary: ["Gluten-Free", "Dairy-Free"]
-    },
-    {
-      id: "lamb-rack",
-      name: "Herb-Crusted Lamb Rack",
-      description: "French rack with rosemary and garlic",
-      price: "$58",
-      image: "/api/placeholder/300/200",
-      ingredients: ["Lamb Rack", "Rosemary", "Garlic", "Herbs"],
-      dietary: ["Gluten-Free"]
-    }
-  ],
-  drinks: [
-    {
-      id: "royal-martini",
-      name: "Royal Palace Martini",
-      description: "Premium vodka with gold flakes",
-      price: "$22",
-      image: "/api/placeholder/300/200",
-      ingredients: ["Premium Vodka", "Dry Vermouth", "Gold Flakes"],
-      dietary: ["Gluten-Free"]
-    },
-    {
-      id: "champagne-cocktail",
-      name: "Golden Champagne Cocktail",
-      description: "Dom Pérignon with elderflower and gold",
-      price: "$35",
-      image: "/api/placeholder/300/200",
-      ingredients: ["Dom Pérignon", "Elderflower", "Gold Leaf"],
-      dietary: ["Gluten-Free"]
-    }
-  ],
-  desserts: [
-    {
-      id: "chocolate-soufflé",
-      name: "Dark Chocolate Soufflé",
-      description: "Rich chocolate with vanilla ice cream",
-      price: "$16",
-      image: "/api/placeholder/300/200",
-      ingredients: ["Dark Chocolate", "Vanilla Ice Cream", "Berries"],
-      dietary: ["Vegetarian"]
-    }
-  ]
+type MenuItem = {
+  id: string;
+  name: string;
+  description: string;
+  price: string;
+  image_url?: string;
+  ingredients: string[];
+  dietary: string[];
+  category: string;
 };
 
 const Menu = () => {
   const [activeCategory, setActiveCategory] = useState("appetizers");
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMenuItems();
+  }, []);
+
+  const fetchMenuItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('*')
+        .order('category', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetching menu items:', error);
+      } else {
+        setMenuItems(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching menu items:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const menuData = menuItems.reduce((acc, item) => {
+    if (!acc[item.category]) {
+      acc[item.category] = [];
+    }
+    acc[item.category].push(item);
+    return acc;
+  }, {} as Record<string, MenuItem[]>);
 
   return (
     <div className="min-h-screen bg-background">
@@ -114,22 +67,25 @@ const Menu = () => {
             </p>
           </div>
 
-          <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-            <TabsList className="grid w-full grid-cols-4 mb-8">
-              <TabsTrigger value="appetizers">Appetizers</TabsTrigger>
-              <TabsTrigger value="mains">Main Courses</TabsTrigger>
-              <TabsTrigger value="drinks">Signature Drinks</TabsTrigger>
-              <TabsTrigger value="desserts">Desserts</TabsTrigger>
-            </TabsList>
+          {loading ? (
+            <div className="text-center py-12">Loading menu...</div>
+          ) : (
+            <Tabs value={activeCategory} onValueChange={setActiveCategory}>
+              <TabsList className="grid w-full grid-cols-4 mb-8">
+                <TabsTrigger value="appetizers">Appetizers</TabsTrigger>
+                <TabsTrigger value="mains">Main Courses</TabsTrigger>
+                <TabsTrigger value="drinks">Signature Drinks</TabsTrigger>
+                <TabsTrigger value="desserts">Desserts</TabsTrigger>
+              </TabsList>
 
-            {Object.entries(menuData).map(([category, items]) => (
+              {Object.entries(menuData).map(([category, items]) => (
               <TabsContent key={category} value={category}>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {items.map((item) => (
                     <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                       <div className="aspect-video bg-muted">
                         <img 
-                          src={item.image} 
+                          src={item.image_url || '/api/placeholder/300/200'} 
                           alt={item.name}
                           className="w-full h-full object-cover"
                         />
@@ -162,8 +118,9 @@ const Menu = () => {
                   ))}
                 </div>
               </TabsContent>
-            ))}
-          </Tabs>
+              ))}
+            </Tabs>
+          )}
         </div>
       </div>
       <Footer />

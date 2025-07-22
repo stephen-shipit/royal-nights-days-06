@@ -1,121 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
 
-const galleryData = {
-  venue: [
-    {
-      id: 1,
-      src: "/api/placeholder/400/300",
-      alt: "Main dining room",
-      category: "Interior"
-    },
-    {
-      id: 2,
-      src: "/api/placeholder/400/300",
-      alt: "VIP lounge area",
-      category: "VIP"
-    },
-    {
-      id: 3,
-      src: "/api/placeholder/400/300",
-      alt: "Bar area",
-      category: "Bar"
-    },
-    {
-      id: 4,
-      src: "/api/placeholder/400/300",
-      alt: "Outdoor terrace",
-      category: "Exterior"
-    }
-  ],
-  food: [
-    {
-      id: 5,
-      src: "/api/placeholder/400/300",
-      alt: "Grilled octopus appetizer",
-      category: "Appetizers"
-    },
-    {
-      id: 6,
-      src: "/api/placeholder/400/300",
-      alt: "Ribeye steak dinner",
-      category: "Mains"
-    },
-    {
-      id: 7,
-      src: "/api/placeholder/400/300",
-      alt: "Chocolate soufflé dessert",
-      category: "Desserts"
-    },
-    {
-      id: 8,
-      src: "/api/placeholder/400/300",
-      alt: "Signature cocktails",
-      category: "Drinks"
-    }
-  ],
-  events: [
-    {
-      id: 9,
-      src: "/api/placeholder/400/300",
-      alt: "Live DJ performance",
-      category: "Entertainment"
-    },
-    {
-      id: 10,
-      src: "/api/placeholder/400/300",
-      alt: "Private party celebration",
-      category: "Private Events"
-    },
-    {
-      id: 11,
-      src: "/api/placeholder/400/300",
-      alt: "Corporate event setup",
-      category: "Corporate"
-    },
-    {
-      id: 12,
-      src: "/api/placeholder/400/300",
-      alt: "Wedding reception",
-      category: "Weddings"
-    }
-  ],
-  atmosphere: [
-    {
-      id: 13,
-      src: "/api/placeholder/400/300",
-      alt: "Evening ambiance",
-      category: "Nightlife"
-    },
-    {
-      id: 14,
-      src: "/api/placeholder/400/300",
-      alt: "Elegant lighting",
-      category: "Ambiance"
-    },
-    {
-      id: 15,
-      src: "/api/placeholder/400/300",
-      alt: "Guests enjoying dinner",
-      category: "Dining"
-    },
-    {
-      id: 16,
-      src: "/api/placeholder/400/300",
-      alt: "Rooftop view",
-      category: "Views"
-    }
-  ]
+type GalleryItem = {
+  id: string;
+  src: string;
+  alt: string;
+  category: string;
+  gallery_type: string;
 };
 
 const Gallery = () => {
   const [activeCategory, setActiveCategory] = useState("venue");
   const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchGalleryItems();
+  }, []);
+
+  const fetchGalleryItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gallery_items')
+        .select('*')
+        .order('gallery_type', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetching gallery items:', error);
+      } else {
+        setGalleryItems(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching gallery items:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const galleryData = galleryItems.reduce((acc, item) => {
+    if (!acc[item.gallery_type]) {
+      acc[item.gallery_type] = [];
+    }
+    acc[item.gallery_type].push(item);
+    return acc;
+  }, {} as Record<string, GalleryItem[]>);
 
   return (
     <div className="min-h-screen bg-background">
@@ -131,15 +66,18 @@ const Gallery = () => {
             </p>
           </div>
 
-          <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-            <TabsList className="grid w-full grid-cols-4 mb-8">
-              <TabsTrigger value="venue">Venue</TabsTrigger>
-              <TabsTrigger value="food">Food</TabsTrigger>
-              <TabsTrigger value="events">Events</TabsTrigger>
-              <TabsTrigger value="atmosphere">Atmosphere</TabsTrigger>
-            </TabsList>
+          {loading ? (
+            <div className="text-center py-12">Loading gallery...</div>
+          ) : (
+            <Tabs value={activeCategory} onValueChange={setActiveCategory}>
+              <TabsList className="grid w-full grid-cols-4 mb-8">
+                <TabsTrigger value="venue">Venue</TabsTrigger>
+                <TabsTrigger value="food">Food</TabsTrigger>
+                <TabsTrigger value="events">Events</TabsTrigger>
+                <TabsTrigger value="atmosphere">Atmosphere</TabsTrigger>
+              </TabsList>
 
-            {Object.entries(galleryData).map(([category, images]) => (
+              {Object.entries(galleryData).map(([category, images]) => (
               <TabsContent key={category} value={category}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {images.map((image) => (
@@ -179,8 +117,9 @@ const Gallery = () => {
                   ))}
                 </div>
               </TabsContent>
-            ))}
-          </Tabs>
+              ))}
+            </Tabs>
+          )}
         </div>
       </div>
       <Footer />

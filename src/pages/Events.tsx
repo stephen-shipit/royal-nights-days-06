@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -5,82 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Calendar, Clock, MapPin, Music, Search, Filter, Users, DollarSign } from "lucide-react";
-import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-const upcomingEvents = [
-  {
-    id: 1,
-    title: "Saturday Night Live DJ Set",
-    date: "2024-01-20",
-    time: "9:00 PM - 2:00 AM",
-    dj: "DJ Marco Villa",
-    description: "Experience the hottest beats with international DJ Marco Villa spinning the latest house and techno tracks.",
-    image: "/api/placeholder/400/250",
-    price: "Free Entry",
-    category: "Nightlife",
-    priceRange: "free"
-  },
-  {
-    id: 2,
-    title: "Wine Tasting Dinner",
-    date: "2024-01-25",
-    time: "6:30 PM - 9:30 PM",
-    host: "Sommelier Antonio",
-    description: "Join our expert sommelier for an evening of exceptional wines paired with our signature dishes.",
-    image: "/api/placeholder/400/250",
-    price: "$125 per person",
-    category: "Dining",
-    priceRange: "expensive"
-  },
-  {
-    id: 3,
-    title: "Comedy Night with Alex Rivers",
-    date: "2024-01-18",
-    time: "8:00 PM - 11:00 PM",
-    host: "Alex Rivers",
-    description: "Stand-up comedy featuring local and touring comedians for a night of laughter and entertainment.",
-    image: "/api/placeholder/400/250",
-    price: "$25 per person",
-    category: "Comedy Show",
-    priceRange: "moderate"
-  },
-  {
-    id: 4,
-    title: "Spoken Word Poetry Night",
-    date: "2024-01-22",
-    time: "7:00 PM - 10:00 PM",
-    host: "Local Artists Collective",
-    description: "An intimate evening of spoken word poetry, storytelling, and artistic expression.",
-    image: "/api/placeholder/400/250",
-    price: "Free Entry",
-    category: "Spoken Word",
-    priceRange: "free"
-  },
-  {
-    id: 5,
-    title: "Live Jazz Night",
-    date: "2024-02-14",
-    time: "7:00 PM - 11:00 PM",
-    host: "The Royal Jazz Trio",
-    description: "Enjoy an intimate evening with live jazz music while savoring our chef's special Valentine's menu.",
-    image: "/api/placeholder/400/250",
-    price: "$85 per person",
-    category: "Live Music",
-    priceRange: "expensive"
-  },
-  {
-    id: 6,
-    title: "New Year's Eve Gala",
-    date: "2024-12-31",
-    time: "8:00 PM - 3:00 AM",
-    dj: "Special Guest DJ",
-    description: "Ring in the New Year with style at our exclusive gala featuring live entertainment, premium drinks, and midnight champagne toast.",
-    image: "/api/placeholder/400/250",
-    price: "$200 per person",
-    category: "Special Event",
-    priceRange: "expensive"
-  }
-];
+type Event = {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  dj?: string;
+  host?: string;
+  description: string;
+  image_url?: string;
+  price: string;
+  category: string;
+  price_range: string;
+};
 
 const categories = ["All", "Nightlife", "Dining", "Live Music", "Comedy Show", "Spoken Word", "Special Event"];
 const priceRanges = ["All", "Free", "Under $50", "$50-$100", "Over $100"];
@@ -89,21 +29,46 @@ const Events = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedPriceRange, setSelectedPriceRange] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredEvents = upcomingEvents.filter(event => {
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetching events:', error);
+      } else {
+        setEvents(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredEvents = events.filter(event => {
     const matchesCategory = selectedCategory === "All" || event.category === selectedCategory;
     const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchQuery.toLowerCase());
     
     let matchesPrice = true;
     if (selectedPriceRange === "Free") {
-      matchesPrice = event.priceRange === "free";
+      matchesPrice = event.price_range === "free";
     } else if (selectedPriceRange === "Under $50") {
-      matchesPrice = event.priceRange === "moderate" || event.priceRange === "free";
+      matchesPrice = event.price_range === "moderate" || event.price_range === "free";
     } else if (selectedPriceRange === "$50-$100") {
-      matchesPrice = event.priceRange === "expensive";
+      matchesPrice = event.price_range === "expensive";
     } else if (selectedPriceRange === "Over $100") {
-      matchesPrice = event.priceRange === "expensive";
+      matchesPrice = event.price_range === "expensive";
     }
     
     return matchesCategory && matchesSearch && matchesPrice;
@@ -204,12 +169,15 @@ const Events = () => {
 
             {/* Events Grid */}
             <div className="flex-1">
-              <div className="grid lg:grid-cols-2 gap-6 mb-12">
-                {filteredEvents.map((event) => (
+              {loading ? (
+                <div className="text-center py-12">Loading events...</div>
+              ) : (
+                <div className="grid lg:grid-cols-2 gap-6 mb-12">
+                  {filteredEvents.map((event) => (
                   <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                     <div className="aspect-video">
                       <img
-                        src={event.image}
+                        src={event.image_url || '/api/placeholder/400/250'}
                         alt={event.title}
                         className="w-full h-full object-cover"
                       />
@@ -255,8 +223,9 @@ const Events = () => {
                       </Button>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
 
               {/* Group Booking Section */}
               <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-secondary/20">

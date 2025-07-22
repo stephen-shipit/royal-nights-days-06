@@ -31,6 +31,7 @@ const RouteLogger = () => {
   
   useEffect(() => {
     console.log('Route changed to:', location.pathname);
+    console.log('Current location object:', location);
   }, [location]);
   
   return null;

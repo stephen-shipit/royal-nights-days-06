@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -10,7 +11,8 @@ const ThankYou = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('ThankYou component mounted');
+    console.log('ThankYou component mounted successfully');
+    console.log('Current location:', window.location.pathname);
   }, []);
 
   return (
@@ -98,14 +100,20 @@ const ThankYou = () => {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
-                onClick={() => navigate("/")}
+                onClick={() => {
+                  console.log('Navigating to homepage');
+                  navigate("/");
+                }}
                 className="px-8 py-3"
               >
                 Return to Homepage
               </Button>
               <Button
                 variant="outline"
-                onClick={() => navigate("/gallery")}
+                onClick={() => {
+                  console.log('Navigating to gallery');
+                  navigate("/gallery");
+                }}
                 className="px-8 py-3"
               >
                 View Our Gallery

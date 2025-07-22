@@ -86,11 +86,19 @@ const PlanEvent = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted, navigating to thank-you page...');
+    console.log('Form data:', formData);
+    
     toast({
       title: "Event Inquiry Submitted",
       description: "We'll contact you within 24 hours to discuss your event details.",
     });
-    navigate("/thank-you");
+    
+    // Add a small delay to ensure toast is shown before navigation
+    setTimeout(() => {
+      console.log('Navigating to /thank-you');
+      navigate("/thank-you");
+    }, 500);
   };
 
   const getStepTitle = (step: number) => {

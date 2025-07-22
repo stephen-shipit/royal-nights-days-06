@@ -784,6 +784,7 @@ const EventManagement = () => {
       toast({ title: "Event added successfully!" });
       setIsEditing(false);
       setEditingEvent(null);
+      setEventImageUrl('');
     },
     onError: (error) => {
       toast({ title: "Error adding event", description: error.message, variant: "destructive" });
@@ -801,6 +802,7 @@ const EventManagement = () => {
       toast({ title: "Event updated successfully!" });
       setIsEditing(false);
       setEditingEvent(null);
+      setEventImageUrl('');
     },
     onError: (error) => {
       toast({ title: "Error updating event", description: error.message, variant: "destructive" });
@@ -846,8 +848,9 @@ const EventManagement = () => {
 
   const handleEdit = (event: any) => {
     setEditingEvent(event);
-    setEventImageUrl(event?.image_url || '');
     setIsEditing(true);
+    // Set the image URL to the existing event's image URL or empty string
+    setEventImageUrl(event?.image_url || '');
   };
 
   const handleDelete = (id: string) => {
@@ -921,7 +924,7 @@ const EventManagement = () => {
                 <div className="md:col-span-2">
                   <Label htmlFor="image_url">Image</Label>
                   <ImageUpload 
-                    value={eventImageUrl || editingEvent?.image_url || ""}
+                    value={eventImageUrl}
                     onChange={setEventImageUrl}
                   />
                 </div>
@@ -932,7 +935,11 @@ const EventManagement = () => {
               </div>
               <div className="flex gap-2">
                 <Button type="submit">{editingEvent ? "Update Event" : "Add Event"}</Button>
-                <Button type="button" variant="outline" onClick={() => { setIsEditing(false); setEditingEvent(null); }}>
+                <Button type="button" variant="outline" onClick={() => { 
+                  setIsEditing(false); 
+                  setEditingEvent(null); 
+                  setEventImageUrl('');
+                }}>
                   Cancel
                 </Button>
               </div>

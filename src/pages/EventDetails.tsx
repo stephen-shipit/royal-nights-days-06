@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Clock, MapPin, Music, Users, ArrowLeft, X } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, Clock, MapPin, Music, Users, ArrowLeft, X, Info, Grid3x3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -59,6 +60,7 @@ const EventDetails = () => {
   const [venueTables, setVenueTables] = useState<VenueTable[]>([]);
   const [selectedTable, setSelectedTable] = useState<VenueTable | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("details");
   const [reservationForm, setReservationForm] = useState<ReservationForm>({
     guest_name: "",
     guest_email: "",
@@ -258,7 +260,176 @@ const EventDetails = () => {
             Back to Events
           </Button>
 
-          <div className="grid lg:grid-cols-2 gap-8">
+          {/* Mobile Tabs - Only show on mobile */}
+          <div className="lg:hidden mb-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="details" className="flex items-center gap-2">
+                  <Info className="w-4 h-4" />
+                  Event Details
+                </TabsTrigger>
+                <TabsTrigger value="seating" className="flex items-center gap-2">
+                  <Grid3x3 className="w-4 h-4" />
+                  Reserve Table
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="details" className="mt-6">
+                {/* Event Details - Mobile */}
+                <div className="space-y-6">
+                  <Card>
+                    <div className="aspect-video">
+                      <img
+                        src={event.image_url || '/api/placeholder/600/400'}
+                        alt={event.title}
+                        className="w-full h-full object-cover rounded-t-lg"
+                      />
+                    </div>
+                    <CardHeader>
+                      <div className="flex justify-between items-start mb-2">
+                        <Badge variant="secondary">{event.category}</Badge>
+                        <span className="text-2xl font-bold text-secondary">{event.price}</span>
+                      </div>
+                      <CardTitle className="text-2xl mb-4">{event.title}</CardTitle>
+                      <div className="space-y-3 text-muted-foreground">
+                        <div className="flex items-center gap-3">
+                          <Calendar className="w-5 h-5" />
+                          <span className="text-lg">{new Date(event.date).toLocaleDateString('en-US', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Clock className="w-5 h-5" />
+                          <span className="text-lg">{event.time}</span>
+                        </div>
+                        {event.dj && (
+                          <div className="flex items-center gap-3">
+                            <Music className="w-5 h-5" />
+                            <span className="text-lg">{event.dj}</span>
+                          </div>
+                        )}
+                        {event.host && (
+                          <div className="flex items-center gap-3">
+                            <MapPin className="w-5 h-5" />
+                            <span className="text-lg">Hosted by {event.host}</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground text-lg leading-relaxed mb-6">{event.description}</p>
+                      
+                      {/* Event Disclaimers */}
+                      <div className="border-t border-border pt-4 space-y-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            <span className="font-medium">Dress Code:</span> Smart casual attire required. No athletic wear, flip-flops, or overly casual clothing permitted.
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            <strong className="text-foreground">Table reservations and cover charges are separate fees.</strong> All patrons must pay the cover charge upon entry, with the exception of the primary reservation holder. Additional guests in your party are subject to the standard cover charge.
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="seating" className="mt-6">
+                {/* Seating Chart - Mobile */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      Venue Seating Chart
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Click on an available table to make a reservation
+                    </p>
+                    {venueTables.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Found {venueTables.length} tables
+                      </p>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="relative w-full h-[400px] bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg overflow-hidden border border-border">
+                      {venueTables.length === 0 ? (
+                        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                          Loading tables...
+                        </div>
+                      ) : (
+                        venueTables.map((table) => {
+                          const isReserved = table.reserved_guests && table.reserved_guests > 0;
+                          
+                          return (
+                            <button
+                              key={table.id}
+                              onClick={() => handleTableSelect(table)}
+                               className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md py-1 px-1 m-1 ${
+                                 isReserved
+                                   ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
+                                   : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
+                               }`}
+                               style={{
+                                  left: `${Math.max(1, Math.min(94, (table.position_x / 1200) * 94 + 1))}%`,
+                                  top: `${Math.max(1, Math.min(94, (table.position_y / 500) * 94 + 1))}%`,
+                                  width: `35px`,
+                                  height: `45px`,
+                                 paddingTop: `2px`,
+                                 paddingBottom: `2px`,
+                               }}
+                               disabled={isReserved}
+                            >
+                              {isReserved && (
+                                <X className="absolute inset-0 w-8 h-8 text-red-500 m-auto" strokeWidth={3} />
+                              )}
+                               <span className="text-xs font-bold">T{table.table_number}</span>
+                               <span className="text-[10px] leading-none">
+                                 {isReserved 
+                                   ? `${table.reserved_guests}/${table.max_guests}`
+                                   : `${table.max_guests}`
+                                 }
+                               </span>
+                               {table.reservation_price > 0 && !isReserved && (
+                                 <span className="text-[10px] text-primary font-semibold">
+                                   ${(table.reservation_price / 100).toFixed(0)}
+                                 </span>
+                               )}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                    
+                    {/* Legend */}
+                    <div className="flex flex-wrap gap-4 mt-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-background border-2 border-primary rounded"></div>
+                        <span>Available</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-red-500/20 border-2 border-red-400 rounded"></div>
+                        <span>Reserved</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-primary/10 border-2 border-primary rounded"></div>
+                        <span>Selected</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Desktop Layout - Hidden on mobile */}
+          <div className="hidden lg:grid lg:grid-cols-2 gap-8">
             {/* Event Details */}
             <div className="space-y-6">
               <Card>

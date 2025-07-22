@@ -98,7 +98,7 @@ const EventDetails = () => {
     try {
       console.log('Fetching venue tables for event:', eventId);
       
-      // Get venue tables and their reservations for this event
+      // Get venue tables and their reservations for this specific event only
       const { data: tables, error: tablesError } = await supabase
         .from('venue_tables')
         .select('*')
@@ -111,9 +111,10 @@ const EventDetails = () => {
 
       console.log('Fetched tables:', tables);
 
+      // Only get reservations for this specific event and confirmed status
       const { data: reservations, error: reservationsError } = await supabase
         .from('table_reservations')
-        .select('table_id, guest_count')
+        .select('table_id, guest_count, event_id, status')
         .eq('event_id', eventId)
         .eq('status', 'confirmed');
 
@@ -122,18 +123,22 @@ const EventDetails = () => {
         return;
       }
 
-      console.log('Fetched reservations:', reservations);
+      console.log('Fetched reservations for event', eventId, ':', reservations);
 
-      // Combine tables with reservation data
+      // Combine tables with reservation data - only for this event
       const tablesWithReservations = tables?.map(table => {
-        const reservation = reservations?.find(r => r.table_id === table.id);
+        // Find reservations specifically for this table AND this event
+        const reservation = reservations?.find(r => 
+          r.table_id === table.id && r.event_id === eventId
+        );
+        
         return {
           ...table,
           reserved_guests: reservation?.guest_count || 0
         };
       }) || [];
 
-      console.log('Tables with reservations:', tablesWithReservations);
+      console.log('Tables with reservations for event', eventId, ':', tablesWithReservations);
       setVenueTables(tablesWithReservations);
     } catch (error) {
       console.error('Error fetching venue data:', error);

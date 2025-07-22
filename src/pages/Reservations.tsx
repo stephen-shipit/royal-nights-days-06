@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "@/hooks/use-toast";
 import { Utensils, Music, Users } from "lucide-react";
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Reservations = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -37,13 +38,70 @@ const Reservations = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const handleReservation = (e: React.FormEvent) => {
+  const handleReservation = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Reservation form submitted');
-    toast({
-      title: "Reservation Submitted",
-      description: "We'll contact you shortly to confirm your reservation.",
-    });
+    
+    const formData = new FormData(e.target as HTMLFormElement);
+    const guestName = formData.get('name') as string;
+    const guestEmail = formData.get('email') as string;
+    const guestCount = parseInt(formData.get('guests') as string);
+    
+    try {
+      // For now, we'll create a dummy event ID since we need one for the reservation
+      // In a real app, you'd select an actual event
+      const { data: events } = await supabase
+        .from('events')
+        .select('id')
+        .limit(1);
+      
+      if (!events || events.length === 0) {
+        throw new Error('No events available');
+      }
+
+      // Get the first available table
+      const { data: tables } = await supabase
+        .from('venue_tables')
+        .select('id')
+        .eq('is_available', true)
+        .limit(1);
+      
+      if (!tables || tables.length === 0) {
+        throw new Error('No tables available');
+      }
+
+      const { error } = await supabase
+        .from('table_reservations')
+        .insert({
+          event_id: events[0].id,
+          table_id: tables[0].id,
+          guest_name: guestName,
+          guest_email: guestEmail,
+          guest_count: guestCount,
+          reservation_type: reservationType,
+          time_slot: reservationType === 'dining' ? '3pm-9pm' : '9pm-5am',
+          status: 'pending'
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Reservation Submitted Successfully",
+        description: "We'll contact you shortly to confirm your reservation.",
+      });
+      
+      // Navigate to thank you page
+      navigate('/thank-you');
+    } catch (error) {
+      console.error('Error submitting reservation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit reservation. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleServiceSelection = (service: string) => {
@@ -216,7 +274,13 @@ const Reservations = () => {
                 </CardContent>
               </Card>
             ) : selectedService ? (
-              <Tabs value={reservationType} onValueChange={setReservationType} className="mb-8">
+              <Tabs value={reservationType} onValueChange={(value) => {
+                if (value === 'nightlife') {
+                  navigate('/events');
+                } else {
+                  setReservationType(value);
+                }
+              }} className="mb-8">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="dining">Restaurant (3PM - 9PM)</TabsTrigger>
                   <TabsTrigger value="nightlife">Nightlife (9PM - 5AM)</TabsTrigger>
@@ -233,19 +297,19 @@ const Reservations = () => {
                         <div className="space-y-4">
                           <div>
                             <Label htmlFor="name">Full Name</Label>
-                            <Input id="name" placeholder="Enter your name" required />
+                            <Input id="name" name="name" placeholder="Enter your name" required />
                           </div>
                           <div>
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" placeholder="Enter your email" required />
+                            <Input id="email" name="email" type="email" placeholder="Enter your email" required />
                           </div>
                           <div>
                             <Label htmlFor="phone">Phone Number</Label>
-                            <Input id="phone" type="tel" placeholder="Enter your phone" required />
+                            <Input id="phone" name="phone" type="tel" placeholder="Enter your phone" required />
                           </div>
                           <div>
                             <Label htmlFor="guests">Number of Guests</Label>
-                            <Select>
+                            <Select name="guests">
                               <SelectTrigger>
                                 <SelectValue placeholder="Select guest count" />
                               </SelectTrigger>

@@ -8,11 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { Utensils, Music, Users } from "lucide-react";
 
 const Reservations = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [reservationType, setReservationType] = useState("dining");
+  const [showSelectionModal, setShowSelectionModal] = useState(true);
+  const [selectedService, setSelectedService] = useState<string | null>(null);
 
   const handleReservation = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,9 +26,71 @@ const Reservations = () => {
     });
   };
 
+  const handleServiceSelection = (service: string) => {
+    setSelectedService(service);
+    if (service === "dining") {
+      setReservationType("dining");
+    } else if (service === "entertainment") {
+      setReservationType("nightlife");
+    }
+    setShowSelectionModal(false);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      
+      {/* Service Selection Modal */}
+      <Dialog open={showSelectionModal} onOpenChange={setShowSelectionModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-center mb-6">
+              What type of reservation would you like to make?
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card 
+              className="cursor-pointer hover:border-primary transition-colors duration-200"
+              onClick={() => handleServiceSelection("dining")}
+            >
+              <CardContent className="p-6 text-center">
+                <Utensils className="w-12 h-12 mx-auto mb-4 text-primary" />
+                <h3 className="text-lg font-semibold mb-2">Dining</h3>
+                <p className="text-muted-foreground text-sm">
+                  Reserve a table for our fine dining experience (3PM - 9PM)
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card 
+              className="cursor-pointer hover:border-primary transition-colors duration-200"
+              onClick={() => handleServiceSelection("entertainment")}
+            >
+              <CardContent className="p-6 text-center">
+                <Music className="w-12 h-12 mx-auto mb-4 text-primary" />
+                <h3 className="text-lg font-semibold mb-2">Entertainment</h3>
+                <p className="text-muted-foreground text-sm">
+                  Book a table for our nightlife experience (9PM - 5AM)
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card 
+              className="cursor-pointer hover:border-primary transition-colors duration-200"
+              onClick={() => handleServiceSelection("private")}
+            >
+              <CardContent className="p-6 text-center">
+                <Users className="w-12 h-12 mx-auto mb-4 text-primary" />
+                <h3 className="text-lg font-semibold mb-2">Private Event</h3>
+                <p className="text-muted-foreground text-sm">
+                  Host a private group event or special occasion
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="pt-20">
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-4xl mx-auto">
@@ -37,11 +103,93 @@ const Reservations = () => {
               </p>
             </div>
 
-            <Tabs value={reservationType} onValueChange={setReservationType} className="mb-8">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="dining">Restaurant (3PM - 9PM)</TabsTrigger>
-                <TabsTrigger value="nightlife">Nightlife (9PM - 5AM)</TabsTrigger>
-              </TabsList>
+            {selectedService === "private" ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Private Event Inquiry</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleReservation} className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="event-name">Full Name</Label>
+                          <Input id="event-name" placeholder="Enter your name" required />
+                        </div>
+                        <div>
+                          <Label htmlFor="event-email">Email</Label>
+                          <Input id="event-email" type="email" placeholder="Enter your email" required />
+                        </div>
+                        <div>
+                          <Label htmlFor="event-phone">Phone Number</Label>
+                          <Input id="event-phone" type="tel" placeholder="Enter your phone" required />
+                        </div>
+                        <div>
+                          <Label htmlFor="event-type">Event Type</Label>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select event type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="birthday">Birthday Party</SelectItem>
+                              <SelectItem value="corporate">Corporate Event</SelectItem>
+                              <SelectItem value="wedding">Wedding Reception</SelectItem>
+                              <SelectItem value="anniversary">Anniversary</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="guest-count">Expected Guest Count</Label>
+                          <Input id="guest-count" type="number" placeholder="Number of guests" required />
+                        </div>
+                        <div>
+                          <Label htmlFor="budget">Estimated Budget</Label>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select budget range" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="5000-10000">$5,000 - $10,000</SelectItem>
+                              <SelectItem value="10000-25000">$10,000 - $25,000</SelectItem>
+                              <SelectItem value="25000-50000">$25,000 - $50,000</SelectItem>
+                              <SelectItem value="50000+">$50,000+</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Preferred Date</Label>
+                          <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={setSelectedDate}
+                            className="rounded-md border"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="event-details">Event Details & Requirements</Label>
+                          <textarea
+                            id="event-details"
+                            placeholder="Please describe your event, any special requirements, catering needs, etc."
+                            className="w-full h-32 p-3 border rounded-md resize-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <Button type="submit" className="w-full">
+                      Submit Private Event Inquiry
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            ) : (
+              <Tabs value={reservationType} onValueChange={setReservationType} className="mb-8">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="dining">Restaurant (3PM - 9PM)</TabsTrigger>
+                  <TabsTrigger value="nightlife">Nightlife (9PM - 5AM)</TabsTrigger>
+                </TabsList>
 
               <TabsContent value="dining">
                 <Card>
@@ -188,6 +336,7 @@ const Reservations = () => {
                 </Card>
               </TabsContent>
             </Tabs>
+            )}
           </div>
         </div>
       </div>

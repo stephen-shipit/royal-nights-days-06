@@ -11,15 +11,21 @@ import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Utensils, Music, Users } from "lucide-react";
+import { useEffect } from "react";
 
 const Reservations = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [reservationType, setReservationType] = useState("dining");
-  const [showSelectionModal, setShowSelectionModal] = useState(true);
-  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [showSelectionModal, setShowSelectionModal] = useState(false);
+  const [selectedService, setSelectedService] = useState<string | null>("dining");
+
+  useEffect(() => {
+    console.log('Reservations component mounted');
+  }, []);
 
   const handleReservation = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Reservation form submitted');
     toast({
       title: "Reservation Submitted",
       description: "We'll contact you shortly to confirm your reservation.",
@@ -27,6 +33,7 @@ const Reservations = () => {
   };
 
   const handleServiceSelection = (service: string) => {
+    console.log('Service selected:', service);
     setSelectedService(service);
     if (service === "dining") {
       setReservationType("dining");
@@ -35,6 +42,12 @@ const Reservations = () => {
     }
     setShowSelectionModal(false);
   };
+
+  const openServiceModal = () => {
+    setShowSelectionModal(true);
+  };
+
+  console.log('Reservations render - selectedService:', selectedService, 'showModal:', showSelectionModal);
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,6 +114,13 @@ const Reservations = () => {
               <p className="text-lg text-muted-foreground">
                 Book your table for an unforgettable dining or nightlife experience
               </p>
+              <Button 
+                onClick={openServiceModal}
+                className="mt-4"
+                variant="outline"
+              >
+                Change Reservation Type
+              </Button>
             </div>
 
             {selectedService === "private" ? (

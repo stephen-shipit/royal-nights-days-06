@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 
 type MenuItem = {
@@ -21,25 +23,33 @@ const Menu = () => {
   const [activeCategory, setActiveCategory] = useState("appetizers");
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('Menu component mounted');
     fetchMenuItems();
   }, []);
 
   const fetchMenuItems = async () => {
     try {
+      console.log('Fetching menu items from Supabase...');
+      setError(null);
+      
       const { data, error } = await supabase
         .from('menu_items')
         .select('*')
         .order('category', { ascending: true });
       
       if (error) {
-        console.error('Error fetching menu items:', error);
+        console.error('Supabase error fetching menu items:', error);
+        setError(`Database error: ${error.message}`);
       } else {
+        console.log('Menu items fetched successfully:', data?.length || 0, 'items');
         setMenuItems(data || []);
       }
     } catch (error) {
-      console.error('Error fetching menu items:', error);
+      console.error('Network error fetching menu items:', error);
+      setError(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -52,6 +62,8 @@ const Menu = () => {
     acc[item.category].push(item);
     return acc;
   }, {} as Record<string, MenuItem[]>);
+
+  console.log('Menu render - loading:', loading, 'error:', error, 'categories:', Object.keys(menuData));
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,8 +79,35 @@ const Menu = () => {
             </p>
           </div>
 
+          {error && (
+            <Alert className="mb-8 max-w-2xl mx-auto">
+              <AlertDescription>
+                {error}
+                <button 
+                  onClick={fetchMenuItems}
+                  className="ml-2 underline hover:no-underline"
+                >
+                  Try again
+                </button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {loading ? (
-            <div className="text-center py-12">Loading menu...</div>
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p>Loading menu...</p>
+            </div>
+          ) : Object.keys(menuData).length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-4">No menu items found</p>
+              <button 
+                onClick={fetchMenuItems}
+                className="text-primary underline hover:no-underline"
+              >
+                Refresh
+              </button>
+            </div>
           ) : (
             <Tabs value={activeCategory} onValueChange={setActiveCategory}>
               <TabsList className="grid w-full grid-cols-4 mb-8">
@@ -88,6 +127,10 @@ const Menu = () => {
                           src={item.image_url || '/api/placeholder/300/200'} 
                           alt={item.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.log('Image failed to load for item:', item.name);
+                            (e.target as HTMLImageElement).src = '/api/placeholder/300/200';
+                          }}
                         />
                       </div>
                       <CardHeader>

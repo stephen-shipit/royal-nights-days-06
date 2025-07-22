@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -5,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 
 type GalleryItem = {
@@ -20,25 +22,33 @@ const Gallery = () => {
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('Gallery component mounted');
     fetchGalleryItems();
   }, []);
 
   const fetchGalleryItems = async () => {
     try {
+      console.log('Fetching gallery items from Supabase...');
+      setError(null);
+      
       const { data, error } = await supabase
         .from('gallery_items')
         .select('*')
         .order('gallery_type', { ascending: true });
       
       if (error) {
-        console.error('Error fetching gallery items:', error);
+        console.error('Supabase error fetching gallery items:', error);
+        setError(`Database error: ${error.message}`);
       } else {
+        console.log('Gallery items fetched successfully:', data?.length || 0, 'items');
         setGalleryItems(data || []);
       }
     } catch (error) {
-      console.error('Error fetching gallery items:', error);
+      console.error('Network error fetching gallery items:', error);
+      setError(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -51,6 +61,8 @@ const Gallery = () => {
     acc[item.gallery_type].push(item);
     return acc;
   }, {} as Record<string, GalleryItem[]>);
+
+  console.log('Gallery render - loading:', loading, 'error:', error, 'types:', Object.keys(galleryData));
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,8 +78,35 @@ const Gallery = () => {
             </p>
           </div>
 
+          {error && (
+            <Alert className="mb-8 max-w-2xl mx-auto">
+              <AlertDescription>
+                {error}
+                <button 
+                  onClick={fetchGalleryItems}
+                  className="ml-2 underline hover:no-underline"
+                >
+                  Try again
+                </button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {loading ? (
-            <div className="text-center py-12">Loading gallery...</div>
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p>Loading gallery...</p>
+            </div>
+          ) : Object.keys(galleryData).length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-4">No gallery items found</p>
+              <button 
+                onClick={fetchGalleryItems}
+                className="text-primary underline hover:no-underline"
+              >
+                Refresh
+              </button>
+            </div>
           ) : (
             <Tabs value={activeCategory} onValueChange={setActiveCategory}>
               <TabsList className="grid w-full grid-cols-4 mb-8">
@@ -89,6 +128,10 @@ const Gallery = () => {
                               src={image.src}
                               alt={image.alt}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              onError={(e) => {
+                                console.log('Image failed to load:', image.src);
+                                (e.target as HTMLImageElement).src = '/api/placeholder/400/400';
+                              }}
                             />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors">
                               <div className="absolute bottom-2 left-2 right-2">

@@ -25,20 +25,15 @@ const Reservations = () => {
   useEffect(() => {
     console.log('Reservations component mounted');
     
-    // Listen for custom event to open modal
-    const handleOpenModal = () => {
-      console.log('Opening modal via custom event');
+    // Check if we should show the modal based on URL parameter
+    if (searchParams.get('showModal') === 'true') {
       setShowSelectionModal(true);
       setSelectedService(null);
       setReservationType("dining");
-    };
-    
-    window.addEventListener('openReservationModal', handleOpenModal);
-    
-    return () => {
-      window.removeEventListener('openReservationModal', handleOpenModal);
-    };
-  }, []);
+      // Clear the URL parameter after opening modal
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleReservation = (e: React.FormEvent) => {
     e.preventDefault();

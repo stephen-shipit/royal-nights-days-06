@@ -336,8 +336,8 @@ const EventDetails = () => {
                             style={{
                                left: `${Math.max(5, Math.min(70, (table.position_x / 1200) * 70))}%`,
                                top: `${Math.max(5, Math.min(70, (table.position_y / 500) * 70))}%`,
-                               width: `35px`,
-                               height: `35px`,
+                               width: `48px`,
+                               height: `48px`,
                             }}
                             disabled={isReserved}
                           >

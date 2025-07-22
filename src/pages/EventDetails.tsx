@@ -297,25 +297,20 @@ const EventDetails = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground text-lg leading-relaxed">{event.description}</p>
-                </CardContent>
-              </Card>
-
-              {/* Event Disclaimers */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Important Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Dress Code</h4>
-                    <p className="text-muted-foreground">Smart casual attire required. No athletic wear, flip-flops, or overly casual clothing permitted.</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Table Reservations & Cover Policy</h4>
-                    <p className="text-muted-foreground">
-                      <strong className="text-foreground">Table reservations and cover charges are separate fees.</strong> All patrons must pay the cover charge upon entry, with the exception of the primary reservation holder. Additional guests in your party are subject to the standard cover charge.
-                    </p>
+                  <p className="text-muted-foreground text-lg leading-relaxed mb-6">{event.description}</p>
+                  
+                  {/* Event Disclaimers */}
+                  <div className="border-t border-border pt-4 space-y-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-medium">Dress Code:</span> Smart casual attire required. No athletic wear, flip-flops, or overly casual clothing permitted.
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        <strong className="text-foreground">Table reservations and cover charges are separate fees.</strong> All patrons must pay the cover charge upon entry, with the exception of the primary reservation holder. Additional guests in your party are subject to the standard cover charge.
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

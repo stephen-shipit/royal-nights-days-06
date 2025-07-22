@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
+import AdminHeader from "@/components/AdminHeader";
+import AdminFooter from "@/components/AdminFooter";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -77,150 +79,156 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage your restaurant's content and reservations</p>
+    <div className="min-h-screen bg-background">
+      <AdminHeader onLogout={() => setIsAuthenticated(false)} />
+      
+      <main className="p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-foreground mb-2">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Manage your restaurant's content and reservations</p>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="menu" className="flex items-center gap-2">
+                <Utensils className="h-4 w-4" />
+                Menu
+              </TabsTrigger>
+              <TabsTrigger value="reservations" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Reservations
+              </TabsTrigger>
+              <TabsTrigger value="events" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Events
+              </TabsTrigger>
+              <TabsTrigger value="gallery" className="flex items-center gap-2">
+                <Image className="h-4 w-4" />
+                Gallery
+              </TabsTrigger>
+              <TabsTrigger value="tables" className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Tables
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Menu Items</CardTitle>
+                    <Utensils className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{menuItems?.length || 0}</div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Active Reservations</CardTitle>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{reservations?.filter(r => r.status === 'confirmed').length || 0}</div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{events?.filter(e => new Date(e.date) >= new Date()).length || 0}</div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Gallery Items</CardTitle>
+                    <Image className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{galleryItems?.length || 0}</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Reservations</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {reservations?.slice(0, 5).map((reservation) => (
+                        <div key={reservation.id} className="flex justify-between items-center p-2 border rounded">
+                          <div>
+                            <p className="font-medium">{reservation.guest_name}</p>
+                            <p className="text-sm text-muted-foreground">{reservation.guest_count} guests</p>
+                          </div>
+                          <Badge variant={reservation.status === 'confirmed' ? 'default' : 'secondary'}>
+                            {reservation.status}
+                          </Badge>
+                        </div>
+                      )) || <p className="text-muted-foreground">No reservations yet</p>}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Venue Tables</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {venueTables?.slice(0, 5).map((table) => (
+                        <div key={table.id} className="flex justify-between items-center p-2 border rounded">
+                          <div>
+                            <p className="font-medium">Table {table.table_number}</p>
+                            <p className="text-sm text-muted-foreground">Max {table.max_guests} guests</p>
+                          </div>
+                          <Badge variant={table.is_available ? 'default' : 'destructive'}>
+                            {table.is_available ? 'Available' : 'Occupied'}
+                          </Badge>
+                        </div>
+                      )) || <p className="text-muted-foreground">No tables configured</p>}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="menu">
+              <MenuManagement />
+            </TabsContent>
+
+            <TabsContent value="reservations">
+              <ReservationManagement />
+            </TabsContent>
+
+            <TabsContent value="events">
+              <EventManagement />
+            </TabsContent>
+
+            <TabsContent value="gallery">
+              <GalleryManagement />
+            </TabsContent>
+
+            <TabsContent value="tables">
+              <TableManagement />
+            </TabsContent>
+          </Tabs>
         </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="menu" className="flex items-center gap-2">
-              <Utensils className="h-4 w-4" />
-              Menu
-            </TabsTrigger>
-            <TabsTrigger value="reservations" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Reservations
-            </TabsTrigger>
-            <TabsTrigger value="events" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Events
-            </TabsTrigger>
-            <TabsTrigger value="gallery" className="flex items-center gap-2">
-              <Image className="h-4 w-4" />
-              Gallery
-            </TabsTrigger>
-            <TabsTrigger value="tables" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Tables
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Menu Items</CardTitle>
-                  <Utensils className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{menuItems?.length || 0}</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Reservations</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{reservations?.filter(r => r.status === 'confirmed').length || 0}</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{events?.filter(e => new Date(e.date) >= new Date()).length || 0}</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Gallery Items</CardTitle>
-                  <Image className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{galleryItems?.length || 0}</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Reservations</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {reservations?.slice(0, 5).map((reservation) => (
-                      <div key={reservation.id} className="flex justify-between items-center p-2 border rounded">
-                        <div>
-                          <p className="font-medium">{reservation.guest_name}</p>
-                          <p className="text-sm text-muted-foreground">{reservation.guest_count} guests</p>
-                        </div>
-                        <Badge variant={reservation.status === 'confirmed' ? 'default' : 'secondary'}>
-                          {reservation.status}
-                        </Badge>
-                      </div>
-                    )) || <p className="text-muted-foreground">No reservations yet</p>}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Venue Tables</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {venueTables?.slice(0, 5).map((table) => (
-                      <div key={table.id} className="flex justify-between items-center p-2 border rounded">
-                        <div>
-                          <p className="font-medium">Table {table.table_number}</p>
-                          <p className="text-sm text-muted-foreground">Max {table.max_guests} guests</p>
-                        </div>
-                        <Badge variant={table.is_available ? 'default' : 'destructive'}>
-                          {table.is_available ? 'Available' : 'Occupied'}
-                        </Badge>
-                      </div>
-                    )) || <p className="text-muted-foreground">No tables configured</p>}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="menu">
-            <MenuManagement />
-          </TabsContent>
-
-          <TabsContent value="reservations">
-            <ReservationManagement />
-          </TabsContent>
-
-          <TabsContent value="events">
-            <EventManagement />
-          </TabsContent>
-
-          <TabsContent value="gallery">
-            <GalleryManagement />
-          </TabsContent>
-
-          <TabsContent value="tables">
-            <TableManagement />
-          </TabsContent>
-        </Tabs>
-      </div>
+      </main>
+      
+      <AdminFooter />
     </div>
   );
 };

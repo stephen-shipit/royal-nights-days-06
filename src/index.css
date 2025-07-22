@@ -33,6 +33,9 @@
     --card: var(--royal-light);
     --card-foreground: var(--royal-dark);
     
+    --popover: var(--royal-light);
+    --popover-foreground: var(--royal-dark);
+    
     --border: 42 12% 75%;
     --input: 42 12% 75%;
     --ring: var(--royal-gold);
@@ -60,6 +63,9 @@
     
     --card: hsl(110 25% 8%);
     --card-foreground: var(--royal-light);
+    
+    --popover: hsl(110 25% 8%);
+    --popover-foreground: var(--royal-light);
     
     --muted: 110 15% 20%;
     --muted-foreground: 42 15% 65%;

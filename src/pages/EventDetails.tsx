@@ -300,6 +300,25 @@ const EventDetails = () => {
                   <p className="text-muted-foreground text-lg leading-relaxed">{event.description}</p>
                 </CardContent>
               </Card>
+
+              {/* Event Disclaimers */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Important Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">Dress Code</h4>
+                    <p className="text-muted-foreground">Smart casual attire required. No athletic wear, flip-flops, or overly casual clothing permitted.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">Table Reservations & Cover Policy</h4>
+                    <p className="text-muted-foreground">
+                      <strong className="text-foreground">Table reservations and cover charges are separate fees.</strong> All patrons must pay the cover charge upon entry, with the exception of the primary reservation holder. Additional guests in your party are subject to the standard cover charge.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Seating Chart */}

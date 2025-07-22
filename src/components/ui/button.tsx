@@ -15,8 +15,8 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 gold-glow",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        luxury: "bg-gradient-to-r from-secondary to-accent text-primary-foreground hover:shadow-lg hover:scale-105 transform transition-all duration-300 font-semibold tracking-wide",
-        royal: "bg-primary text-primary-foreground border-2 border-secondary hover:bg-secondary hover:text-primary hover:border-primary transform hover:scale-105 transition-all duration-300 font-semibold",
+        luxury: "bg-gradient-to-r from-secondary to-accent text-white hover:shadow-lg hover:scale-105 transform transition-all duration-300 font-semibold tracking-wide",
+        royal: "bg-primary text-white border-2 border-secondary hover:bg-secondary hover:text-primary hover:border-primary transform hover:scale-105 transition-all duration-300 font-semibold",
         ghostGold: "text-secondary hover:text-accent hover:bg-secondary/10 transition-all duration-300",
       },
       size: {

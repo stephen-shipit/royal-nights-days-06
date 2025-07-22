@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ const Reservations = () => {
   const [reservationType, setReservationType] = useState("dining");
   const [showSelectionModal, setShowSelectionModal] = useState(false);
   const [selectedService, setSelectedService] = useState<string | null>("dining");
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log('Reservations component mounted');
@@ -34,13 +36,16 @@ const Reservations = () => {
 
   const handleServiceSelection = (service: string) => {
     console.log('Service selected:', service);
-    setSelectedService(service);
+    setShowSelectionModal(false);
+    
     if (service === "dining") {
+      setSelectedService("dining");
       setReservationType("dining");
     } else if (service === "entertainment") {
-      setReservationType("nightlife");
+      navigate("/events");
+    } else if (service === "private") {
+      navigate("/plan-event");
     }
-    setShowSelectionModal(false);
   };
 
   const openServiceModal = () => {

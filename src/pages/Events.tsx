@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ const categories = ["All", "Nightlife", "Dining", "Live Music", "Comedy Show", "
 const priceRanges = ["All", "Free", "Under $50", "$50-$100", "Over $100"];
 
 const Events = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedPriceRange, setSelectedPriceRange] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -218,7 +220,11 @@ const Events = () => {
                     </CardHeader>
                     <CardContent>
                       <p className="text-muted-foreground mb-4">{event.description}</p>
-                      <Button className="w-full" variant="luxury">
+                      <Button 
+                        className="w-full" 
+                        variant="luxury"
+                        onClick={() => navigate(`/events/${event.id}`)}
+                      >
                         Reserve for This Event
                       </Button>
                     </CardContent>

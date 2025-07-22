@@ -131,6 +131,99 @@ export type Database = {
         }
         Relationships: []
       }
+      table_reservations: {
+        Row: {
+          created_at: string
+          event_id: string
+          guest_count: number
+          guest_email: string
+          guest_name: string
+          id: string
+          special_requests: string | null
+          status: string
+          table_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          guest_count: number
+          guest_email: string
+          guest_name: string
+          id?: string
+          special_requests?: string | null
+          status?: string
+          table_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          guest_count?: number
+          guest_email?: string
+          guest_name?: string
+          id?: string
+          special_requests?: string | null
+          status?: string
+          table_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_reservations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_reservations_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "venue_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_tables: {
+        Row: {
+          created_at: string
+          height: number
+          id: string
+          is_available: boolean
+          max_guests: number
+          position_x: number
+          position_y: number
+          table_number: number
+          updated_at: string
+          width: number
+        }
+        Insert: {
+          created_at?: string
+          height?: number
+          id?: string
+          is_available?: boolean
+          max_guests?: number
+          position_x?: number
+          position_y?: number
+          table_number: number
+          updated_at?: string
+          width?: number
+        }
+        Update: {
+          created_at?: string
+          height?: number
+          id?: string
+          is_available?: boolean
+          max_guests?: number
+          position_x?: number
+          position_y?: number
+          table_number?: number
+          updated_at?: string
+          width?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

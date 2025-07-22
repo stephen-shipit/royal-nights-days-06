@@ -16,7 +16,7 @@ const HeroSection = () => {
           type="video/mp4" 
         />
       </video>
-      <div className="absolute inset-0 hero-overlay"></div>
+      
       
       <div className="relative z-10 text-center text-primary-foreground px-6 max-w-4xl mx-auto">
         {/* Crown Icon */}

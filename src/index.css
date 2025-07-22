@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.cdnfonts.com/css/carlasans');
 
 @tailwind base;
 @tailwind components;
@@ -87,7 +86,7 @@
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Carlasans', sans-serif;
+    font-family: 'Carla Sans', sans-serif;
   }
 }
 

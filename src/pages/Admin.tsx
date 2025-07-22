@@ -79,7 +79,7 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       <AdminHeader onLogout={() => setIsAuthenticated(false)} />
       
       <main className="p-8">

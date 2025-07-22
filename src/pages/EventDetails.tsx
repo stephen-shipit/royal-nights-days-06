@@ -380,7 +380,7 @@ const EventDetails = () => {
                                   left: `${(table.position_x / 1200) * 95}%`,
                                   top: `${(table.position_y / 500) * 95}%`,
                                   width: `28px`,
-                                  height: `48px`,
+                                  height: `53px`,
                                   padding: `1px`,
                                }}
                                disabled={isReserved}

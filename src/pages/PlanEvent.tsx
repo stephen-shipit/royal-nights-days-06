@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -14,6 +14,10 @@ import { toast } from "@/hooks/use-toast";
 const PlanEvent = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log('PlanEvent component mounted');
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

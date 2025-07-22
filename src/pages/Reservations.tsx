@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -20,10 +20,20 @@ const Reservations = () => {
   const [showSelectionModal, setShowSelectionModal] = useState(true);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     console.log('Reservations component mounted');
-  }, []);
+    
+    // Check if we should show the modal based on URL parameter
+    if (searchParams.get('showModal') === 'true') {
+      setShowSelectionModal(true);
+      setSelectedService(null);
+      setReservationType("dining");
+      // Clear the URL parameter after opening modal
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleReservation = (e: React.FormEvent) => {
     e.preventDefault();

@@ -27,7 +27,7 @@ const Header = () => {
             <Link to="/menu" className="text-primary-foreground hover:text-secondary transition-colors duration-300">
               Menu
             </Link>
-            <Link to="/reservations" className="text-primary-foreground hover:text-secondary transition-colors duration-300">
+            <Link to="/reservations?showModal=true" className="text-primary-foreground hover:text-secondary transition-colors duration-300">
               Reservations
             </Link>
             <Link to="/gallery" className="text-primary-foreground hover:text-secondary transition-colors duration-300">

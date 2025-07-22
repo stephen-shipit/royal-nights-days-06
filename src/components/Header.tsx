@@ -27,9 +27,20 @@ const Header = () => {
             <Link to="/menu" className="text-primary-foreground hover:text-secondary transition-colors duration-300">
               Menu
             </Link>
-            <Link to="/reservations?showModal=true" className="text-primary-foreground hover:text-secondary transition-colors duration-300">
+            <button 
+              onClick={() => {
+                if (window.location.pathname === '/reservations') {
+                  // If already on reservations page, trigger modal directly
+                  window.dispatchEvent(new CustomEvent('openReservationModal'));
+                } else {
+                  // Navigate to reservations page
+                  window.location.href = '/reservations';
+                }
+              }}
+              className="text-primary-foreground hover:text-secondary transition-colors duration-300 bg-transparent border-none cursor-pointer"
+            >
               Reservations
-            </Link>
+            </button>
             <Link to="/gallery" className="text-primary-foreground hover:text-secondary transition-colors duration-300">
               Gallery
             </Link>

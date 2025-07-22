@@ -1,26 +1,33 @@
 import { Button } from "@/components/ui/button";
-import heroImage from "@/assets/hero-royal-palace.jpg";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   return (
-    <section 
-      className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
-      style={{
-        backgroundImage: `url(${heroImage})`
-      }}
-    >
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Background Video */}
+      <video
+        autoPlay
+        muted
+        loop
+        className="absolute inset-0 w-full h-full object-cover z-0"
+      >
+        <source 
+          src="https://cdn.prod.website-files.com/6665fe4d66fd54b1adf359d1%2F6666fc0ee2b6683ba07dab50_Carla%20Background%20Video-transcode.mp4" 
+          type="video/mp4" 
+        />
+      </video>
       <div className="absolute inset-0 hero-overlay"></div>
       
       <div className="relative z-10 text-center text-primary-foreground px-6 max-w-4xl mx-auto">
         {/* Crown Icon */}
         <div className="mb-8">
           <div className="w-20 h-20 mx-auto bg-gradient-to-r from-secondary to-accent rounded-full flex items-center justify-center">
-            <span className="text-3xl font-bold text-primary font-['Playfair_Display']">♔</span>
+            <span className="text-3xl font-bold text-primary">♔</span>
           </div>
         </div>
 
         {/* Main Heading */}
-        <h1 className="text-6xl md:text-8xl font-bold mb-6 font-['Playfair_Display'] tracking-wide">
+        <h1 className="text-6xl md:text-8xl font-bold mb-6 tracking-wide">
           ROYAL PALACE
         </h1>
         
@@ -35,8 +42,8 @@ const HeroSection = () => {
         {/* Dual CTA Buttons */}
         <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
           <div className="text-center">
-            <Button variant="royal" size="xl" className="w-64 mb-2">
-              Dine With Us
+            <Button variant="royal" size="xl" className="w-64 mb-2" asChild>
+              <Link to="/reservations">Dine With Us</Link>
             </Button>
             <p className="text-sm text-secondary">Wed - Sun • 3PM - 9PM</p>
           </div>
@@ -44,8 +51,8 @@ const HeroSection = () => {
           <div className="hidden md:block w-px h-16 bg-secondary/30"></div>
           
           <div className="text-center">
-            <Button variant="luxury" size="xl" className="w-64 mb-2">
-              Reserve Night Table
+            <Button variant="luxury" size="xl" className="w-64 mb-2" asChild>
+              <Link to="/reservations">Reserve Night Table</Link>
             </Button>
             <p className="text-sm text-secondary">Wed - Sun • 9PM - 5AM</p>
           </div>

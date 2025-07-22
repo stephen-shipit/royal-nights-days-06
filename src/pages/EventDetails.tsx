@@ -371,33 +371,33 @@ const EventDetails = () => {
                             <button
                               key={table.id}
                               onClick={() => handleTableSelect(table)}
-                               className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md ${
+                               className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md py-1 px-1 m-1 ${
                                  isReserved
                                    ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
                                    : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
                                }`}
                                style={{
-                                  left: `${Math.max(2, Math.min(90, (table.position_x / 1200) * 85 + 2))}%`,
-                                  top: `${Math.max(2, Math.min(90, (table.position_y / 500) * 85 + 2))}%`,
-                                  width: `48px`,
-                                  height: `55px`,
-                                  padding: `4px 2px`,
-                                  margin: `0`,
+                                  left: `${Math.max(1, Math.min(94, (table.position_x / 1200) * 94 + 1))}%`,
+                                  top: `${Math.max(1, Math.min(94, (table.position_y / 500) * 94 + 1))}%`,
+                                  width: `35px`,
+                                  height: `45px`,
+                                 paddingTop: `2px`,
+                                 paddingBottom: `2px`,
                                }}
                                disabled={isReserved}
                             >
                               {isReserved && (
                                 <X className="absolute inset-0 w-8 h-8 text-red-500 m-auto" strokeWidth={3} />
                               )}
-                               <span className="text-xs font-bold leading-none">T{table.table_number}</span>
-                               <span className="text-[10px] leading-none mt-1">
+                               <span className="text-xs font-bold">T{table.table_number}</span>
+                               <span className="text-[10px] leading-none">
                                  {isReserved 
                                    ? `${table.reserved_guests}/${table.max_guests}`
                                    : `${table.max_guests}`
                                  }
                                </span>
                                {table.reservation_price > 0 && !isReserved && (
-                                 <span className="text-[9px] text-primary font-semibold leading-none mt-1">
+                                 <span className="text-[10px] text-primary font-semibold">
                                    ${(table.reservation_price / 100).toFixed(0)}
                                  </span>
                                )}
@@ -525,33 +525,33 @@ const EventDetails = () => {
                           <button
                             key={table.id}
                             onClick={() => handleTableSelect(table)}
-                             className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md ${
+                             className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md py-1 px-1 m-1 ${
                                isReserved
                                  ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
                                  : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
                              }`}
                              style={{
-                                left: `${Math.max(2, Math.min(90, (table.position_x / 1200) * 85 + 2))}%`,
-                                top: `${Math.max(2, Math.min(90, (table.position_y / 500) * 85 + 2))}%`,
-                                width: `50px`,
-                                height: `60px`,
-                                padding: `6px 4px`,
-                                margin: `0`,
+                                left: `${Math.max(1, Math.min(94, (table.position_x / 1200) * 94 + 1))}%`,
+                                top: `${Math.max(1, Math.min(94, (table.position_y / 500) * 94 + 1))}%`,
+                                width: `40px`,
+                                height: `55px`,
+                               paddingTop: `4px`,
+                               paddingBottom: `4px`,
                              }}
                              disabled={isReserved}
                           >
                             {isReserved && (
                               <X className="absolute inset-0 w-10 h-10 text-red-500 m-auto" strokeWidth={3} />
                             )}
-                             <span className="text-sm font-bold leading-none">T{table.table_number}</span>
-                             <span className="text-xs leading-none mt-1">
+                             <span className="text-sm font-bold">T{table.table_number}</span>
+                             <span className="text-xs leading-none">
                                {isReserved 
                                  ? `${table.reserved_guests}/${table.max_guests}`
                                  : `${table.max_guests}`
                                }
                              </span>
                              {table.reservation_price > 0 && !isReserved && (
-                               <span className="text-xs text-primary font-semibold leading-none mt-1">
+                               <span className="text-xs text-primary font-semibold">
                                  ${(table.reservation_price / 100).toFixed(0)}
                                </span>
                              )}

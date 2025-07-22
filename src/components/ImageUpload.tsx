@@ -61,6 +61,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   });
 
   const removeImage = () => {
+    console.log('Removing image, current value:', value);
     onChange('');
   };
 

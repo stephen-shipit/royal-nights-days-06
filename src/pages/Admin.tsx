@@ -20,11 +20,7 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  if (!isAuthenticated) {
-    return <AdminAuth onAuthSuccess={() => setIsAuthenticated(true)} />;
-  }
-
-  // Fetch data for overview
+  // Fetch data for overview - moved before early return to follow rules of hooks
   const { data: menuItems } = useQuery({
     queryKey: ["menu-items"],
     queryFn: async () => {
@@ -32,6 +28,7 @@ const Admin = () => {
       if (error) throw error;
       return data;
     },
+    enabled: isAuthenticated, // Only run when authenticated
   });
 
   const { data: reservations } = useQuery({
@@ -41,6 +38,7 @@ const Admin = () => {
       if (error) throw error;
       return data;
     },
+    enabled: isAuthenticated,
   });
 
   const { data: events } = useQuery({
@@ -50,6 +48,7 @@ const Admin = () => {
       if (error) throw error;
       return data;
     },
+    enabled: isAuthenticated,
   });
 
   const { data: galleryItems } = useQuery({
@@ -59,6 +58,7 @@ const Admin = () => {
       if (error) throw error;
       return data;
     },
+    enabled: isAuthenticated,
   });
 
   const { data: venueTables } = useQuery({
@@ -68,7 +68,12 @@ const Admin = () => {
       if (error) throw error;
       return data;
     },
+    enabled: isAuthenticated,
   });
+
+  if (!isAuthenticated) {
+    return <AdminAuth onAuthSuccess={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-white p-8">

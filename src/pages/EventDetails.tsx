@@ -336,8 +336,8 @@ const EventDetails = () => {
                              style={{
                                 left: `${Math.max(1, Math.min(94, (table.position_x / 1200) * 94 + 1))}%`,
                                 top: `${Math.max(1, Math.min(94, (table.position_y / 500) * 94 + 1))}%`,
-                                width: `50px`,
-                                height: `50px`,
+                                width: `40px`,
+                                height: `55px`,
                                paddingTop: `4px`,
                                paddingBottom: `4px`,
                              }}

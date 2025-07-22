@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
+import MobileHeader from "@/components/MobileHeader";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -321,8 +323,9 @@ const PlanEvent = () => {
   return (
     <div className="min-h-screen bg-white">
       <Header />
+      <MobileHeader />
       
-      <div className="pt-20">
+      <div className="pt-20 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
@@ -426,6 +429,7 @@ const PlanEvent = () => {
         </div>
       </div>
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 };

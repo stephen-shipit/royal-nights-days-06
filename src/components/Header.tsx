@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const Header = () => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-md">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-md hidden md:block">
       <div className="w-full px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -20,7 +20,7 @@ const Header = () => {
           </Link>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="flex items-center space-x-8">
             <Link to="/" className="text-primary-foreground hover:text-secondary transition-colors duration-300">
               Home
             </Link>
@@ -40,7 +40,7 @@ const Header = () => {
 
           {/* CTA Buttons */}
           <div className="flex items-center space-x-4">
-            <Button variant="ghostGold" size="sm" className="hidden md:inline-flex">
+            <Button variant="ghostGold" size="sm">
               Call Us
             </Button>
             <Button variant="luxury" size="sm" asChild>

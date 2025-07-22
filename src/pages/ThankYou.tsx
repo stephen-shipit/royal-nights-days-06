@@ -2,6 +2,8 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
+import MobileHeader from "@/components/MobileHeader";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,8 +20,9 @@ const ThankYou = () => {
   return (
     <div className="min-h-screen bg-white">
       <Header />
+      <MobileHeader />
       
-      <div className="pt-20">
+      <div className="pt-20 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-2xl mx-auto text-center">
             
@@ -124,6 +127,7 @@ const ThankYou = () => {
       </div>
       
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 };

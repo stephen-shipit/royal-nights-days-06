@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
+import MobileHeader from "@/components/MobileHeader";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,7 +81,8 @@ const Events = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="pt-20">
+      <MobileHeader />
+      <div className="pt-20 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-12">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -90,9 +93,35 @@ const Events = () => {
             </p>
           </div>
 
+          {/* Mobile Filter Section */}
+          <div className="lg:hidden mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
+              {categories.slice(0, 6).map((category) => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category)}
+                  className="text-xs"
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search events..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
           <div className="flex gap-8">
             {/* Sidebar Filters */}
-            <div className="w-80 flex-shrink-0">
+            <div className="hidden lg:block w-80 flex-shrink-0">
               <Card className="sticky top-8">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -174,7 +203,7 @@ const Events = () => {
               {loading ? (
                 <div className="text-center py-12">Loading events...</div>
               ) : (
-                <div className="grid lg:grid-cols-2 gap-6 mb-12">
+                <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6 mb-12">
                   {filteredEvents.map((event) => (
                   <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                     <div className="aspect-video">
@@ -266,6 +295,7 @@ const Events = () => {
         </div>
       </div>
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 };

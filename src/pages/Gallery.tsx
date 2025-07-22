@@ -1,6 +1,8 @@
 
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
+import MobileHeader from "@/components/MobileHeader";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -67,7 +69,8 @@ const Gallery = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="pt-20">
+      <MobileHeader />
+      <div className="pt-20 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-12">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -166,6 +169,7 @@ const Gallery = () => {
         </div>
       </div>
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 };

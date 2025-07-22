@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
+import MobileHeader from "@/components/MobileHeader";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -218,9 +220,11 @@ const EventDetails = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="pt-20 flex items-center justify-center h-96">
+        <MobileHeader />
+        <div className="pt-20 pb-20 md:pb-0 flex items-center justify-center h-96">
           <div className="text-center">Loading event details...</div>
         </div>
+        <MobileBottomNav />
       </div>
     );
   }
@@ -229,9 +233,11 @@ const EventDetails = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="pt-20 flex items-center justify-center h-96">
+        <MobileHeader />
+        <div className="pt-20 pb-20 md:pb-0 flex items-center justify-center h-96">
           <div className="text-center">Event not found</div>
         </div>
+        <MobileBottomNav />
       </div>
     );
   }
@@ -239,7 +245,8 @@ const EventDetails = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="pt-20">
+      <MobileHeader />
+      <div className="pt-20 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-8">
           {/* Back Button */}
           <Button 
@@ -475,6 +482,7 @@ const EventDetails = () => {
       </Dialog>
 
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 };

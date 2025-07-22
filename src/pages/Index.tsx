@@ -1,4 +1,6 @@
 import Header from "@/components/Header";
+import MobileHeader from "@/components/MobileHeader";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import HeroSection from "@/components/HeroSection";
 import AboutSection from "@/components/AboutSection";
 import AtmosphereSection from "@/components/AtmosphereSection";
@@ -10,12 +12,16 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      <HeroSection />
-      <AboutSection />
-      <AtmosphereSection />
-      <EventsSection />
-      <HoursSection />
-      <Footer />
+      <MobileHeader />
+      <div className="pb-20 md:pb-0">
+        <HeroSection />
+        <AboutSection />
+        <AtmosphereSection />
+        <EventsSection />
+        <HoursSection />
+        <Footer />
+      </div>
+      <MobileBottomNav />
     </div>
   );
 };

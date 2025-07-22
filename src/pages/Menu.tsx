@@ -1,6 +1,8 @@
 
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
+import MobileHeader from "@/components/MobileHeader";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -71,7 +73,8 @@ const Menu = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="pt-20">
+      <MobileHeader />
+      <div className="pt-20 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-12">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -113,32 +116,32 @@ const Menu = () => {
             </div>
           ) : (
             <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-              <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-                <TabsList className="grid w-full sm:w-auto grid-cols-4">
-                  <TabsTrigger value="appetizers">Appetizers</TabsTrigger>
-                  <TabsTrigger value="mains">Main Courses</TabsTrigger>
-                  <TabsTrigger value="drinks">Signature Drinks</TabsTrigger>
-                  <TabsTrigger value="desserts">Desserts</TabsTrigger>
+              <div className="flex flex-col gap-4 mb-8">
+                <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full">
+                  <TabsTrigger value="appetizers" className="text-xs md:text-sm">Appetizers</TabsTrigger>
+                  <TabsTrigger value="mains" className="text-xs md:text-sm">Mains</TabsTrigger>
+                  <TabsTrigger value="drinks" className="text-xs md:text-sm">Drinks</TabsTrigger>
+                  <TabsTrigger value="desserts" className="text-xs md:text-sm">Desserts</TabsTrigger>
                 </TabsList>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 justify-center md:justify-start">
                   <Button
                     variant={viewMode === 'card' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('card')}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-1 md:gap-2"
                   >
                     <Grid className="h-4 w-4" />
-                    Cards
+                    <span className="hidden md:inline">Cards</span>
                   </Button>
                   <Button
                     variant={viewMode === 'list' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('list')}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-1 md:gap-2"
                   >
                     <List className="h-4 w-4" />
-                    List
+                    <span className="hidden md:inline">List</span>
                   </Button>
                 </div>
               </div>
@@ -241,6 +244,7 @@ const Menu = () => {
         </div>
       </div>
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 };

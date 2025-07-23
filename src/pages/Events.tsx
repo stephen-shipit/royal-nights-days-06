@@ -59,6 +59,8 @@ const Events = () => {
     }
   };
 
+  const today = new Date().toISOString().split('T')[0];
+  
   const filteredEvents = events.filter(event => {
     const matchesCategory = selectedCategory === "All" || event.category === selectedCategory;
     const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -76,6 +78,19 @@ const Events = () => {
     }
     
     return matchesCategory && matchesSearch && matchesPrice;
+  }).sort((a, b) => {
+    // Sort upcoming events first, then by date
+    const aDate = new Date(a.date);
+    const bDate = new Date(b.date);
+    const todayDate = new Date(today);
+    
+    const aIsUpcoming = aDate >= todayDate;
+    const bIsUpcoming = bDate >= todayDate;
+    
+    if (aIsUpcoming && !bIsUpcoming) return -1;
+    if (!aIsUpcoming && bIsUpcoming) return 1;
+    
+    return aDate.getTime() - bDate.getTime();
   });
 
   return (

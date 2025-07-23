@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import MobileHeader from "@/components/MobileHeader";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
+import FeaturedEventsCarousel from "@/components/FeaturedEventsCarousel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -99,9 +100,12 @@ const Events = () => {
       <MobileHeader />
       <div className="pt-20 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-12">
+          {/* Featured Events Carousel */}
+          <FeaturedEventsCarousel />
+
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Upcoming Events
+              All Events
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Join us for exclusive dining experiences, live entertainment, and unforgettable nights

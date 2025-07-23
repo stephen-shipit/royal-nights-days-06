@@ -48,6 +48,7 @@ export type Database = {
           date: string
           description: string
           dj: string | null
+          featured: boolean
           host: string | null
           id: string
           image_url: string | null
@@ -63,6 +64,7 @@ export type Database = {
           date: string
           description: string
           dj?: string | null
+          featured?: boolean
           host?: string | null
           id?: string
           image_url?: string | null
@@ -78,6 +80,7 @@ export type Database = {
           date?: string
           description?: string
           dj?: string | null
+          featured?: boolean
           host?: string | null
           id?: string
           image_url?: string | null

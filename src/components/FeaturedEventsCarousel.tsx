@@ -73,20 +73,23 @@ const FeaturedEventsCarousel = () => {
     <div className="relative mb-16 overflow-hidden rounded-2xl">
       <Card className="border-0 overflow-hidden">
         <div className="relative h-[500px] md:h-[600px]">
-          {/* Background Image */}
+          {/* Background Image - Blurred */}
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
               backgroundImage: `url(${currentEvent.image_url || '/api/placeholder/1200/600'})`,
+              filter: 'blur(8px)',
+              transform: 'scale(1.1)',
             }}
           >
             {/* Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
           </div>
 
           {/* Content */}
-          <CardContent className="relative h-full flex items-center justify-start p-8 md:p-16">
-            <div className="max-w-2xl text-white animate-fade-in">
+          <CardContent className="relative h-full flex items-center justify-between p-8 md:p-16">
+            {/* Left Content */}
+            <div className="flex-1 max-w-2xl text-white animate-fade-in pr-8">
               <Badge variant="secondary" className="mb-4 bg-secondary/20 text-white border-secondary/30">
                 Featured Event
               </Badge>
@@ -129,6 +132,15 @@ const FeaturedEventsCarousel = () => {
                   View All Events
                 </Button>
               </div>
+            </div>
+
+            {/* Right Image */}
+            <div className="hidden md:block flex-shrink-0 w-80 h-96">
+              <img
+                src={currentEvent.image_url || '/api/placeholder/400/600'}
+                alt={currentEvent.title}
+                className="w-full h-full object-cover rounded-2xl shadow-2xl border-4 border-white/20"
+              />
             </div>
           </CardContent>
 

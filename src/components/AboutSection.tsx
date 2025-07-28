@@ -52,11 +52,17 @@ const AboutSection = () => {
           {/* Image */}
           <div className="relative">
             <div className="elegant-shadow rounded-2xl overflow-hidden transform hover:scale-105 transition-transform duration-500">
-              <img 
-                src={foodImage} 
-                alt="Mediterranean fusion cuisine"
+              <video
+                autoPlay
+                muted
+                loop
                 className="w-full h-[600px] object-cover"
-              />
+              >
+                <source 
+                  src="https://twbqokjjdopxcgiiuluz.supabase.co/storage/v1/object/sign/assets/vidu-general-4-2025-01-26T18_35_35Z.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zNmI0N2YzZS1iMTY1LTQwNTYtOGI4NS01ZDBjZWQwZWIwNDIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvdmlkdS1nZW5lcmFsLTQtMjAyNS0wMS0yNlQxOF8zNV8zNVoubXA0IiwiaWF0IjoxNzUzNzExMjU4LCJleHAiOjIwNjkwNzEyNTh9.yKDHR-SzkSVkCxhmZIk0GfjLvLZDbAjjKhskQBIFpu0" 
+                  type="video/mp4" 
+                />
+              </video>
             </div>
             <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-gradient-to-r from-secondary to-accent rounded-full flex items-center justify-center gold-glow">
               <span className="text-primary text-2xl">★</span>

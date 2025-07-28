@@ -32,7 +32,7 @@ const PrivatePartyModal = () => {
             <X className="h-4 w-4" />
           </button>
           
-          <div className="grid md:grid-cols-2 min-h-[500px]">
+          <div className="grid md:grid-cols-2 min-h-[400px]">
             {/* Image Half */}
             <div className="relative h-80 md:h-auto">
               <img

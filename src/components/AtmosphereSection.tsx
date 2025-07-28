@@ -10,7 +10,7 @@ const AtmosphereSection = () => {
           <div className="relative order-2 md:order-1">
             <div className="elegant-shadow rounded-2xl overflow-hidden transform hover:scale-105 transition-transform duration-500">
               <img 
-                src={loungeImage} 
+                src="/lovable-uploads/57e58594-bfe5-4bfa-ac83-a2c38683cf90.png" 
                 alt="Upscale lounge atmosphere"
                 className="w-full h-[600px] object-cover"
               />

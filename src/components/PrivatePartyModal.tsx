@@ -23,7 +23,7 @@ const PrivatePartyModal = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-4xl p-0 border-0 bg-transparent">
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 border-0 bg-transparent my-4">
         <div className="relative bg-card rounded-2xl overflow-hidden shadow-2xl">
           <button
             onClick={() => setIsOpen(false)}

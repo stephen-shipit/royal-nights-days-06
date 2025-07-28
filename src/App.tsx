@@ -12,6 +12,7 @@ import Gallery from "./pages/Gallery";
 import Events from "./pages/Events";
 import EventDetails from "./pages/EventDetails";
 import PlanEvent from "./pages/PlanEvent";
+import Perform from "./pages/Perform";
 import ThankYou from "./pages/ThankYou";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -59,6 +60,7 @@ const App = () => {
               <Route path="/events" element={<Events />} />
               <Route path="/events/:eventId" element={<EventDetails />} />
               <Route path="/plan-event" element={<PlanEvent />} />
+              <Route path="/perform" element={<Perform />} />
               <Route path="/thank-you" element={<ThankYou />} />
               <Route path="/admin" element={<Admin />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

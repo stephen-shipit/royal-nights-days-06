@@ -7,6 +7,7 @@ import AtmosphereSection from "@/components/AtmosphereSection";
 import HoursSection from "@/components/HoursSection";
 import EventsSection from "@/components/EventsSection";
 import Footer from "@/components/Footer";
+import PrivatePartyModal from "@/components/PrivatePartyModal";
 
 const Index = () => {
   return (
@@ -22,6 +23,7 @@ const Index = () => {
         <Footer />
       </div>
       <MobileBottomNav />
+      <PrivatePartyModal />
     </div>
   );
 };

@@ -4,7 +4,11 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
-const PrivatePartyModal = () => {
+interface PrivatePartyModalProps {
+  onOpenReservationModal?: () => void;
+}
+
+const PrivatePartyModal = ({ onOpenReservationModal }: PrivatePartyModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -19,6 +23,12 @@ const PrivatePartyModal = () => {
   const handleBookNow = () => {
     navigate("/plan-event");
     setIsOpen(false);
+  };
+
+  const handleReserveTable = () => {
+    setIsOpen(false);
+    // Open the reservation modal via the callback
+    onOpenReservationModal?.();
   };
 
   return (
@@ -69,12 +79,22 @@ const PrivatePartyModal = () => {
                 </div>
               </div>
 
-              <Button
-                onClick={handleBookNow}
-                className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
-              >
-                Plan Your Event
-              </Button>
+              <div className="flex flex-col gap-3">
+                <Button
+                  onClick={handleBookNow}
+                  className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                  Plan Your Event
+                </Button>
+                
+                <Button
+                  onClick={handleReserveTable}
+                  variant="outline"
+                  className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold py-3 rounded-lg transition-all duration-300"
+                >
+                  Reserve a Table
+                </Button>
+              </div>
             </div>
           </div>
         </div>

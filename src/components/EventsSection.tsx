@@ -16,6 +16,7 @@ type Event = {
   description: string;
   category: string;
   price: string;
+  image_url?: string;
 };
 
 const EventsSection = () => {
@@ -48,49 +49,49 @@ const EventsSection = () => {
 
   const today = new Date().toISOString().split('T')[0];
   const todaysEvents = events.filter(event => event.date === today);
-  const upcomingEvents = events.filter(event => event.date > today);
+  const upcomingEvents = events.filter(event => event.date > today).slice(0, 3);
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
-        {/* Today's Events */}
-        <div className="mb-16">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-foreground mb-4">Today's Events</h2>
-            <p className="text-lg text-muted-foreground">Live entertainment happening tonight</p>
-          </div>
-          
-          {loading ? (
-            <div className="text-center py-12">Loading events...</div>
-          ) : todaysEvents.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">No events scheduled for today</div>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
-              {todaysEvents.map((event) => (
-                <Card key={event.id} className="border-secondary/20 hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 bg-secondary/20 rounded-full flex items-center justify-center">
-                        <Music className="w-5 h-5 text-secondary" />
-                      </div>
-                      <Badge variant="secondary">{event.category}</Badge>
-                    </div>
-                    <CardTitle className="text-xl">{event.title}</CardTitle>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="w-4 h-4" />
-                      <span>{event.time}</span>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground mb-4">{event.description}</p>
-                    <Button variant="royal" size="sm" asChild>
-                      <Link to="/events">View Details</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+        {/* Today's Events - Only show if there are events today */}
+        {todaysEvents.length > 0 && (
+          <div className="mb-16">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-foreground mb-4">Today's Events</h2>
+              <p className="text-lg text-muted-foreground">Live entertainment happening tonight</p>
             </div>
-          )}
-        </div>
+            
+            {loading ? (
+              <div className="text-center py-12">Loading events...</div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-6 mb-8">
+                {todaysEvents.map((event) => (
+                  <Card key={event.id} className="border-secondary/20 hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 bg-secondary/20 rounded-full flex items-center justify-center">
+                          <Music className="w-5 h-5 text-secondary" />
+                        </div>
+                        <Badge variant="secondary">{event.category}</Badge>
+                      </div>
+                      <CardTitle className="text-xl">{event.title}</CardTitle>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="w-4 h-4" />
+                        <span>{event.time}</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground mb-4">{event.description}</p>
+                      <Button variant="royal" size="sm" asChild>
+                        <Link to="/events">View Details</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Upcoming Events */}
         <div>
@@ -106,7 +107,16 @@ const EventsSection = () => {
           ) : (
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               {upcomingEvents.map((event) => (
-                <Card key={event.id} className="border-secondary/20 hover:shadow-lg transition-shadow">
+                <Card key={event.id} className="border-secondary/20 hover:shadow-lg transition-shadow overflow-hidden">
+                  {event.image_url && (
+                    <div className="aspect-video overflow-hidden">
+                      <img 
+                        src={event.image_url} 
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                   <CardHeader>
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center">

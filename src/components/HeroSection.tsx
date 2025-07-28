@@ -36,7 +36,7 @@ const HeroSection = () => {
         </p>
         
         <p className="text-lg md:text-xl mb-12 text-primary-foreground/90 max-w-2xl mx-auto leading-relaxed">
-          A fusion of Mediterranean & American flavors in an atmosphere of refined elegance
+          A fusion of Mediterranean & American flavors in an atmosphere of refined elegance, where culinary artistry meets world-class entertainment
         </p>
 
         {/* Dual CTA Buttons */}

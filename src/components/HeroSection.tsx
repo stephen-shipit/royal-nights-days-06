@@ -21,8 +21,8 @@ const HeroSection = () => {
       <div className="relative z-10 text-center text-primary-foreground px-6 max-w-4xl mx-auto">
         {/* Crown Icon */}
         <div className="mb-8">
-          <div className="w-20 h-20 mx-auto bg-gradient-to-r from-secondary to-accent rounded-full flex items-center justify-center">
-            <span className="text-3xl font-bold text-primary">♔</span>
+          <div className="w-20 h-20 mx-auto flex items-center justify-center">
+            <img src="/lovable-uploads/255affc5-b5da-4eee-b14f-11277dbba0d6.png" alt="Royal Palace Logo" className="w-20 h-20 object-contain" />
           </div>
         </div>
 

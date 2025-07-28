@@ -32,12 +32,12 @@ const PrivatePartyModal = () => {
             <X className="h-4 w-4" />
           </button>
           
-          <div className="grid md:grid-cols-2">
+          <div className="grid md:grid-cols-2 min-h-[500px]">
             {/* Image Half */}
-            <div className="relative h-64 md:h-96">
+            <div className="relative h-80 md:h-auto">
               <img
-                src="/lovable-uploads/b1de9097-e588-47f5-b0ac-d02227d99623.png"
-                alt="Private party venue"
+                src="/lovable-uploads/c6341962-1434-4b49-9e1b-0c9059e9748f.png"
+                alt="Private party celebration"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />

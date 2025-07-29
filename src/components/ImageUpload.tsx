@@ -65,8 +65,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   };
 
   return (
-    <div className={`space-y-2 ${className}`}>
-      {value ? (
+    <div className={`space-y-3 ${className}`}>
+      {value && (
         <div className="relative">
           <img
             src={value}
@@ -79,41 +79,47 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             size="sm"
             className="absolute top-2 right-2"
             onClick={removeImage}
+            title="Delete current image"
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
-      ) : (
-        <div
-          {...getRootProps()}
-          className={`
-            border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-            ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}
-            ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
-          `}
-        >
-          <input {...getInputProps()} />
-          <div className="flex flex-col items-center gap-2">
+      )}
+      
+      <div
+        {...getRootProps()}
+        className={`
+          border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors
+          ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}
+          ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
+          ${value ? 'border-gray-300 bg-gray-50' : ''}
+        `}
+      >
+        <input {...getInputProps()} />
+        <div className="flex flex-col items-center gap-2">
+          {uploading ? (
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          ) : (
+            <Upload className="h-6 w-6 text-muted-foreground" />
+          )}
+          <div className="text-sm text-muted-foreground">
             {uploading ? (
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              'Uploading...'
+            ) : isDragActive ? (
+              'Drop the new image here'
+            ) : value ? (
+              'Click to replace image or drag & drop here'
             ) : (
-              <Upload className="h-8 w-8 text-muted-foreground" />
+              'Drag & drop an image here, or click to select'
             )}
-            <div className="text-sm text-muted-foreground">
-              {uploading ? (
-                'Uploading...'
-              ) : isDragActive ? (
-                'Drop the image here'
-              ) : (
-                'Drag & drop an image here, or click to select'
-              )}
-            </div>
+          </div>
+          {!uploading && (
             <div className="text-xs text-muted-foreground">
               Supports JPEG, PNG, WebP
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

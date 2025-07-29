@@ -1,7 +1,13 @@
 import { Button } from "@/components/ui/button";
-import loungeImage from "@/assets/lounge-atmosphere.jpg";
+import { useNavigate } from "react-router-dom";
 
 const AtmosphereSection = () => {
+  const navigate = useNavigate();
+
+  const handleExploreVenue = () => {
+    navigate('/gallery?tab=venue');
+  };
+
   return (
     <section className="py-24 bg-primary text-primary-foreground">
       <div className="container mx-auto px-6">
@@ -23,10 +29,10 @@ const AtmosphereSection = () => {
           {/* Text Content */}
           <div className="space-y-8 order-1 md:order-2">
             <div>
-              <h2 className="text-5xl md:text-6xl font-bold mb-6 font-['Playfair_Display']">
+              <h2 className="text-5xl md:text-6xl font-bold mb-6">
                 INDULGE IN THE
               </h2>
-              <h3 className="text-3xl md:text-4xl luxury-text font-bold mb-8 font-['Playfair_Display']">
+              <h3 className="text-3xl md:text-4xl luxury-text font-bold mb-8">
                 REFINED ATMOSPHERE
               </h3>
             </div>
@@ -49,7 +55,7 @@ const AtmosphereSection = () => {
             </div>
 
             <div className="space-y-4">
-              <Button variant="luxury" size="lg">
+              <Button variant="luxury" size="lg" onClick={handleExploreVenue}>
                 Explore Our Venue
               </Button>
               <p className="text-sm text-secondary">

@@ -8,10 +8,10 @@ const AboutSection = () => {
           {/* Text Content */}
           <div className="space-y-8">
             <div>
-              <h2 className="text-5xl md:text-6xl font-bold text-primary mb-6 font-['Playfair_Display']">
+              <h2 className="text-5xl md:text-6xl font-bold text-primary mb-6">
                 A FUSION OF
               </h2>
-              <h3 className="text-3xl md:text-4xl luxury-text font-bold mb-8 font-['Playfair_Display']">
+              <h3 className="text-3xl md:text-4xl luxury-text font-bold mb-8">
                 MEDITERRANEAN & AMERICAN FLAVORS
               </h3>
             </div>
@@ -49,20 +49,24 @@ const AboutSection = () => {
             </div>
           </div>
 
-          {/* Image */}
+          {/* Video Background */}
           <div className="relative">
-            <div className="elegant-shadow rounded-2xl overflow-hidden transform hover:scale-105 transition-transform duration-500">
+            <div className="elegant-shadow rounded-2xl overflow-hidden transform hover:scale-105 transition-transform duration-500 relative h-[600px]">
               <video
                 autoPlay
                 muted
                 loop
-                className="w-full h-[600px] object-cover"
+                playsInline
+                preload="auto"
+                className="absolute inset-0 w-full h-full object-cover"
               >
                 <source 
                   src="https://twbqokjjdopxcgiiuluz.supabase.co/storage/v1/object/sign/assets/vidu-general-4-2025-01-26T18_35_35Z.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zNmI0N2YzZS1iMTY1LTQwNTYtOGI4NS01ZDBjZWQwZWIwNDIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvdmlkdS1nZW5lcmFsLTQtMjAyNS0wMS0yNlQxOF8zNV8zNVoubXA0IiwiaWF0IjoxNzUzNzExMjU4LCJleHAiOjIwNjkwNzEyNTh9.yKDHR-SzkSVkCxhmZIk0GfjLvLZDbAjjKhskQBIFpu0" 
                   type="video/mp4" 
                 />
               </video>
+              {/* Optional overlay for better text readability if needed */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
             </div>
             <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-gradient-to-r from-secondary to-accent rounded-full flex items-center justify-center gold-glow">
               <span className="text-primary text-2xl">★</span>

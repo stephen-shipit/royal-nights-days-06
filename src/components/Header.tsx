@@ -40,8 +40,10 @@ const Header = () => {
 
           {/* CTA Buttons */}
           <div className="flex items-center space-x-4">
-            <Button variant="ghostGold" size="sm">
-              Call Us
+            <Button variant="ghostGold" size="sm" asChild>
+              <a href="tel:+12145565711">
+                Call Us (214) 556-5711
+              </a>
             </Button>
             <Button variant="luxury" size="sm" asChild>
               <Link to="/reservations">Reserve Table</Link>

@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 
 type FeaturedEvent = {
@@ -16,6 +17,7 @@ type FeaturedEvent = {
   price: string;
   category: string;
   featured: boolean;
+  tickets_url?: string;
 };
 
 const FeaturedEventsCarousel = () => {
@@ -23,6 +25,7 @@ const FeaturedEventsCarousel = () => {
   const [featuredEvents, setFeaturedEvents] = useState<FeaturedEvent[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showFlyerModal, setShowFlyerModal] = useState(false);
 
   useEffect(() => {
     fetchFeaturedEvents();
@@ -70,8 +73,8 @@ const FeaturedEventsCarousel = () => {
   const currentEvent = featuredEvents[currentSlide];
 
   return (
-    <div className="relative mb-16 overflow-hidden rounded-2xl">
-      <Card className="border-0 overflow-hidden">
+    <div className="relative mb-8 md:mb-16 overflow-hidden md:rounded-2xl">
+      <Card className="border-0 overflow-hidden rounded-none md:rounded-2xl">
         <div className="relative h-[500px] md:h-[600px]">
           {/* Background Image - Blurred */}
           <div
@@ -87,38 +90,60 @@ const FeaturedEventsCarousel = () => {
           </div>
 
           {/* Content */}
-          <CardContent className="relative h-full flex items-center justify-between p-8 md:p-16">
+          <CardContent className="relative h-full flex items-center justify-between p-6 pb-16 md:p-16">
             {/* Left Content */}
             <div className="flex-1 max-w-2xl text-white animate-fade-in pr-8">
               <Badge variant="secondary" className="mb-4 bg-secondary/20 text-white border-secondary/30">
                 Featured Event
               </Badge>
               
-              <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
-                {currentEvent.title}
-              </h1>
+              {/* Mobile: Thumbnail + Title on same line */}
+              <div className="flex items-center gap-3 mb-3 md:mb-4 md:block">
+                <button
+                  onClick={() => setShowFlyerModal(true)}
+                  className="w-16 h-16 flex-shrink-0 md:hidden rounded-lg overflow-hidden hover:opacity-80 transition-opacity"
+                >
+                  <img
+                    src={currentEvent.image_url || '/api/placeholder/80/80'}
+                    alt={currentEvent.title}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+                <h1 className="text-2xl md:text-6xl font-bold leading-tight line-clamp-2 md:line-clamp-none">
+                  {currentEvent.title}
+                </h1>
+              </div>
               
-              <div className="flex items-center gap-2 mb-6 text-lg">
-                <Calendar className="w-5 h-5" />
-                <span>
+              <div className="flex items-center gap-2 mb-4 md:mb-6 text-base md:text-lg">
+                <Calendar className="w-4 md:w-5 h-4 md:h-5 flex-shrink-0" />
+                <span className="line-clamp-1 md:line-clamp-none">
                   {new Date(currentEvent.date).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
+                    weekday: 'short',
+                    month: 'short',
                     day: 'numeric'
                   })} at {currentEvent.time}
                 </span>
               </div>
               
-              <p className="text-xl mb-8 text-white/90 leading-relaxed">
+              <p className="text-base md:text-xl mb-6 md:mb-8 text-white/90 leading-relaxed line-clamp-2 md:line-clamp-none">
                 {currentEvent.description}
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-row gap-1 sm:gap-2">
+                {currentEvent.tickets_url && (
+                  <Button 
+                    size="lg" 
+                    variant="royal"
+                    className="text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-3 hover-scale flex-1"
+                    onClick={() => window.open(currentEvent.tickets_url, '_blank')}
+                  >
+                    Buy Tickets
+                  </Button>
+                )}
                 <Button 
                   size="lg" 
                   variant="royal"
-                  className="text-lg px-8 py-3 hover-scale"
+                  className="text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-3 hover-scale flex-1"
                   onClick={() => navigate(`/events/${currentEvent.id}`)}
                 >
                   Reserve Table
@@ -126,10 +151,10 @@ const FeaturedEventsCarousel = () => {
                 <Button 
                   size="lg" 
                   variant="outline"
-                  className="text-lg px-8 py-3 bg-white/10 border-white/30 text-white hover:bg-white/20"
+                  className="text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-3 bg-white/10 border-white/30 text-white hover:bg-white/20 flex-1"
                   onClick={() => navigate('/events')}
                 >
-                  View All Events
+                  View All
                 </Button>
               </div>
             </div>
@@ -184,6 +209,25 @@ const FeaturedEventsCarousel = () => {
           )}
         </div>
       </Card>
+      
+      {/* Flyer Modal */}
+      <Dialog open={showFlyerModal} onOpenChange={setShowFlyerModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-black/95">
+          <button
+            onClick={() => setShowFlyerModal(false)}
+            className="absolute right-4 top-4 z-10 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+          <div className="relative w-full h-full flex items-center justify-center p-4">
+            <img
+              src={currentEvent.image_url || '/api/placeholder/800/1200'}
+              alt={currentEvent.title}
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

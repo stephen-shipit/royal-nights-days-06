@@ -5,12 +5,16 @@ const Footer = () => {
   return (
     <footer className="bg-primary text-primary-foreground py-16">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
+        <div className="grid md:grid-cols-5 gap-8 mb-8">
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="mb-6">
-              <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4">
-                <span className="text-2xl font-bold text-primary">♔</span>
+              <div className="w-16 h-16 flex items-center justify-center mb-4">
+                <img 
+                  src="/lovable-uploads/b1de9097-e588-47f5-b0ac-d02227d99623.png" 
+                  alt="Royal Palace Logo" 
+                  className="w-16 h-16 object-contain" 
+                />
               </div>
               <h3 className="text-2xl font-bold">ROYAL PALACE</h3>
               <p className="text-secondary">Restaurant & Lounge</p>
@@ -65,7 +69,12 @@ const Footer = () => {
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-secondary flex-shrink-0" />
-                <span className="text-primary-foreground/80">(214) 556-5711</span>
+                <a 
+                  href="tel:+12145565711" 
+                  className="text-primary-foreground/80 hover:text-secondary transition-colors"
+                >
+                  (214) 556-5711
+                </a>
               </div>
             </div>
           </div>
@@ -89,6 +98,28 @@ const Footer = () => {
                 <p className="text-primary-foreground/80">Wed - Sun: 9:00 PM - 5:00 AM</p>
               </div>
             </div>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h4 className="font-semibold text-lg mb-4">Legal</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/privacy-policy" className="text-primary-foreground/80 hover:text-secondary transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms-of-service" className="text-primary-foreground/80 hover:text-secondary transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link to="/cookie-policy" className="text-primary-foreground/80 hover:text-secondary transition-colors">
+                  Cookie Policy
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
 

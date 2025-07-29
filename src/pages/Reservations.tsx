@@ -131,13 +131,14 @@ const Reservations = () => {
       
       {/* Service Selection Modal */}
       <Dialog open={showSelectionModal} onOpenChange={setShowSelectionModal}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl text-center mb-6">
-              What type of reservation would you like to make?
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <DialogContent className="max-w-2xl h-screen md:h-auto w-screen md:w-auto max-h-screen md:max-h-[90vh] rounded-none md:rounded-lg p-0 md:p-6 top-0 md:top-[50%] translate-y-0 md:translate-y-[-50%]">
+          <div className="h-full flex flex-col">
+            <DialogHeader className="p-6 md:p-0">
+              <DialogTitle className="text-xl md:text-2xl text-center mb-6">
+                What type of reservation would you like to make?
+              </DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 px-6 pb-6 md:px-0 md:pb-0 flex-1 overflow-y-auto">
             <Card 
               className="cursor-pointer hover:border-primary transition-colors duration-200"
               onClick={() => handleServiceSelection("dining")}
@@ -176,6 +177,7 @@ const Reservations = () => {
                 </p>
               </CardContent>
             </Card>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

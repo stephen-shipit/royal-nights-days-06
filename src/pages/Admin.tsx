@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
+import { BulkImageUpload } from "@/components/BulkImageUpload";
 import AdminHeader from "@/components/AdminHeader";
 import AdminFooter from "@/components/AdminFooter";
 
@@ -145,7 +146,14 @@ const Admin = () => {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{events?.filter(e => new Date(e.date) >= new Date()).length || 0}</div>
+                    <div className="text-2xl font-bold">{events?.filter(e => {
+                      try {
+                        const eventDate = new Date(e.date);
+                        return !isNaN(eventDate.getTime()) && eventDate >= new Date();
+                      } catch {
+                        return false;
+                      }
+                    }).length || 0}</div>
                   </CardContent>
                 </Card>
                 
@@ -240,8 +248,9 @@ const MenuManagement = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [imageUrl, setImageUrl] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
-  const { data: menuItems, isLoading } = useQuery({
+  const { data: menuItems, isLoading, refetch } = useQuery({
     queryKey: ["menu-items"],
     queryFn: async () => {
       const { data, error } = await supabase.from("menu_items").select("*");
@@ -256,8 +265,12 @@ const MenuManagement = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["menu-items"] });
+    onSuccess: async (data) => {
+      // Update the cache with the new item
+      queryClient.setQueryData(["menu-items"], (old: any[]) => {
+        if (!old) return data;
+        return [...old, ...data];
+      });
       toast({ title: "Menu item added successfully!" });
       setIsEditing(false);
       setEditingItem(null);
@@ -265,6 +278,9 @@ const MenuManagement = () => {
     },
     onError: (error) => {
       toast({ title: "Error adding menu item", description: error.message, variant: "destructive" });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["menu-items"] });
     },
   });
 
@@ -274,15 +290,40 @@ const MenuManagement = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["menu-items"] });
+    onMutate: async ({ id, updates }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["menu-items"] });
+      
+      // Snapshot the previous value
+      const previousMenuItems = queryClient.getQueryData(["menu-items"]);
+      
+      // Optimistically update to the new value
+      queryClient.setQueryData(["menu-items"], (old: any[]) => {
+        if (!old) return old;
+        return old.map(item => 
+          item.id === id ? { ...item, ...updates } : item
+        );
+      });
+      
+      // Return a context object with the snapshotted value
+      return { previousMenuItems };
+    },
+    onSuccess: async () => {
       toast({ title: "Menu item updated successfully!" });
       setIsEditing(false);
       setEditingItem(null);
       setImageUrl('');
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousMenuItems) {
+        queryClient.setQueryData(["menu-items"], context.previousMenuItems);
+      }
       toast({ title: "Error updating menu item", description: error.message, variant: "destructive" });
+    },
+    onSettled: () => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: ["menu-items"] });
     },
   });
 
@@ -291,12 +332,33 @@ const MenuManagement = () => {
       const { error } = await supabase.from("menu_items").delete().eq("id", id);
       if (error) throw error;
     },
+    onMutate: async (id) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["menu-items"] });
+      
+      // Snapshot the previous value
+      const previousMenuItems = queryClient.getQueryData(["menu-items"]);
+      
+      // Optimistically remove the item
+      queryClient.setQueryData(["menu-items"], (old: any[]) => {
+        if (!old) return old;
+        return old.filter(item => item.id !== id);
+      });
+      
+      return { previousMenuItems };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["menu-items"] });
       toast({ title: "Menu item deleted successfully!" });
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousMenuItems) {
+        queryClient.setQueryData(["menu-items"], context.previousMenuItems);
+      }
       toast({ title: "Error deleting menu item", description: error.message, variant: "destructive" });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["menu-items"] });
     },
   });
 
@@ -325,6 +387,14 @@ const MenuManagement = () => {
     setIsEditing(true);
     // Set the image URL to the existing item's image URL or empty string
     setImageUrl(item?.image_url || '');
+    
+    // Scroll to the top of the form
+    setTimeout(() => {
+      const formElement = document.querySelector('[data-menu-form]');
+      if (formElement) {
+        formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   const handleDelete = (id: string) => {
@@ -346,7 +416,7 @@ const MenuManagement = () => {
       </div>
 
       {isEditing && (
-        <Card>
+        <Card data-menu-form>
           <CardHeader>
             <CardTitle>{editingItem ? "Edit Menu Item" : "Add New Menu Item"}</CardTitle>
           </CardHeader>
@@ -370,8 +440,10 @@ const MenuManagement = () => {
                     <SelectContent>
                       <SelectItem value="appetizers">Appetizers</SelectItem>
                       <SelectItem value="mains">Main Courses</SelectItem>
+                      <SelectItem value="salads">Salads</SelectItem>
                       <SelectItem value="desserts">Desserts</SelectItem>
                       <SelectItem value="beverages">Beverages</SelectItem>
+                      <SelectItem value="alacarte-sides">A La Carte Sides</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -412,21 +484,47 @@ const MenuManagement = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Menu Items</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Menu Items</CardTitle>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="category-filter" className="text-sm">Filter by Category:</Label>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger id="category-filter" className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="appetizers">Appetizers</SelectItem>
+                  <SelectItem value="mains">Mains</SelectItem>
+                  <SelectItem value="salads">Salads</SelectItem>
+                  <SelectItem value="desserts">Desserts</SelectItem>
+                  <SelectItem value="beverages">Beverages</SelectItem>
+                  <SelectItem value="alacarte-sides">A La Carte Sides</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {menuItems?.map((item) => (
+          {(() => {
+            const filteredItems = menuItems?.filter(item => categoryFilter === 'all' || item.category === categoryFilter) || [];
+            return (
+              <>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Showing {filteredItems.length} of {menuItems?.length || 0} menu items
+                </p>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredItems.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell>{item.category}</TableCell>
@@ -442,10 +540,13 @@ const MenuManagement = () => {
                       </Button>
                     </div>
                   </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </>
+            );
+          })()}
         </CardContent>
       </Card>
     </div>
@@ -675,7 +776,14 @@ const ReservationManagement = () => {
                       <TableCell className="capitalize">{reservation.reservation_type}</TableCell>
                       <TableCell>{reservation.time_slot}</TableCell>
                       <TableCell>
-                        {new Date(reservation.created_at).toLocaleDateString()}
+                        {(() => {
+                          try {
+                            const date = new Date(reservation.created_at);
+                            return !isNaN(date.getTime()) ? date.toLocaleDateString() : 'Invalid Date';
+                          } catch {
+                            return 'Invalid Date';
+                          }
+                        })()}
                       </TableCell>
                       <TableCell>
                         <Select
@@ -763,6 +871,7 @@ const EventManagement = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [eventImageUrl, setEventImageUrl] = useState('');
+  const [isRecurringChecked, setIsRecurringChecked] = useState(false);
 
   const { data: events, isLoading } = useQuery({
     queryKey: ["events"],
@@ -785,6 +894,7 @@ const EventManagement = () => {
       setIsEditing(false);
       setEditingEvent(null);
       setEventImageUrl('');
+      setIsRecurringChecked(false);
     },
     onError: (error) => {
       toast({ title: "Error adding event", description: error.message, variant: "destructive" });
@@ -803,6 +913,7 @@ const EventManagement = () => {
       setIsEditing(false);
       setEditingEvent(null);
       setEventImageUrl('');
+      setIsRecurringChecked(false);
     },
     onError: (error) => {
       toast({ title: "Error updating event", description: error.message, variant: "destructive" });
@@ -826,6 +937,10 @@ const EventManagement = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    const isRecurring = formData.get("is_recurring") === "on";
+    const recurrenceEndDate = formData.get("recurrence_end_date") as string;
+    const recurrencePattern = formData.get("recurrence_pattern") as string;
+    
     const eventData = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
@@ -836,7 +951,11 @@ const EventManagement = () => {
       price_range: formData.get("price_range") as string,
       host: formData.get("host") as string,
       dj: formData.get("dj") as string,
+      tickets_url: formData.get("tickets_url") as string,
       image_url: eventImageUrl,
+      is_recurring: isRecurring,
+      recurrence_pattern: isRecurring && recurrencePattern ? recurrencePattern : null,
+      recurrence_end_date: isRecurring && recurrenceEndDate ? recurrenceEndDate : null,
     };
     
     if (editingEvent) {
@@ -851,6 +970,20 @@ const EventManagement = () => {
     setIsEditing(true);
     // Set the image URL to the existing event's image URL or empty string
     setEventImageUrl(event?.image_url || '');
+    // Set the recurring checkbox state
+    setIsRecurringChecked(event?.is_recurring || false);
+    
+    // Scroll to the form at the top
+    setTimeout(() => {
+      const formElement = document.querySelector('[data-event-form]');
+      if (formElement) {
+        formElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      }
+    }, 100);
   };
 
   const handleDelete = (id: string) => {
@@ -865,19 +998,19 @@ const EventManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Event Management</h2>
-        <Button onClick={() => { setIsEditing(true); setEditingEvent(null); setEventImageUrl(''); }} className="flex items-center gap-2">
+        <Button onClick={() => { setIsEditing(true); setEditingEvent(null); setEventImageUrl(''); setIsRecurringChecked(false); }} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Add Event
         </Button>
       </div>
 
       {isEditing && (
-        <Card>
+        <Card data-event-form>
           <CardHeader>
             <CardTitle>{editingEvent ? "Edit Event" : "Add New Event"}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" key={editingEvent?.id || 'new-event'}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="title">Title</Label>
@@ -922,6 +1055,44 @@ const EventManagement = () => {
                   <Input id="dj" name="dj" defaultValue={editingEvent?.dj || ""} />
                 </div>
                 <div className="md:col-span-2">
+                  <Label htmlFor="tickets_url">Tickets URL</Label>
+                  <Input id="tickets_url" name="tickets_url" type="url" placeholder="https://example.com/tickets" defaultValue={editingEvent?.tickets_url || ""} />
+                </div>
+                <div className="md:col-span-2">
+                  <Label htmlFor="is_recurring" className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      id="is_recurring" 
+                      name="is_recurring" 
+                      checked={isRecurringChecked}
+                      onChange={(e) => setIsRecurringChecked(e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                    Make this a recurring event
+                  </Label>
+                </div>
+                {isRecurringChecked && (
+                  <>
+                    <div>
+                      <Label htmlFor="recurrence_pattern">Recurrence Pattern</Label>
+                      <Select name="recurrence_pattern" defaultValue={editingEvent?.recurrence_pattern || "weekly"}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select pattern" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="recurrence_end_date">Recurrence End Date (Optional)</Label>
+                      <Input id="recurrence_end_date" name="recurrence_end_date" type="date" defaultValue={editingEvent?.recurrence_end_date || ""} />
+                    </div>
+                  </>
+                )}
+                <div className="md:col-span-2">
                   <Label htmlFor="image_url">Image</Label>
                   <ImageUpload 
                     value={eventImageUrl}
@@ -939,6 +1110,7 @@ const EventManagement = () => {
                   setIsEditing(false); 
                   setEditingEvent(null); 
                   setEventImageUrl('');
+                  setIsRecurringChecked(false);
                 }}>
                   Cancel
                 </Button>
@@ -968,7 +1140,14 @@ const EventManagement = () => {
               {events?.map((event) => (
                 <TableRow key={event.id}>
                   <TableCell className="font-medium">{event.title}</TableCell>
-                  <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
+                  <TableCell>{(() => {
+                    try {
+                      const date = new Date(event.date);
+                      return !isNaN(date.getTime()) ? date.toLocaleDateString() : 'Invalid Date';
+                    } catch {
+                      return 'Invalid Date';
+                    }
+                  })()}</TableCell>
                   <TableCell>{event.time}</TableCell>
                   <TableCell>{event.category}</TableCell>
                   <TableCell>{event.price}</TableCell>
@@ -999,6 +1178,9 @@ const GalleryManagement = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [galleryImageUrl, setGalleryImageUrl] = useState('');
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterGalleryType, setFilterGalleryType] = useState<string>('all');
 
   const { data: galleryItems, isLoading } = useQuery({
     queryKey: ["gallery-items"],
@@ -1078,6 +1260,18 @@ const GalleryManagement = () => {
     setEditingItem(item);
     setGalleryImageUrl(item?.src || '');
     setIsEditing(true);
+    
+    // Scroll to the form at the top
+    setTimeout(() => {
+      const formElement = document.querySelector('[data-gallery-form]');
+      if (formElement) {
+        formElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      }
+    }, 100);
   };
 
   const handleDelete = (id: string) => {
@@ -1086,25 +1280,99 @@ const GalleryManagement = () => {
     }
   };
 
+  // Filter gallery items based on selected filters
+  const filteredGalleryItems = galleryItems?.filter(item => {
+    const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
+    const matchesGalleryType = filterGalleryType === 'all' || item.gallery_type === filterGalleryType;
+    return matchesCategory && matchesGalleryType;
+  }) || [];
+
+  const clearFilters = () => {
+    setFilterCategory('all');
+    setFilterGalleryType('all');
+  };
+
   if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gallery Management</h2>
-        <Button onClick={() => { setIsEditing(true); setEditingItem(null); setGalleryImageUrl(''); }} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add Image
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setShowBulkUpload(true)} 
+            variant="outline" 
+            className="flex items-center gap-2"
+          >
+            <Image className="h-4 w-4" />
+            Bulk Upload
+          </Button>
+          <Button onClick={() => { setIsEditing(true); setEditingItem(null); setGalleryImageUrl(''); }} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Image
+          </Button>
+        </div>
       </div>
 
+      {/* Filter Controls */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <Label htmlFor="filterCategory" className="text-sm font-medium">Filter by Category</Label>
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  <SelectItem value="atmosphere">Atmosphere</SelectItem>
+                  <SelectItem value="food">Food</SelectItem>
+                  <SelectItem value="events">Events</SelectItem>
+                  <SelectItem value="interior">Interior</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex-1 min-w-[200px]">
+              <Label htmlFor="filterGalleryType" className="text-sm font-medium">Filter by Gallery Type</Label>
+              <Select value={filterGalleryType} onValueChange={setFilterGalleryType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All gallery types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All gallery types</SelectItem>
+                  <SelectItem value="main">Main Gallery</SelectItem>
+                  <SelectItem value="featured">Featured</SelectItem>
+                  <SelectItem value="venue">Venue</SelectItem>
+                  <SelectItem value="food">Food</SelectItem>
+                  <SelectItem value="events">Events</SelectItem>
+                  <SelectItem value="atmosphere">Atmosphere</SelectItem>
+                  <SelectItem value="archive">Archive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-end">
+              <Button type="button" variant="outline" onClick={clearFilters}>
+                Clear Filters
+              </Button>
+            </div>
+            
+            <div className="text-sm text-muted-foreground">
+              Showing {filteredGalleryItems.length} of {galleryItems?.length || 0} items
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {isEditing && (
-        <Card>
+        <Card data-gallery-form>
           <CardHeader>
             <CardTitle>{editingItem ? "Edit Gallery Item" : "Add New Gallery Item"}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" key={editingItem?.id || 'new-gallery-item'}>
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="image">Image</Label>
@@ -1141,6 +1409,10 @@ const GalleryManagement = () => {
                       <SelectContent>
                         <SelectItem value="main">Main Gallery</SelectItem>
                         <SelectItem value="featured">Featured</SelectItem>
+                        <SelectItem value="venue">Venue</SelectItem>
+                        <SelectItem value="food">Food</SelectItem>
+                        <SelectItem value="events">Events</SelectItem>
+                        <SelectItem value="atmosphere">Atmosphere</SelectItem>
                         <SelectItem value="archive">Archive</SelectItem>
                       </SelectContent>
                     </Select>
@@ -1157,9 +1429,49 @@ const GalleryManagement = () => {
           </CardContent>
         </Card>
       )}
+
+      {showBulkUpload && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Bulk Image Upload</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <BulkImageUpload
+              onComplete={() => {
+                setShowBulkUpload(false);
+                queryClient.invalidateQueries({ queryKey: ["gallery-items"] });
+              }}
+              onCancel={() => setShowBulkUpload(false)}
+            />
+          </CardContent>
+        </Card>
+      )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {galleryItems?.map((item) => (
+      {filteredGalleryItems.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="flex flex-col items-center gap-4">
+              <Image className="h-12 w-12 text-muted-foreground" />
+              <div>
+                <h3 className="text-lg font-semibold">No images found</h3>
+                <p className="text-muted-foreground">
+                  {galleryItems?.length === 0 
+                    ? "No gallery items have been added yet." 
+                    : "No images match the current filters. Try adjusting your filters or clearing them."
+                  }
+                </p>
+              </div>
+              {(filterCategory !== 'all' || filterGalleryType !== 'all') && (
+                <Button variant="outline" onClick={clearFilters}>
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredGalleryItems.map((item) => (
           <Card key={item.id}>
             <CardContent className="p-4">
               <img 
@@ -1184,8 +1496,9 @@ const GalleryManagement = () => {
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -3,7 +3,7 @@ const HoursSection = () => {
     <section className="py-24 bg-background">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-5xl md:text-6xl font-bold text-primary mb-4 font-['Playfair_Display']">
+          <h2 className="text-5xl md:text-6xl font-bold text-primary mb-4">
             OPENING HOURS
           </h2>
           <p className="text-xl text-muted-foreground">
@@ -18,7 +18,7 @@ const HoursSection = () => {
               <div className="w-16 h-16 bg-gradient-to-r from-secondary to-accent rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🍽️</span>
               </div>
-              <h3 className="text-3xl font-bold text-primary mb-2 font-['Playfair_Display']">
+              <h3 className="text-3xl font-bold text-primary mb-2">
                 Restaurant
               </h3>
               <p className="text-muted-foreground">Fine dining experience</p>
@@ -62,7 +62,7 @@ const HoursSection = () => {
               <div className="w-16 h-16 bg-gradient-to-r from-secondary to-accent rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🍸</span>
               </div>
-              <h3 className="text-3xl font-bold mb-2 font-['Playfair_Display']">
+              <h3 className="text-3xl font-bold mb-2">
                 Nightlife
               </h3>
               <p className="text-primary-foreground/80">Lounge & entertainment</p>
@@ -108,16 +108,16 @@ const HoursSection = () => {
           </p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-8">
             <a 
-              href="tel:+1234567890" 
+              href="tel:+12145565711" 
               className="flex items-center space-x-2 text-secondary hover:text-accent transition-colors duration-300"
             >
               <span className="text-2xl">📞</span>
-              <span className="text-xl font-semibold">(123) 456-7890</span>
+              <span className="text-xl font-semibold">(214) 556-5711</span>
             </a>
             <div className="hidden md:block w-px h-8 bg-border"></div>
             <div className="flex items-center space-x-2 text-muted-foreground">
               <span className="text-2xl">📍</span>
-              <span className="text-xl">123 Luxury Avenue, City, State 12345</span>
+              <span className="text-xl">4101 Belt Line Rd, Addison, TX 75001</span>
             </div>
           </div>
         </div>

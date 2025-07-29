@@ -15,8 +15,12 @@ import PlanEvent from "./pages/PlanEvent";
 import Perform from "./pages/Perform";
 import ThankYou from "./pages/ThankYou";
 import Admin from "./pages/Admin";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import CookiePolicy from "./pages/CookiePolicy";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
+import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,6 +55,7 @@ const App = () => {
         <Sonner />
         <ErrorBoundary>
           <BrowserRouter>
+            <ScrollToTop />
             <RouteLogger />
             <Routes>
               <Route path="/" element={<Index />} />
@@ -63,6 +68,9 @@ const App = () => {
               <Route path="/perform" element={<Perform />} />
               <Route path="/thank-you" element={<ThankYou />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/cookie-policy" element={<CookiePolicy />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

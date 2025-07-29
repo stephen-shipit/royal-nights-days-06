@@ -54,6 +54,7 @@ export type Database = {
           image_url: string | null
           price: string
           price_range: string
+          tickets_url: string | null
           time: string
           title: string
           updated_at: string
@@ -70,6 +71,7 @@ export type Database = {
           image_url?: string | null
           price: string
           price_range: string
+          tickets_url?: string | null
           time: string
           title: string
           updated_at?: string
@@ -86,6 +88,7 @@ export type Database = {
           image_url?: string | null
           price?: string
           price_range?: string
+          tickets_url?: string | null
           time?: string
           title?: string
           updated_at?: string

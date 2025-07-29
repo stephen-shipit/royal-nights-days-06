@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Calendar, Clock, MapPin, Music, Search, Filter, Users, DollarSign } from "lucide-react";
+import { Calendar, Clock, MapPin, Music, Search, Filter, Users, DollarSign, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 type Event = {
@@ -24,10 +24,13 @@ type Event = {
   price: string;
   category: string;
   price_range: string;
+  tickets_url?: string;
 };
 
 const categories = ["All", "Nightlife", "Dining", "Live Music", "Comedy Show", "Spoken Word", "Special Event"];
 const priceRanges = ["All", "Free", "Under $50", "$50-$100", "Over $100"];
+
+const EVENTS_PER_PAGE = 15;
 
 const Events = () => {
   const navigate = useNavigate();
@@ -36,6 +39,7 @@ const Events = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchEvents();
@@ -62,6 +66,13 @@ const Events = () => {
 
   const today = new Date().toISOString().split('T')[0];
   
+  const resetFilters = () => {
+    setSelectedCategory("All");
+    setSelectedPriceRange("All");
+    setSearchQuery("");
+    setCurrentPage(1);
+  };
+
   const filteredEvents = events.filter(event => {
     const matchesCategory = selectedCategory === "All" || event.category === selectedCategory;
     const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -98,10 +109,13 @@ const Events = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <MobileHeader />
-      <div className="pt-20 pb-20 md:pb-0">
-        <div className="container mx-auto px-4 py-12">
-          {/* Featured Events Carousel */}
+      <div className="pt-14 md:pt-20 pb-20 md:pb-0">
+        {/* Featured Events Carousel - Full width on mobile */}
+        <div className="md:container md:mx-auto md:px-4 md:pt-12">
           <FeaturedEventsCarousel />
+        </div>
+        
+        <div className="container mx-auto px-4 py-12">
 
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -120,7 +134,10 @@ const Events = () => {
                   key={category}
                   variant={selectedCategory === category ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setSelectedCategory(category)}
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    setCurrentPage(1);
+                  }}
                   className="text-xs"
                 >
                   {category}
@@ -132,7 +149,10 @@ const Events = () => {
               <Input
                 placeholder="Search events..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="pl-10"
               />
             </div>
@@ -157,7 +177,10 @@ const Events = () => {
                       <Input
                         placeholder="Search by name or description..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          setCurrentPage(1);
+                        }}
                         className="pl-10"
                       />
                     </div>
@@ -170,8 +193,11 @@ const Events = () => {
                       {categories.map((category) => (
                         <button
                           key={category}
-                          onClick={() => setSelectedCategory(category)}
-                          className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                          onClick={() => {
+                            setSelectedCategory(selectedCategory === category ? "All" : category);
+                            setCurrentPage(1);
+                          }}
+                          className={`w-full text-left px-3 py-2 text-sm transition-colors rounded-md ${
                             selectedCategory === category
                               ? "bg-secondary text-secondary-foreground"
                               : "hover:bg-muted"
@@ -193,8 +219,11 @@ const Events = () => {
                       {priceRanges.map((range) => (
                         <button
                           key={range}
-                          onClick={() => setSelectedPriceRange(range)}
-                          className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                          onClick={() => {
+                            setSelectedPriceRange(selectedPriceRange === range ? "All" : range);
+                            setCurrentPage(1);
+                          }}
+                          className={`w-full text-left px-3 py-2 text-sm transition-colors rounded-md ${
                             selectedPriceRange === range
                               ? "bg-secondary text-secondary-foreground"
                               : "hover:bg-muted"
@@ -213,6 +242,17 @@ const Events = () => {
                       {filteredEvents.length} events found
                     </p>
                   </div>
+
+                  {/* Reset Filters Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={resetFilters}
+                    className="w-full"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Reset Filters
+                  </Button>
                 </CardContent>
               </Card>
             </div>
@@ -222,8 +262,11 @@ const Events = () => {
               {loading ? (
                 <div className="text-center py-12">Loading events...</div>
               ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6 mb-12">
-                  {filteredEvents.map((event) => (
+                <>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6 mb-12">
+                    {filteredEvents
+                      .slice((currentPage - 1) * EVENTS_PER_PAGE, currentPage * EVENTS_PER_PAGE)
+                      .map((event) => (
                   <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                     <div className="aspect-video">
                       <img
@@ -268,17 +311,68 @@ const Events = () => {
                     </CardHeader>
                     <CardContent>
                       <p className="text-muted-foreground mb-4">{event.description}</p>
-                      <Button 
-                        className="w-full" 
-                        variant="luxury"
-                        onClick={() => navigate(`/events/${event.id}`)}
-                      >
-                        Reserve for This Event
-                      </Button>
+                      <div className="flex flex-col gap-2">
+                        {event.tickets_url && (
+                          <Button 
+                            className="w-full" 
+                            variant="royal"
+                            onClick={() => window.open(event.tickets_url, '_blank')}
+                          >
+                            Buy Tickets
+                          </Button>
+                        )}
+                        <Button 
+                          className="w-full" 
+                          variant="luxury"
+                          onClick={() => navigate(`/events/${event.id}`)}
+                        >
+                          Reserve for This Event
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                   ))}
-                </div>
+                  </div>
+
+                  {/* Pagination */}
+                  {filteredEvents.length > EVENTS_PER_PAGE && (
+                    <div className="flex justify-center items-center gap-4 mb-12">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="w-4 h-4 mr-1" />
+                        Previous
+                      </Button>
+                      
+                      <div className="flex items-center gap-2">
+                        {Array.from({ length: Math.ceil(filteredEvents.length / EVENTS_PER_PAGE) }, (_, i) => i + 1).map((page) => (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className="w-10"
+                          >
+                            {page}
+                          </Button>
+                        ))}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(Math.min(Math.ceil(filteredEvents.length / EVENTS_PER_PAGE), currentPage + 1))}
+                        disabled={currentPage === Math.ceil(filteredEvents.length / EVENTS_PER_PAGE)}
+                      >
+                        Next
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Group Booking Section */}

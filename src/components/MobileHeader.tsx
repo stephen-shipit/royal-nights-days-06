@@ -60,15 +60,19 @@ const MobileHeader = () => {
 
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-secondary to-accent rounded-full flex items-center justify-center">
-            <span className="text-primary font-bold text-sm">R</span>
-          </div>
+          <img 
+            src="/lovable-uploads/b1de9097-e588-47f5-b0ac-d02227d99623.png" 
+            alt="Royal Palace Logo" 
+            className="w-8 h-8 object-contain" 
+          />
           <span className="text-primary-foreground font-bold text-lg">ROYAL PALACE</span>
         </Link>
 
         {/* Call Button */}
-        <Button variant="ghost" size="sm" className="text-primary-foreground">
-          <Phone className="h-5 w-5" />
+        <Button variant="ghost" size="sm" className="text-primary-foreground" asChild>
+          <a href="tel:+12145565711">
+            <Phone className="h-5 w-5" />
+          </a>
         </Button>
       </div>
     </header>

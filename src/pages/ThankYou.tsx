@@ -91,7 +91,9 @@ const ThankYou = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4" />
-                  <span>(555) 123-4567</span>
+                  <a href="tel:+12145565711" className="hover:text-primary transition-colors">
+                    (214) 556-5711
+                  </a>
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />

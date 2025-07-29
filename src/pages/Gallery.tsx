@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import MobileHeader from "@/components/MobileHeader";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -7,9 +8,9 @@ import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
+import { EnhancedGalleryModal } from "@/components/EnhancedGalleryModal";
 
 type GalleryItem = {
   id: string;
@@ -20,11 +21,14 @@ type GalleryItem = {
 };
 
 const Gallery = () => {
-  const [activeCategory, setActiveCategory] = useState("venue");
-  const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'main';
+  const [activeCategory, setActiveCategory] = useState(initialTab);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     console.log('Gallery component mounted');
@@ -63,6 +67,11 @@ const Gallery = () => {
     acc[item.gallery_type].push(item);
     return acc;
   }, {} as Record<string, GalleryItem[]>);
+
+  const handleImageClick = (imageIndex: number) => {
+    setSelectedImageIndex(imageIndex);
+    setModalOpen(true);
+  };
 
   console.log('Gallery render - loading:', loading, 'error:', error, 'types:', Object.keys(galleryData));
 
@@ -112,7 +121,9 @@ const Gallery = () => {
             </div>
           ) : (
             <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-              <TabsList className="grid w-full grid-cols-4 mb-8">
+              <TabsList className="grid w-full grid-cols-6 mb-8">
+                <TabsTrigger value="main">Main</TabsTrigger>
+                <TabsTrigger value="featured">Featured</TabsTrigger>
                 <TabsTrigger value="venue">Venue</TabsTrigger>
                 <TabsTrigger value="food">Food</TabsTrigger>
                 <TabsTrigger value="events">Events</TabsTrigger>
@@ -122,44 +133,31 @@ const Gallery = () => {
               {Object.entries(galleryData).map(([category, images]) => (
               <TabsContent key={category} value={category}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {images.map((image) => (
-                    <Dialog key={image.id}>
-                      <DialogTrigger asChild>
-                        <Card className="overflow-hidden cursor-pointer group hover:shadow-lg transition-all">
-                          <div className="aspect-square relative">
-                            <img
-                              src={image.src}
-                              alt={image.alt}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              onError={(e) => {
-                                console.log('Image failed to load:', image.src);
-                                (e.target as HTMLImageElement).src = '/api/placeholder/400/400';
-                              }}
-                            />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors">
-                              <div className="absolute bottom-2 left-2 right-2">
-                                <Badge variant="secondary" className="text-xs">
-                                  {image.category}
-                                </Badge>
-                              </div>
-                            </div>
+                  {images.map((image, index) => (
+                    <Card 
+                      key={image.id}
+                      className="overflow-hidden cursor-pointer group hover:shadow-lg transition-all"
+                      onClick={() => handleImageClick(index)}
+                    >
+                      <div className="aspect-square relative">
+                        <img
+                          src={image.src}
+                          alt={image.alt}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            console.log('Image failed to load:', image.src);
+                            (e.target as HTMLImageElement).src = '/api/placeholder/400/400';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors">
+                          <div className="absolute bottom-2 left-2 right-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {image.category}
+                            </Badge>
                           </div>
-                        </Card>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl">
-                        <div className="aspect-video">
-                          <img
-                            src={image.src}
-                            alt={image.alt}
-                            className="w-full h-full object-contain"
-                          />
                         </div>
-                        <div className="p-4">
-                          <h3 className="text-xl font-semibold mb-2">{image.alt}</h3>
-                          <Badge variant="outline">{image.category}</Badge>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                      </div>
+                    </Card>
                   ))}
                 </div>
               </TabsContent>
@@ -170,6 +168,14 @@ const Gallery = () => {
       </div>
       <Footer />
       <MobileBottomNav />
+      
+      {/* Enhanced Gallery Modal */}
+      <EnhancedGalleryModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        images={galleryData[activeCategory] || []}
+        initialIndex={selectedImageIndex}
+      />
     </div>
   );
 };

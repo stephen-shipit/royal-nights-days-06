@@ -285,7 +285,6 @@ const MenuManagement = () => {
       return data;
     },
     onSuccess: async (data) => {
-      // Update the cache with the new item
       queryClient.setQueryData(["menu-items"], (old: any[]) => {
         if (!old) return data;
         return [...old, ...data];
@@ -310,21 +309,14 @@ const MenuManagement = () => {
       return data;
     },
     onMutate: async ({ id, updates }) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["menu-items"] });
-      
-      // Snapshot the previous value
       const previousMenuItems = queryClient.getQueryData(["menu-items"]);
-      
-      // Optimistically update to the new value
       queryClient.setQueryData(["menu-items"], (old: any[]) => {
         if (!old) return old;
         return old.map(item => 
           item.id === id ? { ...item, ...updates } : item
         );
       });
-      
-      // Return a context object with the snapshotted value
       return { previousMenuItems };
     },
     onSuccess: async () => {
@@ -334,14 +326,12 @@ const MenuManagement = () => {
       setImageUrl('');
     },
     onError: (error, variables, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousMenuItems) {
         queryClient.setQueryData(["menu-items"], context.previousMenuItems);
       }
       toast({ title: "Error updating menu item", description: error.message, variant: "destructive" });
     },
     onSettled: () => {
-      // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: ["menu-items"] });
     },
   });
@@ -352,25 +342,18 @@ const MenuManagement = () => {
       if (error) throw error;
     },
     onMutate: async (id) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["menu-items"] });
-      
-      // Snapshot the previous value
       const previousMenuItems = queryClient.getQueryData(["menu-items"]);
-      
-      // Optimistically remove the item
       queryClient.setQueryData(["menu-items"], (old: any[]) => {
         if (!old) return old;
         return old.filter(item => item.id !== id);
       });
-      
       return { previousMenuItems };
     },
     onSuccess: () => {
       toast({ title: "Menu item deleted successfully!" });
     },
     onError: (error, variables, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousMenuItems) {
         queryClient.setQueryData(["menu-items"], context.previousMenuItems);
       }
@@ -404,10 +387,8 @@ const MenuManagement = () => {
   const handleEdit = (item: any) => {
     setEditingItem(item);
     setIsEditing(true);
-    // Set the image URL to the existing item's image URL or empty string
     setImageUrl(item?.image_url || '');
     
-    // Scroll to the top of the form
     setTimeout(() => {
       const formElement = document.getElementById('menu-form');
       if (formElement) {
@@ -452,47 +433,48 @@ const MenuManagement = () => {
                 </div>
                 <div>
                   <Label htmlFor="category">Category</Label>
-                  <Select name="category" defaultValue={editingItem?.category || ""} required>
+                  <Select name="category" defaultValue={editingItem?.category || ""}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="appetizers">Appetizers</SelectItem>
-                      <SelectItem value="mains">Main Courses</SelectItem>
-                      <SelectItem value="salads">Salads</SelectItem>
-                      <SelectItem value="desserts">Desserts</SelectItem>
-                      <SelectItem value="beverages">Beverages</SelectItem>
-                      <SelectItem value="alacarte-sides">A La Carte Sides</SelectItem>
+                      <SelectItem value="appetizer">Appetizer</SelectItem>
+                      <SelectItem value="main">Main Course</SelectItem>
+                      <SelectItem value="dessert">Dessert</SelectItem>
+                      <SelectItem value="beverage">Beverage</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="image_url">Image</Label>
-                  <ImageUpload 
-                    value={imageUrl}
-                    onChange={setImageUrl}
-                  />
+                <div>
+                  <Label htmlFor="ingredients">Ingredients (comma-separated)</Label>
+                  <Input id="ingredients" name="ingredients" defaultValue={editingItem?.ingredients?.join(', ') || ""} />
                 </div>
               </div>
+              
               <div>
                 <Label htmlFor="description">Description</Label>
-                <Textarea id="description" name="description" defaultValue={editingItem?.description || ""} required />
+                <Textarea id="description" name="description" defaultValue={editingItem?.description || ""} />
               </div>
-              <div>
-                <Label htmlFor="ingredients">Ingredients (comma-separated)</Label>
-                <Input id="ingredients" name="ingredients" placeholder="ingredient1, ingredient2, ingredient3" defaultValue={editingItem?.ingredients?.join(', ') || ""} />
-              </div>
+              
               <div>
                 <Label htmlFor="dietary">Dietary Info (comma-separated)</Label>
-                <Input id="dietary" name="dietary" placeholder="vegetarian, gluten-free, etc." defaultValue={editingItem?.dietary?.join(', ') || ""} />
+                <Input id="dietary" name="dietary" defaultValue={editingItem?.dietary?.join(', ') || ""} placeholder="e.g., vegetarian, gluten-free" />
               </div>
+              
+              <div>
+                <Label>Item Image</Label>
+                <ImageUpload 
+                  initialImageUrl={imageUrl}
+                  onImageUpload={(url) => setImageUrl(url)}
+                  bucket="menu-items"
+                />
+              </div>
+              
               <div className="flex gap-2">
-                <Button type="submit">{editingItem ? "Update Item" : "Add Item"}</Button>
-                <Button type="button" variant="outline" onClick={() => { 
-                  setIsEditing(false); 
-                  setEditingItem(null); 
-                  setImageUrl('');
-                }}>
+                <Button type="submit">
+                  {editingItem ? "Update Item" : "Add Item"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => { setIsEditing(false); setEditingItem(null); setImageUrl(''); }}>
                   Cancel
                 </Button>
               </div>
@@ -501,161 +483,115 @@ const MenuManagement = () => {
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Menu Items</CardTitle>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center border rounded-lg p-1">
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="flex items-center gap-2"
-                >
-                  <List className="h-4 w-4" />
-                  List
-                </Button>
-                <Button
-                  variant={viewMode === 'card' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('card')}
-                  className="flex items-center gap-2"
-                >
-                  <Grid className="h-4 w-4" />
-                  Cards
-                </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="category-filter" className="text-sm">Filter by Category:</Label>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger id="category-filter" className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="appetizers">Appetizers</SelectItem>
-                    <SelectItem value="mains">Mains</SelectItem>
-                    <SelectItem value="salads">Salads</SelectItem>
-                    <SelectItem value="desserts">Desserts</SelectItem>
-                    <SelectItem value="beverages">Beverages</SelectItem>
-                    <SelectItem value="alacarte-sides">A La Carte Sides</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {(() => {
-            const filteredItems = menuItems?.filter(item => categoryFilter === 'all' || item.category === categoryFilter) || [];
-            return (
-              <>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Showing {filteredItems.length} of {menuItems?.length || 0} menu items
-                </p>
-                {viewMode === 'list' ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Image</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredItems.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell>
-                            <div className="w-12 h-12 rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                              {item.image_url ? (
-                                <img 
-                                  src={item.image_url} 
-                                  alt={item.name}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    const target = e.currentTarget;
-                                    const sibling = target.nextElementSibling as HTMLElement;
-                                    target.style.display = 'none';
-                                    if (sibling) sibling.style.display = 'flex';
-                                  }}
-                                />
-                              ) : null}
-                              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs" style={{ display: item.image_url ? 'none' : 'flex' }}>
-                                No Image
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium">{item.name}</TableCell>
-                          <TableCell>{item.category}</TableCell>
-                          <TableCell>{item.price}</TableCell>
-                          <TableCell className="max-w-xs truncate">{item.description}</TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button size="sm" variant="destructive" onClick={() => handleDelete(item.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredItems.map((item) => (
-                      <Card key={item.id} className="overflow-hidden">
-                        <div className="aspect-square bg-muted flex items-center justify-center">
-                          {item.image_url ? (
-                            <img 
-                              src={item.image_url} 
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                const target = e.currentTarget;
-                                const sibling = target.nextElementSibling as HTMLElement;
-                                target.style.display = 'none';
-                                if (sibling) sibling.style.display = 'flex';
-                              }}
-                            />
-                          ) : null}
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground" style={{ display: item.image_url ? 'none' : 'flex' }}>
-                            No Image
-                          </div>
-                        </div>
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold text-lg mb-2">{item.name}</h3>
-                          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{item.description}</p>
-                          <div className="flex items-center justify-between mb-3">
-                            <Badge variant="secondary">{item.category}</Badge>
-                            <span className="font-bold text-lg">{item.price}</span>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleEdit(item)} className="flex-1 flex items-center gap-1">
-                              <Edit className="h-3 w-3" />
-                              Edit
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => handleDelete(item.id)} className="flex-1 flex items-center gap-1">
-                              <Trash2 className="h-3 w-3" />
-                              Delete
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+      <div className="flex gap-4 items-center">
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="appetizer">Appetizers</SelectItem>
+            <SelectItem value="main">Main Courses</SelectItem>
+            <SelectItem value="dessert">Desserts</SelectItem>
+            <SelectItem value="beverage">Beverages</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <div className="flex gap-2">
+          <Button 
+            variant={viewMode === 'list' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setViewMode('list')}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant={viewMode === 'card' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setViewMode('card')}
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {viewMode === 'list' ? (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {menuItems?.filter(item => categoryFilter === 'all' || item.category === categoryFilter).map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">{item.name}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{item.category}</Badge>
+                  </TableCell>
+                  <TableCell>{item.price}</TableCell>
+                  <TableCell className="max-w-xs truncate">{item.description}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleDelete(item.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {menuItems?.filter(item => categoryFilter === 'all' || item.category === categoryFilter).map((item) => (
+            <Card key={item.id}>
+              <CardContent className="p-4">
+                {item.image_url && (
+                  <img src={item.image_url} alt={item.name} className="w-full h-32 object-cover rounded mb-3" />
                 )}
-              </>
-            );
-          })()}
-        </CardContent>
-      </Card>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-semibold">{item.name}</h3>
+                    <span className="font-bold text-primary">{item.price}</span>
+                  </div>
+                  <Badge variant="outline" className="w-fit">{item.category}</Badge>
+                  <p className="text-sm text-muted-foreground">{item.description}</p>
+                  {item.ingredients && item.ingredients.length > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      <strong>Ingredients:</strong> {item.ingredients.join(', ')}
+                    </div>
+                  )}
+                  {item.dietary && item.dietary.length > 0 && (
+                    <div className="flex gap-1 flex-wrap">
+                      {item.dietary.map((diet: string, index: number) => (
+                        <Badge key={index} variant="secondary" className="text-xs">{diet}</Badge>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-2 pt-2">
+                    <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleDelete(item.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -664,50 +600,15 @@ const MenuManagement = () => {
 const ReservationManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  // State for search, filters, and pagination
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [startDate, setStartDate] = useState<Date | undefined>();
-  const [endDate, setEndDate] = useState<Date | undefined>();
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
-  const { data: allReservations, isLoading } = useQuery({
+  const { data: reservations, isLoading } = useQuery({
     queryKey: ["reservations"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("table_reservations").select("*").order('created_at', { ascending: false });
+      const { data, error } = await supabase.from("table_reservations").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
-
-  // Filter and search reservations
-  const filteredReservations = allReservations?.filter(reservation => {
-    // Search by name or email
-    const matchesSearch = !searchTerm || 
-      reservation.guest_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reservation.guest_email.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Filter by status
-    const matchesStatus = statusFilter === 'all' || reservation.status === statusFilter;
-
-    // Filter by type
-    const matchesType = typeFilter === 'all' || reservation.reservation_type === typeFilter;
-
-    // Filter by date range
-    const reservationDate = new Date(reservation.created_at);
-    const matchesDateRange = (!startDate || reservationDate >= startDate) && 
-                            (!endDate || reservationDate <= endDate);
-
-    return matchesSearch && matchesStatus && matchesType && matchesDateRange;
-  }) || [];
-
-  // Pagination
-  const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedReservations = filteredReservations.slice(startIndex, startIndex + itemsPerPage);
 
   const updateReservationMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string, status: string }) => {
@@ -716,8 +617,8 @@ const ReservationManagement = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["reservations"] });
       toast({ title: "Reservation updated successfully!" });
+      queryClient.invalidateQueries({ queryKey: ["reservations"] });
     },
     onError: (error) => {
       toast({ title: "Error updating reservation", description: error.message, variant: "destructive" });
@@ -730,15 +631,15 @@ const ReservationManagement = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["reservations"] });
       toast({ title: "Reservation deleted successfully!" });
+      queryClient.invalidateQueries({ queryKey: ["reservations"] });
     },
     onError: (error) => {
       toast({ title: "Error deleting reservation", description: error.message, variant: "destructive" });
     },
   });
 
-  const handleStatusChange = (id: string, status: string) => {
+  const handleStatusUpdate = (id: string, status: string) => {
     updateReservationMutation.mutate({ id, status });
   };
 
@@ -748,224 +649,61 @@ const ReservationManagement = () => {
     }
   };
 
-  const resetFilters = () => {
-    setSearchTerm('');
-    setStatusFilter('all');
-    setTypeFilter('all');
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setCurrentPage(1);
-  };
-
   if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Reservation Management</h2>
-        <div className="text-sm text-muted-foreground">
-          {filteredReservations.length} of {allReservations?.length || 0} reservations
-        </div>
       </div>
-      
-      {/* Search and Filters */}
+
       <Card>
-        <CardHeader>
-          <CardTitle>Search & Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Search Input */}
-            <div className="space-y-2">
-              <Label htmlFor="search">Search by Name or Email</Label>
-              <Input
-                id="search"
-                placeholder="Enter name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            {/* Status Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Type Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="dining">Dining</SelectItem>
-                  <SelectItem value="event">Event</SelectItem>
-                  <SelectItem value="nightlife">Nightlife</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Reset Button */}
-            <div className="space-y-2">
-              <Label>&nbsp;</Label>
-              <Button variant="outline" onClick={resetFilters} className="w-full">
-                Reset Filters
-              </Button>
-            </div>
-          </div>
-
-          {/* Date Range */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Start Date</Label>
-              <Input
-                type="date"
-                value={startDate ? startDate.toISOString().split('T')[0] : ''}
-                onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>End Date</Label>
-              <Input
-                type="date"
-                value={endDate ? endDate.toISOString().split('T')[0] : ''}
-                onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Reservations Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Reservations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {paginatedReservations.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No reservations found matching your criteria.
-            </div>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Guest Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Guests</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Time Slot</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedReservations.map((reservation) => (
-                    <TableRow key={reservation.id}>
-                      <TableCell className="font-medium">{reservation.guest_name}</TableCell>
-                      <TableCell>{reservation.guest_email}</TableCell>
-                      <TableCell>{reservation.guest_count}</TableCell>
-                      <TableCell className="capitalize">{reservation.reservation_type}</TableCell>
-                      <TableCell>{reservation.time_slot}</TableCell>
-                      <TableCell>
-                        {(() => {
-                          try {
-                            const date = new Date(reservation.created_at);
-                            return !isNaN(date.getTime()) ? date.toLocaleDateString() : 'Invalid Date';
-                          } catch {
-                            return 'Invalid Date';
-                          }
-                        })()}
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={reservation.status}
-                          onValueChange={(value) => handleStatusChange(reservation.id, value)}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="confirmed">Confirmed</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Button size="sm" variant="destructive" onClick={() => handleDelete(reservation.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="text-sm text-muted-foreground">
-                    Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredReservations.length)} of {filteredReservations.length} reservations
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      Previous
-                    </Button>
-                    
-                    <div className="flex items-center space-x-1">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        const pageNum = currentPage <= 3 ? i + 1 : 
-                                       currentPage >= totalPages - 2 ? totalPages - 4 + i :
-                                       currentPage - 2 + i;
-                        return (
-                          <Button
-                            key={pageNum}
-                            variant={pageNum === currentPage ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(pageNum)}
-                            className="w-8 h-8 p-0"
-                          >
-                            {pageNum}
-                          </Button>
-                        );
-                      })}
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Guest Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Time</TableHead>
+              <TableHead>Guests</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Special Requests</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {reservations?.map((reservation) => (
+              <TableRow key={reservation.id}>
+                <TableCell className="font-medium">{reservation.guest_name}</TableCell>
+                <TableCell>{reservation.guest_email}</TableCell>
+                <TableCell>{reservation.guest_email}</TableCell>
+                <TableCell>{reservation.created_at?.split('T')[0]}</TableCell>
+                <TableCell>{reservation.time_slot}</TableCell>
+                <TableCell>{reservation.guest_count}</TableCell>
+                <TableCell>
+                  <Select value={reservation.status} onValueChange={(value) => handleStatusUpdate(reservation.id, value)}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell className="max-w-xs truncate">{reservation.special_requests || "None"}</TableCell>
+                <TableCell>
+                  <Button size="sm" variant="destructive" onClick={() => handleDelete(reservation.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </Card>
     </div>
   );
@@ -977,14 +715,12 @@ const EventManagement = () => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
-  const [eventImageUrl, setEventImageUrl] = useState('');
-  const [isRecurringChecked, setIsRecurringChecked] = useState(false);
-  const [eventViewMode, setEventViewMode] = useState<'list' | 'card'>('list');
+  const [imageUrl, setImageUrl] = useState('');
 
   const { data: events, isLoading } = useQuery({
     queryKey: ["events"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("events").select("*");
+      const { data, error } = await supabase.from("events").select("*").order("date", { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -997,12 +733,11 @@ const EventManagement = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["events"] });
       toast({ title: "Event added successfully!" });
       setIsEditing(false);
       setEditingEvent(null);
-      setEventImageUrl('');
-      setIsRecurringChecked(false);
+      setImageUrl('');
+      queryClient.invalidateQueries({ queryKey: ["events"] });
     },
     onError: (error) => {
       toast({ title: "Error adding event", description: error.message, variant: "destructive" });
@@ -1016,12 +751,11 @@ const EventManagement = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["events"] });
       toast({ title: "Event updated successfully!" });
       setIsEditing(false);
       setEditingEvent(null);
-      setEventImageUrl('');
-      setIsRecurringChecked(false);
+      setImageUrl('');
+      queryClient.invalidateQueries({ queryKey: ["events"] });
     },
     onError: (error) => {
       toast({ title: "Error updating event", description: error.message, variant: "destructive" });
@@ -1034,8 +768,8 @@ const EventManagement = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["events"] });
       toast({ title: "Event deleted successfully!" });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
     },
     onError: (error) => {
       toast({ title: "Error deleting event", description: error.message, variant: "destructive" });
@@ -1045,25 +779,17 @@ const EventManagement = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const isRecurring = formData.get("is_recurring") === "on";
-    const recurrenceEndDate = formData.get("recurrence_end_date") as string;
-    const recurrencePattern = formData.get("recurrence_pattern") as string;
-    
     const eventData = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
       date: formData.get("date") as string,
       time: formData.get("time") as string,
-      category: formData.get("category") as string,
       price: formData.get("price") as string,
-      price_range: formData.get("price_range") as string,
-      host: formData.get("host") as string,
-      dj: formData.get("dj") as string,
-      tickets_url: formData.get("tickets_url") as string,
-      image_url: eventImageUrl,
-      is_recurring: isRecurring,
-      recurrence_pattern: isRecurring && recurrencePattern ? recurrencePattern : null,
-      recurrence_end_date: isRecurring && recurrenceEndDate ? recurrenceEndDate : null,
+      max_attendees: parseInt(formData.get("max_attendees") as string),
+      image_url: imageUrl,
+      location: formData.get("location") as string,
+      organizer_name: formData.get("organizer_name") as string,
+      organizer_contact: formData.get("organizer_contact") as string,
     };
     
     if (editingEvent) {
@@ -1076,22 +802,7 @@ const EventManagement = () => {
   const handleEdit = (event: any) => {
     setEditingEvent(event);
     setIsEditing(true);
-    // Set the image URL to the existing event's image URL or empty string
-    setEventImageUrl(event?.image_url || '');
-    // Set the recurring checkbox state
-    setIsRecurringChecked(event?.is_recurring || false);
-    
-    // Scroll to the form at the top
-    setTimeout(() => {
-      const formElement = document.querySelector('[data-event-form]');
-      if (formElement) {
-        formElement.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start',
-          inline: 'nearest'
-        });
-      }
-    }, 100);
+    setImageUrl(event?.image_url || '');
   };
 
   const handleDelete = (id: string) => {
@@ -1106,23 +817,27 @@ const EventManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Event Management</h2>
-        <Button onClick={() => { setIsEditing(true); setEditingEvent(null); setEventImageUrl(''); setIsRecurringChecked(false); }} className="flex items-center gap-2">
+        <Button onClick={() => { setIsEditing(true); setEditingEvent(null); setImageUrl(''); }} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Add Event
         </Button>
       </div>
 
       {isEditing && (
-        <Card data-event-form>
+        <Card>
           <CardHeader>
             <CardTitle>{editingEvent ? "Edit Event" : "Add New Event"}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4" key={editingEvent?.id || 'new-event'}>
+            <form onSubmit={handleSubmit} className="space-y-4" key={editingEvent?.id || 'new'}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="title">Title</Label>
+                  <Label htmlFor="title">Event Title</Label>
                   <Input id="title" name="title" defaultValue={editingEvent?.title || ""} required />
+                </div>
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input id="location" name="location" defaultValue={editingEvent?.location || ""} required />
                 </div>
                 <div>
                   <Label htmlFor="date">Date</Label>
@@ -1130,96 +845,45 @@ const EventManagement = () => {
                 </div>
                 <div>
                   <Label htmlFor="time">Time</Label>
-                  <Input id="time" name="time" defaultValue={editingEvent?.time || ""} required />
-                </div>
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Select name="category" defaultValue={editingEvent?.category || ""} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="live-music">Live Music</SelectItem>
-                      <SelectItem value="dj-night">DJ Night</SelectItem>
-                      <SelectItem value="special-event">Special Event</SelectItem>
-                      <SelectItem value="private-party">Private Party</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input id="time" name="time" type="time" defaultValue={editingEvent?.time || ""} required />
                 </div>
                 <div>
                   <Label htmlFor="price">Price</Label>
                   <Input id="price" name="price" defaultValue={editingEvent?.price || ""} required />
                 </div>
                 <div>
-                  <Label htmlFor="price_range">Price Range</Label>
-                  <Input id="price_range" name="price_range" defaultValue={editingEvent?.price_range || ""} required />
+                  <Label htmlFor="max_attendees">Max Attendees</Label>
+                  <Input id="max_attendees" name="max_attendees" type="number" defaultValue={editingEvent?.max_attendees || ""} required />
                 </div>
                 <div>
-                  <Label htmlFor="host">Host</Label>
-                  <Input id="host" name="host" defaultValue={editingEvent?.host || ""} />
+                  <Label htmlFor="organizer_name">Organizer Name</Label>
+                  <Input id="organizer_name" name="organizer_name" defaultValue={editingEvent?.organizer_name || ""} />
                 </div>
                 <div>
-                  <Label htmlFor="dj">DJ</Label>
-                  <Input id="dj" name="dj" defaultValue={editingEvent?.dj || ""} />
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="tickets_url">Tickets URL</Label>
-                  <Input id="tickets_url" name="tickets_url" type="url" placeholder="https://example.com/tickets" defaultValue={editingEvent?.tickets_url || ""} />
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="is_recurring" className="flex items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      id="is_recurring" 
-                      name="is_recurring" 
-                      checked={isRecurringChecked}
-                      onChange={(e) => setIsRecurringChecked(e.target.checked)}
-                      className="w-4 h-4"
-                    />
-                    Make this a recurring event
-                  </Label>
-                </div>
-                {isRecurringChecked && (
-                  <>
-                    <div>
-                      <Label htmlFor="recurrence_pattern">Recurrence Pattern</Label>
-                      <Select name="recurrence_pattern" defaultValue={editingEvent?.recurrence_pattern || "weekly"}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select pattern" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="recurrence_end_date">Recurrence End Date (Optional)</Label>
-                      <Input id="recurrence_end_date" name="recurrence_end_date" type="date" defaultValue={editingEvent?.recurrence_end_date || ""} />
-                    </div>
-                  </>
-                )}
-                <div className="md:col-span-2">
-                  <Label htmlFor="image_url">Image</Label>
-                  <ImageUpload 
-                    value={eventImageUrl}
-                    onChange={setEventImageUrl}
-                  />
+                  <Label htmlFor="organizer_contact">Organizer Contact</Label>
+                  <Input id="organizer_contact" name="organizer_contact" defaultValue={editingEvent?.organizer_contact || ""} />
                 </div>
               </div>
+              
               <div>
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" name="description" defaultValue={editingEvent?.description || ""} required />
               </div>
+              
+              <div>
+                <Label>Event Image</Label>
+                <ImageUpload 
+                  currentImageUrl={imageUrl}
+                  onImageUpload={(url) => setImageUrl(url)}
+                  bucket="events"
+                />
+              </div>
+              
               <div className="flex gap-2">
-                <Button type="submit">{editingEvent ? "Update Event" : "Add Event"}</Button>
-                <Button type="button" variant="outline" onClick={() => { 
-                  setIsEditing(false); 
-                  setEditingEvent(null); 
-                  setEventImageUrl('');
-                  setIsRecurringChecked(false);
-                }}>
+                <Button type="submit">
+                  {editingEvent ? "Update Event" : "Add Event"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => { setIsEditing(false); setEditingEvent(null); setImageUrl(''); }}>
                   Cancel
                 </Button>
               </div>
@@ -1227,149 +891,37 @@ const EventManagement = () => {
           </CardContent>
         </Card>
       )}
-      
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>All Events</CardTitle>
-            <div className="flex items-center border rounded-lg p-1">
-              <Button
-                variant={eventViewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setEventViewMode('list')}
-                className="flex items-center gap-2"
-              >
-                <List className="h-4 w-4" />
-                List
-              </Button>
-              <Button
-                variant={eventViewMode === 'card' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setEventViewMode('card')}
-                className="flex items-center gap-2"
-              >
-                <Grid className="h-4 w-4" />
-                Cards
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {eventViewMode === 'list' ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {events?.map((event) => (
-                  <TableRow key={event.id}>
-                    <TableCell>
-                      <div className="w-12 h-12 rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                        {event.image_url ? (
-                          <img 
-                            src={event.image_url} 
-                            alt={event.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.currentTarget;
-                              const sibling = target.nextElementSibling as HTMLElement;
-                              target.style.display = 'none';
-                              if (sibling) sibling.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs" style={{ display: event.image_url ? 'none' : 'flex' }}>
-                          No Image
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{event.title}</TableCell>
-                    <TableCell>{(() => {
-                      try {
-                        const date = new Date(event.date);
-                        return !isNaN(date.getTime()) ? date.toLocaleDateString() : 'Invalid Date';
-                      } catch {
-                        return 'Invalid Date';
-                      }
-                    })()}</TableCell>
-                    <TableCell>{event.time}</TableCell>
-                    <TableCell>{event.category}</TableCell>
-                    <TableCell>{event.price}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => handleEdit(event)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDelete(event.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {events?.map((event) => (
-                <Card key={event.id} className="overflow-hidden">
-                  <div className="aspect-video bg-muted flex items-center justify-center">
-                    {event.image_url ? (
-                      <img 
-                        src={event.image_url} 
-                        alt={event.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          const sibling = target.nextElementSibling as HTMLElement;
-                          target.style.display = 'none';
-                          if (sibling) sibling.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground" style={{ display: event.image_url ? 'none' : 'flex' }}>
-                      No Image
-                    </div>
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-lg mb-2">{event.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{event.description}</p>
-                    <div className="space-y-2 mb-3">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary">{event.category}</Badge>
-                        <span className="font-bold text-lg">{event.price}</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        <div>{new Date(event.date).toLocaleDateString()} at {event.time}</div>
-                        {event.host && <div>Host: {event.host}</div>}
-                        {event.dj && <div>DJ: {event.dj}</div>}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(event)} className="flex-1 flex items-center gap-1">
-                        <Edit className="h-3 w-3" />
-                        Edit
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleDelete(event.id)} className="flex-1 flex items-center gap-1">
-                        <Trash2 className="h-3 w-3" />
-                        Delete
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {events?.map((event) => (
+          <Card key={event.id}>
+            <CardContent className="p-4">
+              {event.image_url && (
+                <img src={event.image_url} alt={event.title} className="w-full h-32 object-cover rounded mb-3" />
+              )}
+              <div className="space-y-2">
+                <h3 className="font-semibold">{event.title}</h3>
+                <p className="text-sm text-muted-foreground">{event.description}</p>
+                <div className="text-sm">
+                  <p><strong>Date:</strong> {event.date}</p>
+                  <p><strong>Time:</strong> {event.time}</p>
+                  <p><strong>Location:</strong> {event.location}</p>
+                  <p><strong>Price:</strong> {event.price}</p>
+                  <p><strong>Max Attendees:</strong> {event.max_attendees}</p>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button size="sm" variant="outline" onClick={() => handleEdit(event)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleDelete(event.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
@@ -1380,15 +932,12 @@ const GalleryManagement = () => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
-  const [galleryImageUrl, setGalleryImageUrl] = useState('');
-  const [showBulkUpload, setShowBulkUpload] = useState(false);
-  const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [filterGalleryType, setFilterGalleryType] = useState<string>('all');
+  const [imageUrl, setImageUrl] = useState('');
 
   const { data: galleryItems, isLoading } = useQuery({
     queryKey: ["gallery-items"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("gallery_items").select("*");
+      const { data, error } = await supabase.from("gallery_items").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -1401,10 +950,11 @@ const GalleryManagement = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["gallery-items"] });
       toast({ title: "Gallery item added successfully!" });
       setIsEditing(false);
       setEditingItem(null);
+      setImageUrl('');
+      queryClient.invalidateQueries({ queryKey: ["gallery-items"] });
     },
     onError: (error) => {
       toast({ title: "Error adding gallery item", description: error.message, variant: "destructive" });
@@ -1418,10 +968,11 @@ const GalleryManagement = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["gallery-items"] });
       toast({ title: "Gallery item updated successfully!" });
       setIsEditing(false);
       setEditingItem(null);
+      setImageUrl('');
+      queryClient.invalidateQueries({ queryKey: ["gallery-items"] });
     },
     onError: (error) => {
       toast({ title: "Error updating gallery item", description: error.message, variant: "destructive" });
@@ -1434,8 +985,8 @@ const GalleryManagement = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["gallery-items"] });
       toast({ title: "Gallery item deleted successfully!" });
+      queryClient.invalidateQueries({ queryKey: ["gallery-items"] });
     },
     onError: (error) => {
       toast({ title: "Error deleting gallery item", description: error.message, variant: "destructive" });
@@ -1446,10 +997,10 @@ const GalleryManagement = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const itemData = {
-      src: galleryImageUrl,
-      alt: formData.get("alt") as string,
+      title: formData.get("title") as string,
+      description: formData.get("description") as string,
+      image_url: imageUrl,
       category: formData.get("category") as string,
-      gallery_type: formData.get("gallery_type") as string,
     };
     
     if (editingItem) {
@@ -1461,38 +1012,14 @@ const GalleryManagement = () => {
 
   const handleEdit = (item: any) => {
     setEditingItem(item);
-    setGalleryImageUrl(item?.src || '');
     setIsEditing(true);
-    
-    // Scroll to the form at the top
-    setTimeout(() => {
-      const formElement = document.querySelector('[data-gallery-form]');
-      if (formElement) {
-        formElement.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start',
-          inline: 'nearest'
-        });
-      }
-    }, 100);
+    setImageUrl(item?.image_url || '');
   };
 
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this gallery item?")) {
       deleteGalleryItemMutation.mutate(id);
     }
-  };
-
-  // Filter gallery items based on selected filters
-  const filteredGalleryItems = galleryItems?.filter(item => {
-    const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
-    const matchesGalleryType = filterGalleryType === 'all' || item.gallery_type === filterGalleryType;
-    return matchesCategory && matchesGalleryType;
-  }) || [];
-
-  const clearFilters = () => {
-    setFilterCategory('all');
-    setFilterGalleryType('all');
   };
 
   if (isLoading) return <div>Loading...</div>;
@@ -1502,129 +1029,63 @@ const GalleryManagement = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gallery Management</h2>
         <div className="flex gap-2">
-          <Button 
-            onClick={() => setShowBulkUpload(true)} 
-            variant="outline" 
-            className="flex items-center gap-2"
-          >
-            <Image className="h-4 w-4" />
-            Bulk Upload
-          </Button>
-          <Button onClick={() => { setIsEditing(true); setEditingItem(null); setGalleryImageUrl(''); }} className="flex items-center gap-2">
+          <Button onClick={() => { setIsEditing(true); setEditingItem(null); setImageUrl(''); }} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
-            Add Image
+            Add Gallery Item
           </Button>
         </div>
       </div>
 
-      {/* Filter Controls */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <Label htmlFor="filterCategory" className="text-sm font-medium">Filter by Category</Label>
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  <SelectItem value="atmosphere">Atmosphere</SelectItem>
-                  <SelectItem value="food">Food</SelectItem>
-                  <SelectItem value="events">Events</SelectItem>
-                  <SelectItem value="interior">Interior</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex-1 min-w-[200px]">
-              <Label htmlFor="filterGalleryType" className="text-sm font-medium">Filter by Gallery Type</Label>
-              <Select value={filterGalleryType} onValueChange={setFilterGalleryType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All gallery types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All gallery types</SelectItem>
-                  <SelectItem value="main">Main Gallery</SelectItem>
-                  <SelectItem value="featured">Featured</SelectItem>
-                  <SelectItem value="venue">Venue</SelectItem>
-                  <SelectItem value="food">Food</SelectItem>
-                  <SelectItem value="events">Events</SelectItem>
-                  <SelectItem value="atmosphere">Atmosphere</SelectItem>
-                  <SelectItem value="archive">Archive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex items-end">
-              <Button type="button" variant="outline" onClick={clearFilters}>
-                Clear Filters
-              </Button>
-            </div>
-            
-            <div className="text-sm text-muted-foreground">
-              Showing {filteredGalleryItems.length} of {galleryItems?.length || 0} items
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <BulkImageUpload onComplete={() => queryClient.invalidateQueries({ queryKey: ["gallery-items"] })} />
 
       {isEditing && (
-        <Card data-gallery-form>
+        <Card>
           <CardHeader>
             <CardTitle>{editingItem ? "Edit Gallery Item" : "Add New Gallery Item"}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4" key={editingItem?.id || 'new-gallery-item'}>
-              <div className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" key={editingItem?.id || 'new'}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="image">Image</Label>
-                  <ImageUpload 
-                    value={galleryImageUrl || editingItem?.src || ""}
-                    onChange={setGalleryImageUrl}
-                  />
+                  <Label htmlFor="title">Title</Label>
+                  <Input id="title" name="title" defaultValue={editingItem?.title || ""} required />
                 </div>
                 <div>
-                  <Label htmlFor="alt">Alt Text</Label>
-                  <Input id="alt" name="alt" defaultValue={editingItem?.alt || ""} required />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Select name="category" defaultValue={editingItem?.category || ""} required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="atmosphere">Atmosphere</SelectItem>
-                        <SelectItem value="food">Food</SelectItem>
-                        <SelectItem value="events">Events</SelectItem>
-                        <SelectItem value="interior">Interior</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="gallery_type">Gallery Type</Label>
-                    <Select name="gallery_type" defaultValue={editingItem?.gallery_type || ""} required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gallery type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="main">Main Gallery</SelectItem>
-                        <SelectItem value="featured">Featured</SelectItem>
-                        <SelectItem value="venue">Venue</SelectItem>
-                        <SelectItem value="food">Food</SelectItem>
-                        <SelectItem value="events">Events</SelectItem>
-                        <SelectItem value="atmosphere">Atmosphere</SelectItem>
-                        <SelectItem value="archive">Archive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select name="category" defaultValue={editingItem?.category || ""}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="food">Food</SelectItem>
+                      <SelectItem value="ambiance">Ambiance</SelectItem>
+                      <SelectItem value="events">Events</SelectItem>
+                      <SelectItem value="chef">Chef</SelectItem>
+                      <SelectItem value="interior">Interior</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
+              
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" name="description" defaultValue={editingItem?.description || ""} />
+              </div>
+              
+              <div>
+                <Label>Image</Label>
+                <ImageUpload 
+                  currentImageUrl={imageUrl}
+                  onImageUpload={(url) => setImageUrl(url)}
+                  bucket="gallery"
+                />
+              </div>
+              
               <div className="flex gap-2">
-                <Button type="submit">{editingItem ? "Update Item" : "Add Item"}</Button>
-                <Button type="button" variant="outline" onClick={() => { setIsEditing(false); setEditingItem(null); }}>
+                <Button type="submit">
+                  {editingItem ? "Update Item" : "Add Item"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => { setIsEditing(false); setEditingItem(null); setImageUrl(''); }}>
                   Cancel
                 </Button>
               </div>
@@ -1633,62 +1094,16 @@ const GalleryManagement = () => {
         </Card>
       )}
 
-      {showBulkUpload && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Bulk Image Upload</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BulkImageUpload
-              onComplete={() => {
-                setShowBulkUpload(false);
-                queryClient.invalidateQueries({ queryKey: ["gallery-items"] });
-              }}
-              onCancel={() => setShowBulkUpload(false)}
-            />
-          </CardContent>
-        </Card>
-      )}
-      
-      {filteredGalleryItems.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <div className="flex flex-col items-center gap-4">
-              <Image className="h-12 w-12 text-muted-foreground" />
-              <div>
-                <h3 className="text-lg font-semibold">No images found</h3>
-                <p className="text-muted-foreground">
-                  {galleryItems?.length === 0 
-                    ? "No gallery items have been added yet." 
-                    : "No images match the current filters. Try adjusting your filters or clearing them."
-                  }
-                </p>
-              </div>
-              {(filterCategory !== 'all' || filterGalleryType !== 'all') && (
-                <Button variant="outline" onClick={clearFilters}>
-                  Clear Filters
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredGalleryItems.map((item) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {galleryItems?.map((item) => (
           <Card key={item.id}>
             <CardContent className="p-4">
-              <img 
-                src={item.src} 
-                alt={item.alt} 
-                className="w-full h-48 object-cover rounded-md mb-4"
-              />
+              <img src={item.src} alt={item.alt} className="w-full h-32 object-cover rounded mb-3" />
               <div className="space-y-2">
-                <p className="font-medium">{item.alt}</p>
-                <div className="flex gap-2">
-                  <Badge>{item.category}</Badge>
-                  <Badge variant="outline">{item.gallery_type}</Badge>
-                </div>
-                <div className="flex gap-2">
+                <h3 className="font-semibold">{item.alt}</h3>
+                <Badge variant="outline">{item.category}</Badge>
+                <p className="text-sm text-muted-foreground">{item.alt}</p>
+                <div className="flex gap-2 pt-2">
                   <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -1699,9 +1114,8 @@ const GalleryManagement = () => {
               </div>
             </CardContent>
           </Card>
-          ))}
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 };
@@ -1716,7 +1130,7 @@ const TableManagement = () => {
   const { data: venueTables, isLoading } = useQuery({
     queryKey: ["venue-tables"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("venue_tables").select("*");
+      const { data, error } = await supabase.from("venue_tables").select("*").order("table_number", { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -1729,10 +1143,10 @@ const TableManagement = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["venue-tables"] });
       toast({ title: "Table added successfully!" });
       setIsEditing(false);
       setEditingTable(null);
+      queryClient.invalidateQueries({ queryKey: ["venue-tables"] });
     },
     onError: (error) => {
       toast({ title: "Error adding table", description: error.message, variant: "destructive" });
@@ -1746,10 +1160,10 @@ const TableManagement = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["venue-tables"] });
       toast({ title: "Table updated successfully!" });
       setIsEditing(false);
       setEditingTable(null);
+      queryClient.invalidateQueries({ queryKey: ["venue-tables"] });
     },
     onError: (error) => {
       toast({ title: "Error updating table", description: error.message, variant: "destructive" });
@@ -1762,8 +1176,8 @@ const TableManagement = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["venue-tables"] });
       toast({ title: "Table deleted successfully!" });
+      queryClient.invalidateQueries({ queryKey: ["venue-tables"] });
     },
     onError: (error) => {
       toast({ title: "Error deleting table", description: error.message, variant: "destructive" });
@@ -1774,13 +1188,9 @@ const TableManagement = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const tableData = {
-      table_number: parseInt(formData.get("table_number") as string),
+      table_number: formData.get("table_number") as string,
       max_guests: parseInt(formData.get("max_guests") as string),
-      position_x: parseFloat(formData.get("position_x") as string),
-      position_y: parseFloat(formData.get("position_y") as string),
-      width: parseFloat(formData.get("width") as string),
-      height: parseFloat(formData.get("height") as string),
-      reservation_price: parseInt((parseFloat(formData.get("reservation_price") as string) * 100).toString()),
+      location: formData.get("location") as string,
       is_available: formData.get("is_available") === "true",
     };
     
@@ -1820,41 +1230,25 @@ const TableManagement = () => {
             <CardTitle>{editingTable ? "Edit Table" : "Add New Table"}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" key={editingTable?.id || 'new'}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="table_number">Table Number</Label>
-                  <Input id="table_number" name="table_number" type="number" defaultValue={editingTable?.table_number || ""} required />
+                  <Input id="table_number" name="table_number" defaultValue={editingTable?.table_number || ""} required />
                 </div>
                 <div>
                   <Label htmlFor="max_guests">Max Guests</Label>
-                  <Input id="max_guests" name="max_guests" type="number" defaultValue={editingTable?.max_guests || ""} required />
+                  <Input id="max_guests" name="max_guests" type="number" min="1" defaultValue={editingTable?.max_guests || ""} required />
                 </div>
                 <div>
-                  <Label htmlFor="position_x">Position X</Label>
-                  <Input id="position_x" name="position_x" type="number" step="0.1" defaultValue={editingTable?.position_x || "0"} required />
+                  <Label htmlFor="location">Location</Label>
+                  <Input id="location" name="location" defaultValue={editingTable?.location || ""} placeholder="e.g., Main Dining, Patio, Bar" />
                 </div>
-                <div>
-                  <Label htmlFor="position_y">Position Y</Label>
-                  <Input id="position_y" name="position_y" type="number" step="0.1" defaultValue={editingTable?.position_y || "0"} required />
-                </div>
-                <div>
-                  <Label htmlFor="width">Width</Label>
-                  <Input id="width" name="width" type="number" step="0.1" defaultValue={editingTable?.width || "100"} required />
-                </div>
-                <div>
-                  <Label htmlFor="height">Height</Label>
-                  <Input id="height" name="height" type="number" step="0.1" defaultValue={editingTable?.height || "80"} required />
-                </div>
-                <div>
-                  <Label htmlFor="reservation_price">Reservation Price ($)</Label>
-                  <Input id="reservation_price" name="reservation_price" type="number" step="0.01" defaultValue={editingTable ? (editingTable.reservation_price / 100).toFixed(2) : "0"} required />
-                </div>
-                <div>
-                  <Label htmlFor="is_available">Availability</Label>
-                  <Select name="is_available" defaultValue={editingTable?.is_available?.toString() || "true"} required>
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="is_available">Available</Label>
+                  <Select name="is_available" defaultValue={editingTable?.is_available?.toString() || "true"}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select availability" />
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="true">Available</SelectItem>
@@ -1863,8 +1257,11 @@ const TableManagement = () => {
                   </Select>
                 </div>
               </div>
+              
               <div className="flex gap-2">
-                <Button type="submit">{editingTable ? "Update Table" : "Add Table"}</Button>
+                <Button type="submit">
+                  {editingTable ? "Update Table" : "Add Table"}
+                </Button>
                 <Button type="button" variant="outline" onClick={() => { setIsEditing(false); setEditingTable(null); }}>
                   Cancel
                 </Button>
@@ -1873,74 +1270,55 @@ const TableManagement = () => {
           </CardContent>
         </Card>
       )}
-      
+
       <Card>
-        <CardHeader>
-          <CardTitle>Venue Tables</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Table Number</TableHead>
-                <TableHead>Max Guests</TableHead>
-                <TableHead>Position (X, Y)</TableHead>
-                <TableHead>Size (W x H)</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Table Number</TableHead>
+              <TableHead>Max Guests</TableHead>
+              <TableHead>Location</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {venueTables?.map((table) => (
+              <TableRow key={table.id}>
+                <TableCell className="font-medium">{table.table_number}</TableCell>
+                <TableCell>{table.max_guests}</TableCell>
+                <TableCell>{table.location || "Not specified"}</TableCell>
+                <TableCell>
+                  <Badge variant={table.is_available ? 'default' : 'destructive'}>
+                    {table.is_available ? 'Available' : 'Occupied'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => handleEdit(table)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleDelete(table.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {venueTables?.map((table) => (
-                <TableRow key={table.id}>
-                  <TableCell className="font-medium">{table.table_number}</TableCell>
-                  <TableCell>{table.max_guests}</TableCell>
-                  <TableCell>({table.position_x}, {table.position_y})</TableCell>
-                  <TableCell>{table.width} x {table.height}</TableCell>
-                  <TableCell>${(table.reservation_price / 100).toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Badge variant={table.is_available ? 'default' : 'destructive'}>
-                      {table.is_available ? 'Available' : 'Occupied'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(table)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleDelete(table.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
+            ))}
+          </TableBody>
+        </Table>
       </Card>
     </div>
   );
 };
 
-// Modal Management Component
+// Modal Management Component  
 const ModalManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
   const [editingModal, setEditingModal] = useState<any>(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [modalViewMode, setModalViewMode] = useState<'list' | 'card'>('list');
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    image_url: "",
-    primary_button_text: "Plan Your Event",
-    primary_button_action: "plan-event",
-    secondary_button_text: "Reserve a Table",
-    secondary_button_action: "reservation",
-    is_active: true
-  });
+  const [imageUrl, setImageUrl] = useState('');
 
   const { data: homeModals, isLoading } = useQuery({
     queryKey: ["home-modals"],
@@ -1951,74 +1329,49 @@ const ModalManagement = () => {
     },
   });
 
-  const { data: events } = useQuery({
-    queryKey: ["events-for-modals"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("events").select("id, title").order("date", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: menuItems } = useQuery({
-    queryKey: ["menu-items-for-modals"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("menu_items").select("id, name").order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const createModal = useMutation({
-    mutationFn: async (modalData) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user) throw new Error("Not authenticated");
-
-      const { data, error } = await supabase.from("home_modals").insert(modalData).select();
+  const addModalMutation = useMutation({
+    mutationFn: async (newModal: any) => {
+      const { data, error } = await supabase.from("home_modals").insert([newModal]).select();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      toast({ title: "Modal created successfully" });
+      toast({ title: "Modal added successfully!" });
+      setIsEditing(false);
+      setEditingModal(null);
+      setImageUrl('');
       queryClient.invalidateQueries({ queryKey: ["home-modals"] });
-      setIsAddModalOpen(false);
-      resetForm();
     },
     onError: (error) => {
-      toast({ title: "Error creating modal", description: error.message, variant: "destructive" });
+      toast({ title: "Error adding modal", description: error.message, variant: "destructive" });
     },
   });
 
-  const updateModal = useMutation({
-    mutationFn: async ({ id, ...modalData }: { id: string; [key: string]: any }) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user) throw new Error("Not authenticated");
-
-      const { data, error } = await supabase.from("home_modals").update(modalData).eq("id", id).select();
+  const updateModalMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string, updates: any }) => {
+      const { data, error } = await supabase.from("home_modals").update(updates).eq("id", id).select();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      toast({ title: "Modal updated successfully" });
-      queryClient.invalidateQueries({ queryKey: ["home-modals"] });
+      toast({ title: "Modal updated successfully!" });
+      setIsEditing(false);
       setEditingModal(null);
-      resetForm();
+      setImageUrl('');
+      queryClient.invalidateQueries({ queryKey: ["home-modals"] });
     },
     onError: (error) => {
       toast({ title: "Error updating modal", description: error.message, variant: "destructive" });
     },
   });
 
-  const deleteModal = useMutation({
+  const deleteModalMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user) throw new Error("Not authenticated");
-
       const { error } = await supabase.from("home_modals").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Modal deleted successfully" });
+      toast({ title: "Modal deleted successfully!" });
       queryClient.invalidateQueries({ queryKey: ["home-modals"] });
     },
     onError: (error) => {
@@ -2026,339 +1379,160 @@ const ModalManagement = () => {
     },
   });
 
-  const resetForm = () => {
-    setFormData({
-      title: "",
-      description: "",
-      image_url: "",
-      primary_button_text: "Plan Your Event",
-      primary_button_action: "plan-event",
-      secondary_button_text: "Reserve a Table",
-      secondary_button_action: "reservation",
-      is_active: true
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const dataToSave = {
+      title: formData.get("title") as string,
+      description: formData.get("description") as string,
+      image_url: imageUrl,
+      primary_button_text: formData.get("primary_button_text") as string,
+      primary_button_action: formData.get("primary_button_action") as string,
+      secondary_button_text: formData.get("secondary_button_text") as string,
+      secondary_button_action: formData.get("secondary_button_action") as string,
+      is_active: formData.get("is_active") === "true",
+    };
+    
     if (editingModal) {
-      updateModal.mutate({ id: editingModal.id, ...formData });
+      updateModalMutation.mutate({ id: editingModal.id, updates: dataToSave });
     } else {
-      createModal.mutate(formData);
+      addModalMutation.mutate(dataToSave);
     }
   };
 
   const handleEdit = (modal: any) => {
     setEditingModal(modal);
-    setFormData({
-      title: modal.title,
-      description: modal.description,
-      image_url: modal.image_url || "",
-      primary_button_text: modal.primary_button_text,
-      primary_button_action: modal.primary_button_action,
-      secondary_button_text: modal.secondary_button_text,
-      secondary_button_action: modal.secondary_button_action,
-      is_active: modal.is_active
-    });
-    setIsAddModalOpen(true);
+    setIsEditing(true);
+    setImageUrl(modal?.image_url || '');
   };
 
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this modal?")) {
-      deleteModal.mutate(id);
+      deleteModalMutation.mutate(id);
     }
-  };
-
-  const getActionOptions = () => {
-    const staticOptions = [
-      { value: "plan-event", label: "Plan Event" },
-      { value: "reservation", label: "Make Reservation" },
-      { value: "menu", label: "View Menu" },
-      { value: "events", label: "View Events" }
-    ];
-
-    const eventOptions = events?.map(event => ({
-      value: `event:${event.id}`,
-      label: `Event: ${event.title}`
-    })) || [];
-
-    const menuOptions = menuItems?.map(item => ({
-      value: `menu-item:${item.id}`,
-      label: `Menu: ${item.name}`
-    })) || [];
-
-    return [...staticOptions, ...eventOptions, ...menuOptions];
   };
 
   if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Home Page Modals</CardTitle>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center border rounded-lg p-1">
-                <Button
-                  variant={modalViewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setModalViewMode('list')}
-                  className="flex items-center gap-2"
-                >
-                  <List className="h-4 w-4" />
-                  List
-                </Button>
-                <Button
-                  variant={modalViewMode === 'card' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setModalViewMode('card')}
-                  className="flex items-center gap-2"
-                >
-                  <Grid className="h-4 w-4" />
-                  Cards
-                </Button>
-              </div>
-              <Button onClick={() => { setIsAddModalOpen(true); setEditingModal(null); resetForm(); }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Modal
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isAddModalOpen && (
-            <form onSubmit={handleSubmit} className="space-y-4 mb-6 p-4 border rounded-lg">
-              <div className="grid grid-cols-2 gap-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Modal Management</h2>
+        <Button onClick={() => { setIsEditing(true); setEditingModal(null); setImageUrl(''); }} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Add Modal
+        </Button>
+      </div>
+
+      {isEditing && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{editingModal ? "Edit Modal" : "Add New Modal"}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4" key={editingModal?.id || 'new'}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    required
-                  />
+                  <Input id="title" name="title" defaultValue={editingModal?.title || ""} required />
                 </div>
-                <div>
-                  <Label htmlFor="image_url">Image URL</Label>
-                  <ImageUpload
-                    value={formData.image_url}
-                    onChange={(url) => setFormData({ ...formData, image_url: url })}
-                  />
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="is_active">Active</Label>
+                  <Select name="is_active" defaultValue={editingModal?.is_active?.toString() || "true"}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">Active</SelectItem>
+                      <SelectItem value="false">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-
+              
               <div>
                 <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  required
-                />
+                <Textarea id="description" name="description" defaultValue={editingModal?.description || ""} required />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="primary_button_text">Primary Button Text</Label>
-                  <Input
-                    id="primary_button_text"
-                    value={formData.primary_button_text}
-                    onChange={(e) => setFormData({ ...formData, primary_button_text: e.target.value })}
-                    required
-                  />
+                  <Input id="primary_button_text" name="primary_button_text" defaultValue={editingModal?.primary_button_text || ""} />
                 </div>
                 <div>
                   <Label htmlFor="primary_button_action">Primary Button Action</Label>
-                  <Select
-                    value={formData.primary_button_action}
-                    onValueChange={(value) => setFormData({ ...formData, primary_button_action: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getActionOptions().map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input id="primary_button_action" name="primary_button_action" defaultValue={editingModal?.primary_button_action || ""} placeholder="URL or action" />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="secondary_button_text">Secondary Button Text</Label>
-                  <Input
-                    id="secondary_button_text"
-                    value={formData.secondary_button_text}
-                    onChange={(e) => setFormData({ ...formData, secondary_button_text: e.target.value })}
-                    required
-                  />
+                  <Input id="secondary_button_text" name="secondary_button_text" defaultValue={editingModal?.secondary_button_text || ""} />
                 </div>
                 <div>
                   <Label htmlFor="secondary_button_action">Secondary Button Action</Label>
-                  <Select
-                    value={formData.secondary_button_action}
-                    onValueChange={(value) => setFormData({ ...formData, secondary_button_action: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getActionOptions().map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input id="secondary_button_action" name="secondary_button_action" defaultValue={editingModal?.secondary_button_action || ""} placeholder="URL or action" />
                 </div>
               </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="h-4 w-4"
+              
+              <div>
+                <Label>Modal Image</Label>
+                <ImageUpload 
+                  currentImageUrl={imageUrl}
+                  onImageUpload={(url) => setImageUrl(url)}
+                  bucket="modals"
                 />
-                <Label htmlFor="is_active">Active</Label>
               </div>
-
+              
               <div className="flex gap-2">
                 <Button type="submit">
-                  {editingModal ? "Update Modal" : "Create Modal"}
+                  {editingModal ? "Update Modal" : "Add Modal"}
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsAddModalOpen(false);
-                    setEditingModal(null);
-                    resetForm();
-                  }}
-                >
+                <Button type="button" variant="outline" onClick={() => { setIsEditing(false); setEditingModal(null); setImageUrl(''); }}>
                   Cancel
                 </Button>
               </div>
             </form>
-          )}
+          </CardContent>
+        </Card>
+      )}
 
-          {modalViewMode === 'list' ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Primary Action</TableHead>
-                  <TableHead>Secondary Action</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {homeModals?.map((modal) => (
-                  <TableRow key={modal.id}>
-                    <TableCell>
-                      <div className="w-12 h-12 rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                        {modal.image_url ? (
-                          <img 
-                            src={modal.image_url} 
-                            alt={modal.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.currentTarget;
-                              const sibling = target.nextElementSibling as HTMLElement;
-                              target.style.display = 'none';
-                              if (sibling) sibling.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs" style={{ display: modal.image_url ? 'none' : 'flex' }}>
-                          No Image
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{modal.title}</TableCell>
-                    <TableCell className="max-w-xs truncate">{modal.description}</TableCell>
-                    <TableCell>
-                      <Badge variant={modal.is_active ? "default" : "secondary"}>
-                        {modal.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{modal.primary_button_action}</TableCell>
-                    <TableCell>{modal.secondary_button_action}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => handleEdit(modal)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDelete(modal.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {homeModals?.map((modal) => (
-                <Card key={modal.id} className="overflow-hidden">
-                  <div className="aspect-video bg-muted flex items-center justify-center">
-                    {modal.image_url ? (
-                      <img 
-                        src={modal.image_url} 
-                        alt={modal.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          const sibling = target.nextElementSibling as HTMLElement;
-                          target.style.display = 'none';
-                          if (sibling) sibling.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground" style={{ display: modal.image_url ? 'none' : 'flex' }}>
-                      No Image
-                    </div>
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-lg mb-2">{modal.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{modal.description}</p>
-                    <div className="space-y-2 mb-3">
-                      <Badge variant={modal.is_active ? "default" : "secondary"} className="w-full justify-center">
-                        {modal.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                      <div className="text-sm text-muted-foreground">
-                        <div className="truncate">Primary: {modal.primary_button_action}</div>
-                        <div className="truncate">Secondary: {modal.secondary_button_action}</div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(modal)} className="flex-1 flex items-center gap-1">
-                        <Edit className="h-3 w-3" />
-                        Edit
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleDelete(modal.id)} className="flex-1 flex items-center gap-1">
-                        <Trash2 className="h-3 w-3" />
-                        Delete
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {homeModals?.map((modal) => (
+          <Card key={modal.id}>
+            <CardContent className="p-4">
+              {modal.image_url && (
+                <img src={modal.image_url} alt={modal.title} className="w-full h-32 object-cover rounded mb-3" />
+              )}
+              <div className="space-y-2">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-semibold">{modal.title}</h3>
+                  <Badge variant={modal.is_active ? 'default' : 'secondary'}>
+                    {modal.is_active ? 'Active' : 'Inactive'}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">{modal.description}</p>
+                <div className="text-xs text-muted-foreground">
+                  {modal.primary_button_text && (
+                    <p><strong>Primary:</strong> {modal.primary_button_text}</p>
+                  )}
+                  {modal.secondary_button_text && (
+                    <p><strong>Secondary:</strong> {modal.secondary_button_text}</p>
+                  )}
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button size="sm" variant="outline" onClick={() => handleEdit(modal)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleDelete(modal.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

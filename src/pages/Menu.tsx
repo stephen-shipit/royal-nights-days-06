@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import MobileHeader from "@/components/MobileHeader";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -151,89 +152,93 @@ const Menu = () => {
                 {viewMode === 'card' ? (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {items.map((item) => (
-                      <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                        <div className="aspect-video bg-muted">
-                          <img 
-                            src={item.image_url || '/api/placeholder/300/200'} 
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              console.log('Image failed to load for item:', item.name);
-                              (e.target as HTMLImageElement).src = '/api/placeholder/300/200';
-                            }}
-                          />
-                        </div>
-                        <CardHeader>
-                          <div className="flex justify-between items-start">
-                            <CardTitle className="text-xl">{item.name}</CardTitle>
-                            <span className="text-lg font-bold text-secondary">{item.price}</span>
+                      <Link key={item.id} to={`/menu/${item.id}`} className="group cursor-pointer">
+                        <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+                          <div className="aspect-video bg-muted overflow-hidden">
+                            <img 
+                              src={item.image_url || '/api/placeholder/300/200'} 
+                              alt={item.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              onError={(e) => {
+                                console.log('Image failed to load for item:', item.name);
+                                (e.target as HTMLImageElement).src = '/api/placeholder/300/200';
+                              }}
+                            />
                           </div>
-                          <p className="text-muted-foreground">{item.description}</p>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            <div>
-                              <h4 className="font-medium mb-2">Ingredients:</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {item.ingredients.join(", ")}
-                              </p>
+                          <CardHeader>
+                            <div className="flex justify-between items-start">
+                              <CardTitle className="text-xl group-hover:text-primary transition-colors">{item.name}</CardTitle>
+                              <span className="text-lg font-bold text-secondary">{item.price}</span>
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                              {item.dietary.map((diet) => (
-                                <Badge key={diet} variant="secondary" className="text-xs">
-                                  {diet}
-                                </Badge>
-                              ))}
+                            <p className="text-muted-foreground">{item.description}</p>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-3">
+                              <div>
+                                <h4 className="font-medium mb-2">Ingredients:</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {item.ingredients.join(", ")}
+                                </p>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {item.dietary.map((diet) => (
+                                  <Badge key={diet} variant="secondary" className="text-xs">
+                                    {diet}
+                                  </Badge>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                          </CardContent>
+                        </Card>
+                      </Link>
                     ))}
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {items.map((item) => (
-                      <Card key={item.id} className="hover:shadow-lg transition-shadow">
-                        <CardContent className="p-6">
-                          <div className="flex flex-col md:flex-row gap-6">
-                            <div className="md:w-48 flex-shrink-0">
-                              <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                                <img 
-                                  src={item.image_url || '/api/placeholder/300/200'} 
-                                  alt={item.name}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    console.log('Image failed to load for item:', item.name);
-                                    (e.target as HTMLImageElement).src = '/api/placeholder/300/200';
-                                  }}
-                                />
-                              </div>
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex justify-between items-start mb-3">
-                                <h3 className="text-xl font-bold text-foreground">{item.name}</h3>
-                                <span className="text-lg font-bold text-secondary">{item.price}</span>
-                              </div>
-                              <p className="text-muted-foreground mb-4">{item.description}</p>
-                              <div className="space-y-3">
-                                <div>
-                                  <h4 className="font-medium mb-2 text-sm">Ingredients:</h4>
-                                  <p className="text-sm text-muted-foreground">
-                                    {item.ingredients.join(", ")}
-                                  </p>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                  {item.dietary.map((diet) => (
-                                    <Badge key={diet} variant="secondary" className="text-xs">
-                                      {diet}
-                                    </Badge>
-                                  ))}
+                      <Link key={item.id} to={`/menu/${item.id}`} className="block group cursor-pointer">
+                        <Card className="hover:shadow-lg transition-shadow">
+                          <CardContent className="p-6">
+                            <div className="flex flex-col md:flex-row gap-6">
+                              <div className="md:w-48 flex-shrink-0">
+                                <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+                                  <img 
+                                    src={item.image_url || '/api/placeholder/300/200'} 
+                                    alt={item.name}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    onError={(e) => {
+                                      console.log('Image failed to load for item:', item.name);
+                                      (e.target as HTMLImageElement).src = '/api/placeholder/300/200';
+                                    }}
+                                  />
                                 </div>
                               </div>
+                              <div className="flex-1">
+                                <div className="flex justify-between items-start mb-3">
+                                  <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{item.name}</h3>
+                                  <span className="text-lg font-bold text-secondary">{item.price}</span>
+                                </div>
+                                <p className="text-muted-foreground mb-4">{item.description}</p>
+                                <div className="space-y-3">
+                                  <div>
+                                    <h4 className="font-medium mb-2 text-sm">Ingredients:</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                      {item.ingredients.join(", ")}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {item.dietary.map((diet) => (
+                                      <Badge key={diet} variant="secondary" className="text-xs">
+                                        {diet}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                          </CardContent>
+                        </Card>
+                      </Link>
                     ))}
                   </div>
                 )}

@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import Index from "./pages/Index";
 import Reservations from "./pages/Reservations";
 import Menu from "./pages/Menu";
+import MenuItemDetails from "./pages/MenuItemDetails";
 import Gallery from "./pages/Gallery";
 import Events from "./pages/Events";
 import EventDetails from "./pages/EventDetails";
@@ -61,6 +62,7 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/reservations" element={<Reservations />} />
               <Route path="/menu" element={<Menu />} />
+              <Route path="/menu/:menuItemId" element={<MenuItemDetails />} />
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/events" element={<Events />} />
               <Route path="/events/:eventId" element={<EventDetails />} />

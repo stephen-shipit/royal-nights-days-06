@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { BulkImageUpload } from "@/components/BulkImageUpload";
 import AdminHeader from "@/components/AdminHeader";
@@ -75,6 +75,16 @@ const Admin = () => {
     enabled: isAuthenticated,
   });
 
+  const { data: homeModals } = useQuery({
+    queryKey: ["home-modals"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("home_modals").select("*");
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAuthenticated,
+  });
+
   if (!isAuthenticated) {
     return <AdminAuth onAuthSuccess={() => setIsAuthenticated(true)} />;
   }
@@ -91,7 +101,7 @@ const Admin = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Overview
@@ -115,6 +125,10 @@ const Admin = () => {
               <TabsTrigger value="tables" className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
                 Tables
+              </TabsTrigger>
+              <TabsTrigger value="modals" className="flex items-center gap-2">
+                <Layers className="h-4 w-4" />
+                Modals
               </TabsTrigger>
             </TabsList>
 
@@ -232,6 +246,10 @@ const Admin = () => {
             <TabsContent value="tables">
               <TableManagement />
             </TabsContent>
+
+            <TabsContent value="modals">
+              <ModalManagement />
+            </TabsContent>
           </Tabs>
         </div>
       </main>
@@ -249,6 +267,7 @@ const MenuManagement = () => {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [imageUrl, setImageUrl] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
 
   const { data: menuItems, isLoading, refetch } = useQuery({
     queryKey: ["menu-items"],
@@ -390,7 +409,7 @@ const MenuManagement = () => {
     
     // Scroll to the top of the form
     setTimeout(() => {
-      const formElement = document.querySelector('[data-menu-form]');
+      const formElement = document.getElementById('menu-form');
       if (formElement) {
         formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
@@ -416,12 +435,12 @@ const MenuManagement = () => {
       </div>
 
       {isEditing && (
-        <Card data-menu-form>
+        <Card id="menu-form">
           <CardHeader>
             <CardTitle>{editingItem ? "Edit Menu Item" : "Add New Menu Item"}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" key={editingItem?.id || 'new'}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Name</Label>
@@ -486,22 +505,44 @@ const MenuManagement = () => {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Menu Items</CardTitle>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="category-filter" className="text-sm">Filter by Category:</Label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger id="category-filter" className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="appetizers">Appetizers</SelectItem>
-                  <SelectItem value="mains">Mains</SelectItem>
-                  <SelectItem value="salads">Salads</SelectItem>
-                  <SelectItem value="desserts">Desserts</SelectItem>
-                  <SelectItem value="beverages">Beverages</SelectItem>
-                  <SelectItem value="alacarte-sides">A La Carte Sides</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center border rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="flex items-center gap-2"
+                >
+                  <List className="h-4 w-4" />
+                  List
+                </Button>
+                <Button
+                  variant={viewMode === 'card' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('card')}
+                  className="flex items-center gap-2"
+                >
+                  <Grid className="h-4 w-4" />
+                  Cards
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="category-filter" className="text-sm">Filter by Category:</Label>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger id="category-filter" className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="appetizers">Appetizers</SelectItem>
+                    <SelectItem value="mains">Mains</SelectItem>
+                    <SelectItem value="salads">Salads</SelectItem>
+                    <SelectItem value="desserts">Desserts</SelectItem>
+                    <SelectItem value="beverages">Beverages</SelectItem>
+                    <SelectItem value="alacarte-sides">A La Carte Sides</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -513,37 +554,103 @@ const MenuManagement = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   Showing {filteredItems.length} of {menuItems?.length || 0} menu items
                 </p>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                {viewMode === 'list' ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Image</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredItems.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell>
+                            <div className="w-12 h-12 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                              {item.image_url ? (
+                                <img 
+                                  src={item.image_url} 
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.currentTarget;
+                                    const sibling = target.nextElementSibling as HTMLElement;
+                                    target.style.display = 'none';
+                                    if (sibling) sibling.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs" style={{ display: item.image_url ? 'none' : 'flex' }}>
+                                No Image
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell>{item.category}</TableCell>
+                          <TableCell>{item.price}</TableCell>
+                          <TableCell className="max-w-xs truncate">{item.description}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={() => handleDelete(item.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {filteredItems.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell>{item.category}</TableCell>
-                  <TableCell>{item.price}</TableCell>
-                  <TableCell className="max-w-xs truncate">{item.description}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleDelete(item.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                    </TableRow>
+                      <Card key={item.id} className="overflow-hidden">
+                        <div className="aspect-square bg-muted flex items-center justify-center">
+                          {item.image_url ? (
+                            <img 
+                              src={item.image_url} 
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                const sibling = target.nextElementSibling as HTMLElement;
+                                target.style.display = 'none';
+                                if (sibling) sibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground" style={{ display: item.image_url ? 'none' : 'flex' }}>
+                            No Image
+                          </div>
+                        </div>
+                        <CardContent className="p-4">
+                          <h3 className="font-semibold text-lg mb-2">{item.name}</h3>
+                          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{item.description}</p>
+                          <div className="flex items-center justify-between mb-3">
+                            <Badge variant="secondary">{item.category}</Badge>
+                            <span className="font-bold text-lg">{item.price}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => handleEdit(item)} className="flex-1 flex items-center gap-1">
+                              <Edit className="h-3 w-3" />
+                              Edit
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleDelete(item.id)} className="flex-1 flex items-center gap-1">
+                              <Trash2 className="h-3 w-3" />
+                              Delete
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
                     ))}
-                  </TableBody>
-                </Table>
+                  </div>
+                )}
               </>
             );
           })()}
@@ -872,6 +979,7 @@ const EventManagement = () => {
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [eventImageUrl, setEventImageUrl] = useState('');
   const [isRecurringChecked, setIsRecurringChecked] = useState(false);
+  const [eventViewMode, setEventViewMode] = useState<'list' | 'card'>('list');
 
   const { data: events, isLoading } = useQuery({
     queryKey: ["events"],
@@ -1122,49 +1230,144 @@ const EventManagement = () => {
       
       <Card>
         <CardHeader>
-          <CardTitle>All Events</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>All Events</CardTitle>
+            <div className="flex items-center border rounded-lg p-1">
+              <Button
+                variant={eventViewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setEventViewMode('list')}
+                className="flex items-center gap-2"
+              >
+                <List className="h-4 w-4" />
+                List
+              </Button>
+              <Button
+                variant={eventViewMode === 'card' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setEventViewMode('card')}
+                className="flex items-center gap-2"
+              >
+                <Grid className="h-4 w-4" />
+                Cards
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          {eventViewMode === 'list' ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Image</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {events?.map((event) => (
+                  <TableRow key={event.id}>
+                    <TableCell>
+                      <div className="w-12 h-12 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                        {event.image_url ? (
+                          <img 
+                            src={event.image_url} 
+                            alt={event.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              const sibling = target.nextElementSibling as HTMLElement;
+                              target.style.display = 'none';
+                              if (sibling) sibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs" style={{ display: event.image_url ? 'none' : 'flex' }}>
+                          No Image
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{event.title}</TableCell>
+                    <TableCell>{(() => {
+                      try {
+                        const date = new Date(event.date);
+                        return !isNaN(date.getTime()) ? date.toLocaleDateString() : 'Invalid Date';
+                      } catch {
+                        return 'Invalid Date';
+                      }
+                    })()}</TableCell>
+                    <TableCell>{event.time}</TableCell>
+                    <TableCell>{event.category}</TableCell>
+                    <TableCell>{event.price}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => handleEdit(event)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleDelete(event.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {events?.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell className="font-medium">{event.title}</TableCell>
-                  <TableCell>{(() => {
-                    try {
-                      const date = new Date(event.date);
-                      return !isNaN(date.getTime()) ? date.toLocaleDateString() : 'Invalid Date';
-                    } catch {
-                      return 'Invalid Date';
-                    }
-                  })()}</TableCell>
-                  <TableCell>{event.time}</TableCell>
-                  <TableCell>{event.category}</TableCell>
-                  <TableCell>{event.price}</TableCell>
-                  <TableCell>
+                <Card key={event.id} className="overflow-hidden">
+                  <div className="aspect-video bg-muted flex items-center justify-center">
+                    {event.image_url ? (
+                      <img 
+                        src={event.image_url} 
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          const sibling = target.nextElementSibling as HTMLElement;
+                          target.style.display = 'none';
+                          if (sibling) sibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground" style={{ display: event.image_url ? 'none' : 'flex' }}>
+                      No Image
+                    </div>
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-lg mb-2">{event.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{event.description}</p>
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="secondary">{event.category}</Badge>
+                        <span className="font-bold text-lg">{event.price}</span>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        <div>{new Date(event.date).toLocaleDateString()} at {event.time}</div>
+                        {event.host && <div>Host: {event.host}</div>}
+                        {event.dj && <div>DJ: {event.dj}</div>}
+                      </div>
+                    </div>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(event)}>
-                        <Edit className="h-4 w-4" />
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(event)} className="flex-1 flex items-center gap-1">
+                        <Edit className="h-3 w-3" />
+                        Edit
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleDelete(event.id)}>
-                        <Trash2 className="h-4 w-4" />
+                      <Button size="sm" variant="destructive" onClick={() => handleDelete(event.id)} className="flex-1 flex items-center gap-1">
+                        <Trash2 className="h-3 w-3" />
+                        Delete
                       </Button>
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </CardContent>
+                </Card>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -1715,6 +1918,445 @@ const TableManagement = () => {
               ))}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Modal Management Component
+const ModalManagement = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editingModal, setEditingModal] = useState<any>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [modalViewMode, setModalViewMode] = useState<'list' | 'card'>('list');
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    image_url: "",
+    primary_button_text: "Plan Your Event",
+    primary_button_action: "plan-event",
+    secondary_button_text: "Reserve a Table",
+    secondary_button_action: "reservation",
+    is_active: true
+  });
+
+  const { data: homeModals, isLoading } = useQuery({
+    queryKey: ["home-modals"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("home_modals").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: events } = useQuery({
+    queryKey: ["events-for-modals"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("events").select("id, title").order("date", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: menuItems } = useQuery({
+    queryKey: ["menu-items-for-modals"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("menu_items").select("id, name").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const createModal = useMutation({
+    mutationFn: async (modalData) => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase.from("home_modals").insert(modalData).select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Modal created successfully" });
+      queryClient.invalidateQueries({ queryKey: ["home-modals"] });
+      setIsAddModalOpen(false);
+      resetForm();
+    },
+    onError: (error) => {
+      toast({ title: "Error creating modal", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const updateModal = useMutation({
+    mutationFn: async ({ id, ...modalData }: { id: string; [key: string]: any }) => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase.from("home_modals").update(modalData).eq("id", id).select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Modal updated successfully" });
+      queryClient.invalidateQueries({ queryKey: ["home-modals"] });
+      setEditingModal(null);
+      resetForm();
+    },
+    onError: (error) => {
+      toast({ title: "Error updating modal", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const deleteModal = useMutation({
+    mutationFn: async (id: string) => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) throw new Error("Not authenticated");
+
+      const { error } = await supabase.from("home_modals").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Modal deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: ["home-modals"] });
+    },
+    onError: (error) => {
+      toast({ title: "Error deleting modal", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      image_url: "",
+      primary_button_text: "Plan Your Event",
+      primary_button_action: "plan-event",
+      secondary_button_text: "Reserve a Table",
+      secondary_button_action: "reservation",
+      is_active: true
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingModal) {
+      updateModal.mutate({ id: editingModal.id, ...formData });
+    } else {
+      createModal.mutate(formData);
+    }
+  };
+
+  const handleEdit = (modal: any) => {
+    setEditingModal(modal);
+    setFormData({
+      title: modal.title,
+      description: modal.description,
+      image_url: modal.image_url || "",
+      primary_button_text: modal.primary_button_text,
+      primary_button_action: modal.primary_button_action,
+      secondary_button_text: modal.secondary_button_text,
+      secondary_button_action: modal.secondary_button_action,
+      is_active: modal.is_active
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this modal?")) {
+      deleteModal.mutate(id);
+    }
+  };
+
+  const getActionOptions = () => {
+    const staticOptions = [
+      { value: "plan-event", label: "Plan Event" },
+      { value: "reservation", label: "Make Reservation" },
+      { value: "menu", label: "View Menu" },
+      { value: "events", label: "View Events" }
+    ];
+
+    const eventOptions = events?.map(event => ({
+      value: `event:${event.id}`,
+      label: `Event: ${event.title}`
+    })) || [];
+
+    const menuOptions = menuItems?.map(item => ({
+      value: `menu-item:${item.id}`,
+      label: `Menu: ${item.name}`
+    })) || [];
+
+    return [...staticOptions, ...eventOptions, ...menuOptions];
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>Home Page Modals</CardTitle>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center border rounded-lg p-1">
+                <Button
+                  variant={modalViewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setModalViewMode('list')}
+                  className="flex items-center gap-2"
+                >
+                  <List className="h-4 w-4" />
+                  List
+                </Button>
+                <Button
+                  variant={modalViewMode === 'card' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setModalViewMode('card')}
+                  className="flex items-center gap-2"
+                >
+                  <Grid className="h-4 w-4" />
+                  Cards
+                </Button>
+              </div>
+              <Button onClick={() => { setIsAddModalOpen(true); setEditingModal(null); resetForm(); }}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Modal
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isAddModalOpen && (
+            <form onSubmit={handleSubmit} className="space-y-4 mb-6 p-4 border rounded-lg">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="image_url">Image URL</Label>
+                  <ImageUpload
+                    value={formData.image_url}
+                    onChange={(url) => setFormData({ ...formData, image_url: url })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="primary_button_text">Primary Button Text</Label>
+                  <Input
+                    id="primary_button_text"
+                    value={formData.primary_button_text}
+                    onChange={(e) => setFormData({ ...formData, primary_button_text: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="primary_button_action">Primary Button Action</Label>
+                  <Select
+                    value={formData.primary_button_action}
+                    onValueChange={(value) => setFormData({ ...formData, primary_button_action: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getActionOptions().map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="secondary_button_text">Secondary Button Text</Label>
+                  <Input
+                    id="secondary_button_text"
+                    value={formData.secondary_button_text}
+                    onChange={(e) => setFormData({ ...formData, secondary_button_text: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="secondary_button_action">Secondary Button Action</Label>
+                  <Select
+                    value={formData.secondary_button_action}
+                    onValueChange={(value) => setFormData({ ...formData, secondary_button_action: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getActionOptions().map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="is_active">Active</Label>
+              </div>
+
+              <div className="flex gap-2">
+                <Button type="submit">
+                  {editingModal ? "Update Modal" : "Create Modal"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsAddModalOpen(false);
+                    setEditingModal(null);
+                    resetForm();
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {modalViewMode === 'list' ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Image</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Primary Action</TableHead>
+                  <TableHead>Secondary Action</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {homeModals?.map((modal) => (
+                  <TableRow key={modal.id}>
+                    <TableCell>
+                      <div className="w-12 h-12 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                        {modal.image_url ? (
+                          <img 
+                            src={modal.image_url} 
+                            alt={modal.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              const sibling = target.nextElementSibling as HTMLElement;
+                              target.style.display = 'none';
+                              if (sibling) sibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs" style={{ display: modal.image_url ? 'none' : 'flex' }}>
+                          No Image
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{modal.title}</TableCell>
+                    <TableCell className="max-w-xs truncate">{modal.description}</TableCell>
+                    <TableCell>
+                      <Badge variant={modal.is_active ? "default" : "secondary"}>
+                        {modal.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{modal.primary_button_action}</TableCell>
+                    <TableCell>{modal.secondary_button_action}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => handleEdit(modal)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleDelete(modal.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {homeModals?.map((modal) => (
+                <Card key={modal.id} className="overflow-hidden">
+                  <div className="aspect-video bg-muted flex items-center justify-center">
+                    {modal.image_url ? (
+                      <img 
+                        src={modal.image_url} 
+                        alt={modal.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          const sibling = target.nextElementSibling as HTMLElement;
+                          target.style.display = 'none';
+                          if (sibling) sibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground" style={{ display: modal.image_url ? 'none' : 'flex' }}>
+                      No Image
+                    </div>
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-lg mb-2">{modal.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{modal.description}</p>
+                    <div className="space-y-2 mb-3">
+                      <Badge variant={modal.is_active ? "default" : "secondary"} className="w-full justify-center">
+                        {modal.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                      <div className="text-sm text-muted-foreground">
+                        <div className="truncate">Primary: {modal.primary_button_action}</div>
+                        <div className="truncate">Secondary: {modal.secondary_button_action}</div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(modal)} className="flex-1 flex items-center gap-1">
+                        <Edit className="h-3 w-3" />
+                        Edit
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleDelete(modal.id)} className="flex-1 flex items-center gap-1">
+                        <Trash2 className="h-3 w-3" />
+                        Delete
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

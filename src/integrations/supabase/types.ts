@@ -125,6 +125,48 @@ export type Database = {
         }
         Relationships: []
       }
+      home_modals: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          image_url: string | null
+          primary_button_text: string
+          primary_button_action: string
+          secondary_button_text: string
+          secondary_button_action: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description: string
+          image_url?: string | null
+          primary_button_text?: string
+          primary_button_action?: string
+          secondary_button_text?: string
+          secondary_button_action?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          image_url?: string | null
+          primary_button_text?: string
+          primary_button_action?: string
+          secondary_button_text?: string
+          secondary_button_action?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           category: string

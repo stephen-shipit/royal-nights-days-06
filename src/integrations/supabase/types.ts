@@ -261,6 +261,7 @@ export type Database = {
           birthday_package: boolean | null
           created_at: string
           event_id: string
+          expires_at: string | null
           guest_count: number
           guest_email: string
           guest_name: string
@@ -280,6 +281,7 @@ export type Database = {
           birthday_package?: boolean | null
           created_at?: string
           event_id: string
+          expires_at?: string | null
           guest_count: number
           guest_email: string
           guest_name: string
@@ -299,6 +301,7 @@ export type Database = {
           birthday_package?: boolean | null
           created_at?: string
           event_id?: string
+          expires_at?: string | null
           guest_count?: number
           guest_email?: string
           guest_name?: string
@@ -381,8 +384,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_reservations: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       is_admin: {
         Args: { user_id: string }
+        Returns: boolean
+      }
+      is_table_available: {
+        Args: { p_event_id: string; p_table_id: string }
         Returns: boolean
       }
     }

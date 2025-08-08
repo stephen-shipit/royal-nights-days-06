@@ -122,12 +122,14 @@ const EventDetails = () => {
 
       console.log('Fetched tables:', tables);
 
-      // Only get reservations for this specific event and confirmed status
+      // Clean up expired reservations and get all active reservations for this event
+      await supabase.rpc('cleanup_expired_reservations');
+      
       const { data: reservations, error: reservationsError } = await supabase
         .from('table_reservations')
         .select('table_id, guest_count, event_id, status')
         .eq('event_id', eventId)
-        .eq('status', 'confirmed');
+        .in('status', ['confirmed', 'pending']);
 
       if (reservationsError) {
         console.error('Error fetching reservations:', reservationsError);
@@ -195,7 +197,30 @@ const EventDetails = () => {
     setIsProcessingPayment(true);
 
     try {
-      // Create pending reservation first
+      // Clean up expired reservations first
+      await supabase.rpc('cleanup_expired_reservations');
+      
+      // Check if table is still available
+      const { data: isAvailable } = await supabase.rpc('is_table_available', {
+        p_event_id: event.id,
+        p_table_id: selectedTable.id
+      });
+      
+      if (!isAvailable) {
+        toast({
+          title: "Table Unavailable",
+          description: "This table is no longer available. Please select another table.",
+          variant: "destructive",
+        });
+        setIsProcessingPayment(false);
+        // Refresh the page to update table availability
+        window.location.reload();
+        return;
+      }
+
+      // Create pending reservation with 30 minutes expiry
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+      
       const { data: reservation, error: reservationError } = await supabase
         .from('table_reservations')
         .insert({
@@ -204,7 +229,8 @@ const EventDetails = () => {
           guest_name: reservationForm.guest_name,
           guest_email: reservationForm.guest_email,
           guest_count: reservationForm.guest_count,
-          status: 'pending'
+          status: 'pending',
+          expires_at: expiresAt
         })
         .select()
         .single();

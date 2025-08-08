@@ -42,17 +42,34 @@ serve(async (req) => {
 
     console.log("Creating payment session for reservation:", reservationId);
 
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2023-10-16",
-    });
-
     // Create Supabase client for service operations
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // Clean up expired reservations before processing
+    await supabase.rpc('cleanup_expired_reservations');
+
+    // Verify the reservation still exists and is valid
+    const { data: reservation, error: reservationCheckError } = await supabase
+      .from('table_reservations')
+      .select('*')
+      .eq('id', reservationId)
+      .eq('status', 'pending')
+      .single();
+
+    if (reservationCheckError || !reservation) {
+      console.error('Reservation not found or invalid:', reservationCheckError);
+      throw new Error('Reservation not found or has expired');
+    }
+
+    // Initialize Stripe
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+      apiVersion: "2023-10-16",
+    });
+
 
     // Calculate total amount
     const birthdayPackagePrice = birthdayPackage ? 5000 : 0; // $50 in cents

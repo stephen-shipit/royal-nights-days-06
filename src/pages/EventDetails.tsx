@@ -440,9 +440,9 @@ const EventDetails = () => {
                                )}
                                {!isReserved && (
                                  <>
-                                   {table.reservation_price > 0 && (
+                                   {table.reservation_price && Number(table.reservation_price) > 0 && (
                                      <span className="text-[10px] font-bold leading-none">
-                                       ${Math.floor(table.reservation_price / 100)}
+                                       ${Math.floor(Number(table.reservation_price) / 100)}
                                      </span>
                                    )}
                                    <span className="text-xs font-bold">T{table.table_number}</span>
@@ -593,9 +593,9 @@ const EventDetails = () => {
                              )}
                              {!isReserved && (
                                <>
-                                 {table.reservation_price > 0 && (
+                                 {table.reservation_price && Number(table.reservation_price) > 0 && (
                                    <span className="text-xs font-bold leading-none">
-                                     ${Math.floor(table.reservation_price / 100)}
+                                     ${Math.floor(Number(table.reservation_price) / 100)}
                                    </span>
                                  )}
                                  <span className="text-sm font-bold">T{table.table_number}</span>

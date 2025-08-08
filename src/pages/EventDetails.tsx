@@ -440,11 +440,11 @@ const EventDetails = () => {
                                )}
                                {!isReserved && (
                                  <>
-                                   {table.reservation_price && Number(table.reservation_price) > 0 && (
-                                     <span className="text-[8px] font-bold leading-none">
-                                       ${Number(table.reservation_price)}
-                                     </span>
-                                   )}
+                                    {Number(table.reservation_price) > 0 && (
+                                      <span className="text-[8px] font-bold leading-none">
+                                        ${Number(table.reservation_price)}
+                                      </span>
+                                    )}
                                    <span className="text-xs font-bold">T{table.table_number}</span>
                                    <span className="text-[10px] leading-none">{table.max_guests}</span>
                                  </>
@@ -593,11 +593,11 @@ const EventDetails = () => {
                              )}
                              {!isReserved && (
                                <>
-                                 {table.reservation_price && Number(table.reservation_price) > 0 && (
-                                   <span className="text-[10px] font-bold leading-none">
-                                     ${Number(table.reservation_price)}
-                                   </span>
-                                 )}
+                                  {Number(table.reservation_price) > 0 && (
+                                    <span className="text-[10px] font-bold leading-none">
+                                      ${Number(table.reservation_price)}
+                                    </span>
+                                  )}
                                  <span className="text-sm font-bold">T{table.table_number}</span>
                                  <span className="text-xs leading-none">{table.max_guests}</span>
                                </>

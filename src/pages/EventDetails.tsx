@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,8 +49,10 @@ type VenueTable = {
 type ReservationForm = {
   guest_name: string;
   guest_email: string;
+  guest_phone: string;
   guest_count: number;
   special_requests: string;
+  birthday_package: boolean;
 };
 
 const EventDetails = () => {
@@ -64,9 +67,12 @@ const EventDetails = () => {
   const [reservationForm, setReservationForm] = useState<ReservationForm>({
     guest_name: "",
     guest_email: "",
+    guest_phone: "",
     guest_count: 1,
-    special_requests: ""
+    special_requests: "",
+    birthday_package: false
   });
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
     if (eventId) {
@@ -166,6 +172,7 @@ const EventDetails = () => {
   const handleReservation = async () => {
     if (!selectedTable || !event) return;
 
+    // Validation
     if (reservationForm.guest_count > selectedTable.max_guests) {
       toast({
         title: "Too Many Guests",
@@ -175,10 +182,20 @@ const EventDetails = () => {
       return;
     }
 
-    const totalPrice = selectedTable.reservation_price || 0;
+    if (!reservationForm.guest_name || !reservationForm.guest_email || !reservationForm.guest_phone) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessingPayment(true);
 
     try {
-      const { error } = await supabase
+      // Create pending reservation first
+      const { data: reservation, error: reservationError } = await supabase
         .from('table_reservations')
         .insert({
           event_id: event.id,
@@ -186,35 +203,68 @@ const EventDetails = () => {
           guest_name: reservationForm.guest_name,
           guest_email: reservationForm.guest_email,
           guest_count: reservationForm.guest_count,
-          special_requests: reservationForm.special_requests,
-          total_price: totalPrice,
-          status: 'confirmed'
-        });
+          status: 'pending'
+        })
+        .select()
+        .single();
 
-      if (error) {
-        console.error('Error creating reservation:', error);
+      if (reservationError) {
+        console.error('Error creating reservation:', reservationError);
         toast({
           title: "Reservation Failed",
           description: "Could not create your reservation. Please try again.",
           variant: "destructive",
         });
-      } else {
-        const priceText = totalPrice > 0 ? ` for $${(totalPrice / 100).toFixed(2)}` : '';
-        toast({
-          title: "Reservation Confirmed!",
-          description: `Table ${selectedTable.table_number} reserved for ${reservationForm.guest_count} guests${priceText}`,
-        });
-        setSelectedTable(null);
-        setReservationForm({
-          guest_name: "",
-          guest_email: "",
-          guest_count: 1,
-          special_requests: ""
-        });
-        fetchVenueTables(); // Refresh table availability
+        setIsProcessingPayment(false);
+        return;
       }
+
+      // Calculate pricing
+      const tablePrice = selectedTable.reservation_price || 0;
+      const birthdayPackagePrice = reservationForm.birthday_package ? 5000 : 0; // $50 in cents
+      const totalPrice = tablePrice + birthdayPackagePrice;
+
+      // Create Stripe payment session
+      const { data, error: paymentError } = await supabase.functions.invoke('create-payment-session', {
+        body: {
+          reservationId: reservation.id,
+          eventId: event.id,
+          tableId: selectedTable.id,
+          guestName: reservationForm.guest_name,
+          guestEmail: reservationForm.guest_email,
+          guestPhone: reservationForm.guest_phone,
+          guestCount: reservationForm.guest_count,
+          specialRequests: reservationForm.special_requests,
+          birthdayPackage: reservationForm.birthday_package,
+          tablePrice: tablePrice
+        }
+      });
+
+      if (paymentError) {
+        console.error('Error creating payment session:', paymentError);
+        toast({
+          title: "Payment Error",
+          description: "Could not create payment session. Please try again.",
+          variant: "destructive",
+        });
+        setIsProcessingPayment(false);
+        return;
+      }
+
+      // Redirect to Stripe Checkout
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+
+      setIsProcessingPayment(false);
     } catch (error) {
       console.error('Error creating reservation:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      setIsProcessingPayment(false);
     }
   };
 
@@ -593,24 +643,37 @@ const EventDetails = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="guest_name">Guest Name</Label>
+                <Label htmlFor="guest_name">Guest Name *</Label>
                 <Input
                   id="guest_name"
                   value={reservationForm.guest_name}
                   onChange={(e) => setReservationForm(prev => ({ ...prev, guest_name: e.target.value }))}
                   placeholder="Your name"
+                  required
                 />
               </div>
               <div>
-                <Label htmlFor="guest_email">Email</Label>
+                <Label htmlFor="guest_email">Email *</Label>
                 <Input
                   id="guest_email"
                   type="email"
                   value={reservationForm.guest_email}
                   onChange={(e) => setReservationForm(prev => ({ ...prev, guest_email: e.target.value }))}
                   placeholder="your@email.com"
+                  required
                 />
               </div>
+            </div>
+            <div>
+              <Label htmlFor="guest_phone">Phone Number *</Label>
+              <Input
+                id="guest_phone"
+                type="tel"
+                value={reservationForm.guest_phone}
+                onChange={(e) => setReservationForm(prev => ({ ...prev, guest_phone: e.target.value }))}
+                placeholder="(555) 123-4567"
+                required
+              />
             </div>
             <div>
               <Label htmlFor="guest_count">Number of Guests</Label>
@@ -631,6 +694,33 @@ const EventDetails = () => {
                 </p>
               )}
             </div>
+            {/* Birthday Package Option */}
+            <div className="border border-accent rounded-lg p-4 bg-accent/5">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="birthday_package"
+                  checked={reservationForm.birthday_package}
+                  onCheckedChange={(checked) => 
+                    setReservationForm(prev => ({ ...prev, birthday_package: checked as boolean }))
+                  }
+                />
+                <div className="space-y-2">
+                  <Label 
+                    htmlFor="birthday_package" 
+                    className="text-base font-medium cursor-pointer"
+                  >
+                    🎉 Birthday Shoutout Package (+$50.00)
+                  </Label>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>• Special shoutout by our MC</p>
+                    <p>• Your picture and name displayed on our large screen</p>
+                    <p>• Sparklers and lights display at your table</p>
+                    <p>• Custom name sign at your table</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div>
               <Label htmlFor="special_requests">Special Requests (Optional)</Label>
               <Textarea
@@ -640,12 +730,42 @@ const EventDetails = () => {
                 placeholder="Any special dietary requirements or requests..."
               />
             </div>
+
+            {/* Price Summary */}
+            <div className="border-t pt-4">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Table Reservation</span>
+                  <span>${selectedTable ? (selectedTable.reservation_price / 100).toFixed(2) : '0.00'}</span>
+                </div>
+                {reservationForm.birthday_package && (
+                  <div className="flex justify-between text-sm">
+                    <span>Birthday Shoutout Package</span>
+                    <span>$50.00</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-medium text-base border-t pt-2">
+                  <span>Total</span>
+                  <span>
+                    ${selectedTable 
+                      ? ((selectedTable.reservation_price + (reservationForm.birthday_package ? 5000 : 0)) / 100).toFixed(2) 
+                      : '0.00'
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
             <Button 
               onClick={handleReservation}
               className="w-full"
-              disabled={!reservationForm.guest_name || !reservationForm.guest_email}
+              disabled={
+                !reservationForm.guest_name || 
+                !reservationForm.guest_email || 
+                !reservationForm.guest_phone ||
+                isProcessingPayment
+              }
             >
-              Confirm Reservation for Full Event Duration
+              {isProcessingPayment ? "Processing..." : "Continue to Payment"}
             </Button>
           </div>
         </DialogContent>

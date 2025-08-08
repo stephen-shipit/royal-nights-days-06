@@ -52,8 +52,11 @@ export type Database = {
           host: string | null
           id: string
           image_url: string | null
+          is_recurring: boolean | null
           price: string
           price_range: string
+          recurrence_end_date: string | null
+          recurrence_pattern: string | null
           tickets_url: string | null
           time: string
           title: string
@@ -69,8 +72,11 @@ export type Database = {
           host?: string | null
           id?: string
           image_url?: string | null
+          is_recurring?: boolean | null
           price: string
           price_range: string
+          recurrence_end_date?: string | null
+          recurrence_pattern?: string | null
           tickets_url?: string | null
           time: string
           title: string
@@ -86,8 +92,11 @@ export type Database = {
           host?: string | null
           id?: string
           image_url?: string | null
+          is_recurring?: boolean | null
           price?: string
           price_range?: string
+          recurrence_end_date?: string | null
+          recurrence_pattern?: string | null
           tickets_url?: string | null
           time?: string
           title?: string
@@ -127,42 +136,42 @@ export type Database = {
       }
       home_modals: {
         Row: {
-          id: string
-          title: string
-          description: string
-          image_url: string | null
-          primary_button_text: string
-          primary_button_action: string
-          secondary_button_text: string
-          secondary_button_action: string
-          is_active: boolean
           created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          primary_button_action: string
+          primary_button_text: string
+          secondary_button_action: string
+          secondary_button_text: string
+          title: string
           updated_at: string
         }
         Insert: {
-          id?: string
-          title: string
-          description: string
-          image_url?: string | null
-          primary_button_text?: string
-          primary_button_action?: string
-          secondary_button_text?: string
-          secondary_button_action?: string
-          is_active?: boolean
           created_at?: string
+          description: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          primary_button_action?: string
+          primary_button_text?: string
+          secondary_button_action?: string
+          secondary_button_text?: string
+          title: string
           updated_at?: string
         }
         Update: {
-          id?: string
-          title?: string
-          description?: string
-          image_url?: string | null
-          primary_button_text?: string
-          primary_button_action?: string
-          secondary_button_text?: string
-          secondary_button_action?: string
-          is_active?: boolean
           created_at?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          primary_button_action?: string
+          primary_button_text?: string
+          secondary_button_action?: string
+          secondary_button_text?: string
+          title?: string
           updated_at?: string
         }
         Relationships: []
@@ -206,47 +215,100 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string | null
+          id: string
+          reservation_id: string | null
+          status: string | null
+          stripe_session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string | null
+          id?: string
+          reservation_id?: string | null
+          status?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string | null
+          id?: string
+          reservation_id?: string | null
+          status?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "table_reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       table_reservations: {
         Row: {
+          birthday_package: boolean | null
           created_at: string
           event_id: string
           guest_count: number
           guest_email: string
           guest_name: string
+          guest_phone: string | null
           id: string
+          payment_status: string | null
           reservation_type: string | null
           special_requests: string | null
           status: string
+          stripe_session_id: string | null
           table_id: string
           time_slot: string | null
           total_price: number | null
           updated_at: string
         }
         Insert: {
+          birthday_package?: boolean | null
           created_at?: string
           event_id: string
           guest_count: number
           guest_email: string
           guest_name: string
+          guest_phone?: string | null
           id?: string
+          payment_status?: string | null
           reservation_type?: string | null
           special_requests?: string | null
           status?: string
+          stripe_session_id?: string | null
           table_id: string
           time_slot?: string | null
           total_price?: number | null
           updated_at?: string
         }
         Update: {
+          birthday_package?: boolean | null
           created_at?: string
           event_id?: string
           guest_count?: number
           guest_email?: string
           guest_name?: string
+          guest_phone?: string | null
           id?: string
+          payment_status?: string | null
           reservation_type?: string | null
           special_requests?: string | null
           status?: string
+          stripe_session_id?: string | null
           table_id?: string
           time_slot?: string | null
           total_price?: number | null

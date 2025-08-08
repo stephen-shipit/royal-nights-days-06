@@ -464,9 +464,8 @@ const MenuManagement = () => {
               <div>
                 <Label>Item Image</Label>
                 <ImageUpload 
-                  initialImageUrl={imageUrl}
-                  onImageUpload={(url) => setImageUrl(url)}
-                  bucket="menu-items"
+                  value={imageUrl}
+                  onChange={(url) => setImageUrl(url)}
                 />
               </div>
               
@@ -873,9 +872,8 @@ const EventManagement = () => {
               <div>
                 <Label>Event Image</Label>
                 <ImageUpload 
-                  currentImageUrl={imageUrl}
-                  onImageUpload={(url) => setImageUrl(url)}
-                  bucket="events"
+                  value={imageUrl}
+                  onChange={(url) => setImageUrl(url)}
                 />
               </div>
               
@@ -905,9 +903,9 @@ const EventManagement = () => {
                 <div className="text-sm">
                   <p><strong>Date:</strong> {event.date}</p>
                   <p><strong>Time:</strong> {event.time}</p>
-                  <p><strong>Location:</strong> {event.location}</p>
+                  <p><strong>Category:</strong> {event.category}</p>
                   <p><strong>Price:</strong> {event.price}</p>
-                  <p><strong>Max Attendees:</strong> {event.max_attendees}</p>
+                  <p><strong>Featured:</strong> {event.featured ? 'Yes' : 'No'}</p>
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button size="sm" variant="outline" onClick={() => handleEdit(event)}>
@@ -1036,7 +1034,7 @@ const GalleryManagement = () => {
         </div>
       </div>
 
-      <BulkImageUpload onComplete={() => queryClient.invalidateQueries({ queryKey: ["gallery-items"] })} />
+      <BulkImageUpload onComplete={() => queryClient.invalidateQueries({ queryKey: ["gallery-items"] })} onCancel={() => {}} />
 
       {isEditing && (
         <Card>
@@ -1075,9 +1073,8 @@ const GalleryManagement = () => {
               <div>
                 <Label>Image</Label>
                 <ImageUpload 
-                  currentImageUrl={imageUrl}
-                  onImageUpload={(url) => setImageUrl(url)}
-                  bucket="gallery"
+                  value={imageUrl}
+                  onChange={(url) => setImageUrl(url)}
                 />
               </div>
               
@@ -1287,7 +1284,7 @@ const TableManagement = () => {
               <TableRow key={table.id}>
                 <TableCell className="font-medium">{table.table_number}</TableCell>
                 <TableCell>{table.max_guests}</TableCell>
-                <TableCell>{table.location || "Not specified"}</TableCell>
+                <TableCell>${table.reservation_price}</TableCell>
                 <TableCell>
                   <Badge variant={table.is_available ? 'default' : 'destructive'}>
                     {table.is_available ? 'Available' : 'Occupied'}
@@ -1478,9 +1475,8 @@ const ModalManagement = () => {
               <div>
                 <Label>Modal Image</Label>
                 <ImageUpload 
-                  currentImageUrl={imageUrl}
-                  onImageUpload={(url) => setImageUrl(url)}
-                  bucket="modals"
+                  value={imageUrl}
+                  onChange={(url) => setImageUrl(url)}
                 />
               </div>
               

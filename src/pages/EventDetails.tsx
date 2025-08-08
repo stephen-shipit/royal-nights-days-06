@@ -421,7 +421,7 @@ const EventDetails = () => {
                             <button
                               key={table.id}
                               onClick={() => handleTableSelect(table)}
-                               className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md ${
+                               className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md relative ${
                                  isReserved
                                    ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
                                    : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'

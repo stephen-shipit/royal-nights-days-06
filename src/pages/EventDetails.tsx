@@ -438,7 +438,7 @@ const EventDetails = () => {
                               {isReserved && (
                                 <X className="absolute inset-0 w-8 h-8 text-red-500 m-auto" strokeWidth={3} />
                               )}
-                               {table.reservation_price > 0 && !isReserved && (
+                               {table.reservation_price && table.reservation_price > 0 && !isReserved && (
                                  <span className="text-[10px] font-bold leading-none">
                                    ${(table.reservation_price / 100).toFixed(0)}
                                  </span>
@@ -592,7 +592,7 @@ const EventDetails = () => {
                             {isReserved && (
                               <X className="absolute inset-0 w-10 h-10 text-red-500 m-auto" strokeWidth={3} />
                             )}
-                             {table.reservation_price > 0 && !isReserved && (
+                             {table.reservation_price && table.reservation_price > 0 && !isReserved && (
                                <span className="text-xs font-bold leading-none">
                                  ${(table.reservation_price / 100).toFixed(0)}
                                </span>

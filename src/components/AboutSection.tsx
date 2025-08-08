@@ -17,9 +17,9 @@ const AboutSection = () => {
             <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
               <p>Since our founding, Royal Palace has redefined the culinary landscape with our innovative approach to Afro-Mediterranean fusion cuisine. Our master chefs craft each dish with precision and passion.</p>
               <p>
-                From our signature wood-fired dishes to handcrafted cocktails, every element 
+                From our signature Afro-Mediterranean spice blends to authentic wood-fired preparations, every element 
                 is designed to create an unforgettable dining experience that seamlessly 
-                transitions into sophisticated nightlife.
+                transitions into sophisticated nightlife entertainment.
               </p>
               <p>
                 Join us for an evening where exceptional cuisine meets refined atmosphere, 

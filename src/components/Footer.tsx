@@ -20,7 +20,7 @@ const Footer = () => {
               <p className="text-secondary">Restaurant & Lounge</p>
             </div>
             <p className="text-primary-foreground/80 mb-4">
-              A fusion of Mediterranean & American flavors in an atmosphere of refined elegance.
+              A fusion of African & Mediterranean flavors in an atmosphere of refined elegance.
             </p>
           </div>
 

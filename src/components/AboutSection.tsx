@@ -12,7 +12,7 @@ const AboutSection = () => {
                 A FUSION OF
               </h2>
               <h3 className="text-3xl md:text-4xl luxury-text font-bold mb-8">
-                MEDITERRANEAN & AMERICAN FLAVORS
+                AFRICAN & MEDITERRANEAN FLAVORS
               </h3>
             </div>
             

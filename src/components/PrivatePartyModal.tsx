@@ -142,14 +142,14 @@ const PrivatePartyModal = ({ onOpenReservationModal }: PrivatePartyModalProps) =
       <DialogContent className="max-w-4xl h-screen md:h-auto max-h-screen md:max-h-none p-0 border-0 bg-transparent my-0 md:my-4 [&>button]:text-white md:[&>button]:text-black [&>button]:opacity-90 [&>button:hover]:opacity-100 [&>button>svg]:h-5 [&>button>svg]:w-5 md:[&>button>svg]:h-4 md:[&>button>svg]:w-4 [&>button]:hidden md:[&>button]:flex">
         <div className="relative bg-card rounded-none md:rounded-2xl overflow-hidden shadow-2xl flex flex-col h-full md:h-[600px]">
           {/* Mobile close button */}
-          <div className="md:hidden absolute top-8 right-4 z-10">
+          <div className="md:hidden absolute top-6 right-4 z-20">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsOpen(false)}
-              className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white rounded-full"
+              className="h-10 w-10 p-0 bg-black/70 hover:bg-black/90 text-white rounded-full shadow-lg"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
           
@@ -178,7 +178,7 @@ const PrivatePartyModal = ({ onOpenReservationModal }: PrivatePartyModalProps) =
               </div>
 
               {/* Sticky buttons container for mobile */}
-              <div className="sticky bottom-0 bg-card p-6 pb-8 border-t md:border-t-0 md:p-8 md:pb-8 md:static">
+              <div className="sticky bottom-0 bg-card p-6 pb-12 border-t md:border-t-0 md:p-8 md:pb-8 md:static">
                 <div className="flex flex-col gap-3">
                   <Button
                     onClick={handlePrimaryAction}

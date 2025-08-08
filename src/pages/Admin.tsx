@@ -1240,7 +1240,16 @@ const TableManagement = () => {
                 </div>
                 <div>
                   <Label htmlFor="location">Location</Label>
-                  <Input id="location" name="location" defaultValue={editingTable?.location || ""} placeholder="e.g., Main Dining, Patio, Bar" />
+                  <Select name="location" defaultValue={editingTable?.location || ""}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Right Red Vip">Right Red Vip</SelectItem>
+                      <SelectItem value="Left Green Vip">Left Green Vip</SelectItem>
+                      <SelectItem value="Floor Seating">Floor Seating</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="reservation_price">Reservation Price ($)</Label>

@@ -1188,6 +1188,7 @@ const TableManagement = () => {
       table_number: formData.get("table_number") as string,
       max_guests: parseInt(formData.get("max_guests") as string),
       location: formData.get("location") as string,
+      reservation_price: parseInt(formData.get("reservation_price") as string) || 0,
       is_available: formData.get("is_available") === "true",
     };
     
@@ -1241,6 +1242,10 @@ const TableManagement = () => {
                   <Label htmlFor="location">Location</Label>
                   <Input id="location" name="location" defaultValue={editingTable?.location || ""} placeholder="e.g., Main Dining, Patio, Bar" />
                 </div>
+                <div>
+                  <Label htmlFor="reservation_price">Reservation Price ($)</Label>
+                  <Input id="reservation_price" name="reservation_price" type="number" min="0" defaultValue={editingTable?.reservation_price || ""} placeholder="0" />
+                </div>
                 <div className="flex items-center space-x-2">
                   <Label htmlFor="is_available">Available</Label>
                   <Select name="is_available" defaultValue={editingTable?.is_available?.toString() || "true"}>
@@ -1275,6 +1280,7 @@ const TableManagement = () => {
               <TableHead>Table Number</TableHead>
               <TableHead>Max Guests</TableHead>
               <TableHead>Location</TableHead>
+              <TableHead>Price</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -1284,7 +1290,8 @@ const TableManagement = () => {
               <TableRow key={table.id}>
                 <TableCell className="font-medium">{table.table_number}</TableCell>
                 <TableCell>{table.max_guests}</TableCell>
-                <TableCell>${table.reservation_price}</TableCell>
+                <TableCell>{table.location || "Not specified"}</TableCell>
+                <TableCell>${table.reservation_price || 0}</TableCell>
                 <TableCell>
                   <Badge variant={table.is_available ? 'default' : 'destructive'}>
                     {table.is_available ? 'Available' : 'Occupied'}

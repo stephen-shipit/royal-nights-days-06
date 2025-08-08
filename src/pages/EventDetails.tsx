@@ -438,12 +438,11 @@ const EventDetails = () => {
                               {isReserved && (
                                 <X className="absolute inset-0 w-8 h-8 text-red-500 m-auto" strokeWidth={3} />
                               )}
-                               <span className="text-[10px] font-bold leading-none">
-                                 {table.reservation_price > 0 && !isReserved 
-                                   ? `$${(table.reservation_price / 100).toFixed(0)}`
-                                   : table.table_number
-                                 }
-                               </span>
+                               {table.reservation_price > 0 && !isReserved && (
+                                 <span className="text-[10px] font-bold leading-none">
+                                   ${(table.reservation_price / 100).toFixed(0)}
+                                 </span>
+                               )}
                                <span className="text-xs font-bold">T{table.table_number}</span>
                                <span className="text-[10px] leading-none">
                                  {isReserved 
@@ -593,12 +592,11 @@ const EventDetails = () => {
                             {isReserved && (
                               <X className="absolute inset-0 w-10 h-10 text-red-500 m-auto" strokeWidth={3} />
                             )}
-                             <span className="text-xs font-bold leading-none">
-                               {table.reservation_price > 0 && !isReserved 
-                                 ? `$${(table.reservation_price / 100).toFixed(0)}`
-                                 : table.table_number
-                               }
-                             </span>
+                             {table.reservation_price > 0 && !isReserved && (
+                               <span className="text-xs font-bold leading-none">
+                                 ${(table.reservation_price / 100).toFixed(0)}
+                               </span>
+                             )}
                              <span className="text-sm font-bold">T{table.table_number}</span>
                              <span className="text-xs leading-none">
                                {isReserved 

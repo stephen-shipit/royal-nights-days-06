@@ -142,7 +142,7 @@ const PrivatePartyModal = ({ onOpenReservationModal }: PrivatePartyModalProps) =
       <DialogContent className="max-w-4xl h-screen md:h-auto max-h-screen md:max-h-none p-0 border-0 bg-transparent my-0 md:my-4 [&>button]:text-white md:[&>button]:text-black [&>button]:opacity-90 [&>button:hover]:opacity-100 [&>button>svg]:h-5 [&>button>svg]:w-5 md:[&>button>svg]:h-4 md:[&>button>svg]:w-4 [&>button]:hidden md:[&>button]:flex">
         <div className="relative bg-card rounded-none md:rounded-2xl overflow-hidden shadow-2xl flex flex-col h-full md:h-[600px]">
           {/* Mobile close button */}
-          <div className="md:hidden absolute top-4 right-4 z-10">
+          <div className="md:hidden absolute top-8 right-4 z-10">
             <Button
               variant="ghost"
               size="sm"

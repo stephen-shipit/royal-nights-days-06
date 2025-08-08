@@ -19,7 +19,7 @@ const AboutSection = () => {
               <p>
                 From our signature Afro-Mediterranean spice blends to expertly crafted preparations, every element 
                 is designed to create an unforgettable dining experience that seamlessly 
-                transitions into sophisticated nightlife entertainment.
+                transitions into sophisticated social entertainment.
               </p>
               <p>
                 Join us for an evening where exceptional cuisine meets refined atmosphere, 

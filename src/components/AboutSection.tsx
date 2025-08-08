@@ -1,8 +1,6 @@
 import foodImage from "@/assets/food-fusion.jpg";
-
 const AboutSection = () => {
-  return (
-    <section className="py-24 bg-background">
+  return <section className="py-24 bg-background">
       <div className="container mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-16 items-center">
           {/* Text Content */}
@@ -12,16 +10,12 @@ const AboutSection = () => {
                 A FUSION OF
               </h2>
               <h3 className="text-3xl md:text-4xl luxury-text font-bold mb-8">
-                AFRICAN & MEDITERRANEAN FLAVORS
+                MEDITERRANEAN & AMERICAN FLAVORS
               </h3>
             </div>
             
             <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
-              <p>
-                Since our founding, Royal Palace has redefined the culinary landscape with our 
-                innovative approach to Mediterranean-American fusion cuisine. Our master chefs 
-                craft each dish with precision and passion.
-              </p>
+              <p>Since our founding, Royal Palace has redefined the culinary landscape with our innovative approach to Afro-Mediterranean fusion cuisine. Our master chefs craft each dish with precision and passion.</p>
               <p>
                 From our signature wood-fired dishes to handcrafted cocktails, every element 
                 is designed to create an unforgettable dining experience that seamlessly 
@@ -52,18 +46,8 @@ const AboutSection = () => {
           {/* Video Background */}
           <div className="relative">
             <div className="elegant-shadow rounded-2xl overflow-hidden transform hover:scale-105 transition-transform duration-500 relative h-[600px]">
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
-                className="absolute inset-0 w-full h-full object-cover"
-              >
-                <source 
-                  src="https://twbqokjjdopxcgiiuluz.supabase.co/storage/v1/object/sign/assets/vidu-general-4-2025-01-26T18_35_35Z.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zNmI0N2YzZS1iMTY1LTQwNTYtOGI4NS01ZDBjZWQwZWIwNDIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvdmlkdS1nZW5lcmFsLTQtMjAyNS0wMS0yNlQxOF8zNV8zNVoubXA0IiwiaWF0IjoxNzUzNzExMjU4LCJleHAiOjIwNjkwNzEyNTh9.yKDHR-SzkSVkCxhmZIk0GfjLvLZDbAjjKhskQBIFpu0" 
-                  type="video/mp4" 
-                />
+              <video autoPlay muted loop playsInline preload="auto" className="absolute inset-0 w-full h-full object-cover">
+                <source src="https://twbqokjjdopxcgiiuluz.supabase.co/storage/v1/object/sign/assets/vidu-general-4-2025-01-26T18_35_35Z.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zNmI0N2YzZS1iMTY1LTQwNTYtOGI4NS01ZDBjZWQwZWIwNDIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvdmlkdS1nZW5lcmFsLTQtMjAyNS0wMS0yNlQxOF8zNV8zNVoubXA0IiwiaWF0IjoxNzUzNzExMjU4LCJleHAiOjIwNjkwNzEyNTh9.yKDHR-SzkSVkCxhmZIk0GfjLvLZDbAjjKhskQBIFpu0" type="video/mp4" />
               </video>
               {/* Optional overlay for better text readability if needed */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
@@ -74,8 +58,6 @@ const AboutSection = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default AboutSection;

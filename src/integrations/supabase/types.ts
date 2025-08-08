@@ -337,6 +337,7 @@ export type Database = {
           height: number
           id: string
           is_available: boolean
+          location: string | null
           max_guests: number
           position_x: number
           position_y: number
@@ -350,6 +351,7 @@ export type Database = {
           height?: number
           id?: string
           is_available?: boolean
+          location?: string | null
           max_guests?: number
           position_x?: number
           position_y?: number
@@ -363,6 +365,7 @@ export type Database = {
           height?: number
           id?: string
           is_available?: boolean
+          location?: string | null
           max_guests?: number
           position_x?: number
           position_y?: number

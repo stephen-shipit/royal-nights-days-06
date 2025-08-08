@@ -1290,7 +1290,7 @@ const TableManagement = () => {
               <TableRow key={table.id}>
                 <TableCell className="font-medium">{table.table_number}</TableCell>
                 <TableCell>{table.max_guests}</TableCell>
-                <TableCell>{table.location || "Not specified"}</TableCell>
+                <TableCell>{(table as any).location || "Not specified"}</TableCell>
                 <TableCell>${table.reservation_price || 0}</TableCell>
                 <TableCell>
                   <Badge variant={table.is_available ? 'default' : 'destructive'}>

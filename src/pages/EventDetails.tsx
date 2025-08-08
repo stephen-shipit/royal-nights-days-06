@@ -634,13 +634,13 @@ const EventDetails = () => {
 
       {/* Reservation Dialog */}
       <Dialog open={!!selectedTable} onOpenChange={() => setSelectedTable(null)}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-h-[85vh] max-w-lg mx-auto my-8 overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>
               Reserve Table {selectedTable?.table_number}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto flex-1 pr-2">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="guest_name">Guest Name *</Label>

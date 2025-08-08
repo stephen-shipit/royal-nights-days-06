@@ -27,18 +27,14 @@ const AboutSection = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-8 pt-8 border-t border-border">
+            <div className="grid grid-cols-2 gap-8 pt-8 border-t border-border">
               <div className="text-center">
-                <div className="text-3xl font-bold text-secondary mb-2">7+</div>
-                <div className="text-sm text-muted-foreground">Years of Excellence</div>
+                <div className="text-3xl font-bold text-secondary mb-2">1+</div>
+                <div className="text-sm text-muted-foreground">Year of Excellence</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-secondary mb-2">50+</div>
                 <div className="text-sm text-muted-foreground">Signature Dishes</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-secondary mb-2">200+</div>
-                <div className="text-sm text-muted-foreground">Premium Spirits</div>
               </div>
             </div>
           </div>

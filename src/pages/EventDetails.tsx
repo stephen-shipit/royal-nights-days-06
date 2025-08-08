@@ -440,11 +440,13 @@ const EventDetails = () => {
                                )}
                                {!isReserved && (
                                  <>
-                                   <span className="text-[10px] font-bold leading-none">
-                                     ${Math.floor((table.reservation_price || 0) / 100)}
-                                   </span>
+                                   {table.reservation_price > 0 && (
+                                     <span className="text-[10px] font-bold leading-none">
+                                       ${Math.floor(table.reservation_price / 100)}
+                                     </span>
+                                   )}
                                    <span className="text-xs font-bold">T{table.table_number}</span>
-                                   <span className="text-[10px] leading-none">{table.max_guests} people</span>
+                                   <span className="text-[10px] leading-none">{table.max_guests}</span>
                                  </>
                                )}
                             </button>
@@ -591,11 +593,13 @@ const EventDetails = () => {
                              )}
                              {!isReserved && (
                                <>
-                                 <span className="text-xs font-bold leading-none">
-                                   ${Math.floor((table.reservation_price || 0) / 100)}
-                                 </span>
+                                 {table.reservation_price > 0 && (
+                                   <span className="text-xs font-bold leading-none">
+                                     ${Math.floor(table.reservation_price / 100)}
+                                   </span>
+                                 )}
                                  <span className="text-sm font-bold">T{table.table_number}</span>
-                                 <span className="text-xs leading-none">{table.max_guests} people</span>
+                                 <span className="text-xs leading-none">{table.max_guests}</span>
                                </>
                              )}
                           </button>

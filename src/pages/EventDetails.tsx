@@ -442,7 +442,7 @@ const EventDetails = () => {
                                  <>
                                    {table.reservation_price && Number(table.reservation_price) > 0 && (
                                      <span className="text-[10px] font-bold leading-none">
-                                       ${Math.floor(Number(table.reservation_price) / 100)}
+                                       ${Number(table.reservation_price)}
                                      </span>
                                    )}
                                    <span className="text-xs font-bold">T{table.table_number}</span>
@@ -595,7 +595,7 @@ const EventDetails = () => {
                                <>
                                  {table.reservation_price && Number(table.reservation_price) > 0 && (
                                    <span className="text-xs font-bold leading-none">
-                                     ${Math.floor(Number(table.reservation_price) / 100)}
+                                     ${Number(table.reservation_price)}
                                    </span>
                                  )}
                                  <span className="text-sm font-bold">T{table.table_number}</span>

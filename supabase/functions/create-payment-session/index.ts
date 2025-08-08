@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 interface PaymentRequest {
-  reservationId: string;
   eventId: string;
   tableId: string;
   guestName: string;
@@ -28,7 +27,6 @@ serve(async (req) => {
 
   try {
     const {
-      reservationId,
       eventId,
       tableId,
       guestName,
@@ -40,7 +38,7 @@ serve(async (req) => {
       tablePrice
     }: PaymentRequest = await req.json();
 
-    console.log("Creating payment session for reservation:", reservationId);
+    console.log("Creating payment session for table:", tableId);
 
     // Create Supabase client for service operations
     const supabase = createClient(
@@ -52,17 +50,14 @@ serve(async (req) => {
     // Clean up expired reservations before processing
     await supabase.rpc('cleanup_expired_reservations');
 
-    // Verify the reservation still exists and is valid
-    const { data: reservation, error: reservationCheckError } = await supabase
-      .from('table_reservations')
-      .select('*')
-      .eq('id', reservationId)
-      .eq('status', 'pending')
-      .single();
+    // Double-check table availability
+    const { data: isAvailable } = await supabase.rpc('is_table_available', {
+      p_event_id: eventId,
+      p_table_id: tableId
+    });
 
-    if (reservationCheckError || !reservation) {
-      console.error('Reservation not found or invalid:', reservationCheckError);
-      throw new Error('Reservation not found or has expired');
+    if (!isAvailable) {
+      throw new Error('Table is no longer available');
     }
 
     // Initialize Stripe
@@ -126,49 +121,20 @@ serve(async (req) => {
         name: "auto",
         address: "auto",
       } : undefined,
-      success_url: `${req.headers.get("origin")}/payment-success?session_id={CHECKOUT_SESSION_ID}&reservation_id=${reservationId}`,
-      cancel_url: `${req.headers.get("origin")}/payment-cancelled?reservation_id=${reservationId}`,
+      success_url: `${req.headers.get("origin")}/payment-success?session_id={CHECKOUT_SESSION_ID}&event_id=${eventId}&table_id=${tableId}`,
+      cancel_url: `${req.headers.get("origin")}/payment-cancelled?event_id=${eventId}&table_id=${tableId}`,
       metadata: {
-        reservationId,
         eventId,
         tableId,
+        guestName,
+        guestEmail,
+        guestPhone,
+        guestCount,
+        specialRequests: specialRequests || '',
+        birthdayPackage: birthdayPackage.toString(),
+        tablePrice: tablePrice.toString()
       },
     });
-
-    // Update reservation with Stripe session ID
-    const { error: updateError } = await supabase
-      .from("table_reservations")
-      .update({
-        stripe_session_id: session.id,
-        guest_name: guestName,
-        guest_email: guestEmail,
-        guest_phone: guestPhone,
-        guest_count: guestCount,
-        special_requests: specialRequests,
-        birthday_package: birthdayPackage,
-        total_price: totalAmount,
-      })
-      .eq("id", reservationId);
-
-    if (updateError) {
-      console.error("Error updating reservation:", updateError);
-      throw new Error("Failed to update reservation");
-    }
-
-    // Create payment record
-    const { error: paymentError } = await supabase
-      .from("payments")
-      .insert({
-        reservation_id: reservationId,
-        stripe_session_id: session.id,
-        amount: totalAmount,
-        status: "pending",
-      });
-
-    if (paymentError) {
-      console.error("Error creating payment record:", paymentError);
-      throw new Error("Failed to create payment record");
-    }
 
     console.log("Payment session created successfully:", session.id);
 

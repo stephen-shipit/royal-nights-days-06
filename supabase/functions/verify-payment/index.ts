@@ -9,7 +9,6 @@ const corsHeaders = {
 
 interface VerifyPaymentRequest {
   sessionId: string;
-  reservationId: string;
 }
 
 serve(async (req) => {
@@ -19,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    const { sessionId, reservationId }: VerifyPaymentRequest = await req.json();
+    const { sessionId }: VerifyPaymentRequest = await req.json();
 
     console.log("Verifying payment for session:", sessionId);
 
@@ -44,42 +43,58 @@ serve(async (req) => {
 
     console.log("Stripe session status:", session.payment_status);
 
-    // Update reservation status based on payment status
+    // Update payment status based on payment status
     const paymentStatus = session.payment_status === "paid" ? "confirmed" : "failed";
-    const reservationStatus = session.payment_status === "paid" ? "confirmed" : "cancelled";
-
-    // Update reservation
-    const { error: reservationError } = await supabase
-      .from("table_reservations")
-      .update({
-        status: reservationStatus,
-        payment_status: paymentStatus,
-      })
-      .eq("id", reservationId);
-
-    if (reservationError) {
-      console.error("Error updating reservation:", reservationError);
-      throw new Error("Failed to update reservation");
-    }
-
-    // Update payment record
-    const { error: paymentError } = await supabase
-      .from("payments")
-      .update({
-        status: paymentStatus,
-      })
-      .eq("stripe_session_id", sessionId);
-
-    if (paymentError) {
-      console.error("Error updating payment:", paymentError);
-      throw new Error("Failed to update payment");
-    }
-
-    // If payment was successful, send confirmation email
+    
     if (session.payment_status === "paid") {
+      // Payment successful - create the reservation now
+      const metadata = session.metadata;
+      const totalAmount = (parseInt(metadata.tablePrice) || 0) + (metadata.birthdayPackage === 'true' ? 5000 : 0);
+      
+      // Create the confirmed reservation
+      const { data: reservation, error: reservationError } = await supabase
+        .from("table_reservations")
+        .insert({
+          event_id: metadata.eventId,
+          table_id: metadata.tableId,
+          guest_name: metadata.guestName,
+          guest_email: metadata.guestEmail,
+          guest_phone: metadata.guestPhone,
+          guest_count: parseInt(metadata.guestCount),
+          special_requests: metadata.specialRequests,
+          birthday_package: metadata.birthdayPackage === 'true',
+          total_price: totalAmount,
+          stripe_session_id: sessionId,
+          status: "confirmed",
+          payment_status: "confirmed"
+        })
+        .select()
+        .single();
+
+      if (reservationError) {
+        console.error("Error creating reservation:", reservationError);
+        throw new Error("Failed to create reservation");
+      }
+
+      // Create payment record
+      const { error: paymentError } = await supabase
+        .from("payments")
+        .insert({
+          reservation_id: reservation.id,
+          stripe_session_id: sessionId,
+          amount: totalAmount,
+          status: paymentStatus,
+        });
+
+      if (paymentError) {
+        console.error("Error creating payment record:", paymentError);
+        throw new Error("Failed to create payment record");
+      }
+
+      // Send confirmation email
       try {
         const { error: emailError } = await supabase.functions.invoke('send-reservation-email', {
-          body: { reservationId, sessionId }
+          body: { reservationId: reservation.id, sessionId }
         });
 
         if (emailError) {
@@ -89,18 +104,29 @@ serve(async (req) => {
       } catch (emailError) {
         console.error("Error invoking email function:", emailError);
       }
+
+      console.log("Payment verification and reservation creation completed successfully");
+
+      return new Response(JSON.stringify({ 
+        status: paymentStatus,
+        reservationId: reservation.id,
+        amount: session.amount_total,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    } else {
+      // Payment failed - no reservation created
+      console.log("Payment failed, no reservation created");
+      
+      return new Response(JSON.stringify({ 
+        status: paymentStatus,
+        amount: session.amount_total,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
-
-    console.log("Payment verification completed successfully");
-
-    return new Response(JSON.stringify({ 
-      status: paymentStatus,
-      reservationStatus,
-      amount: session.amount_total,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
   } catch (error) {
     console.error("Error in verify-payment:", error);
     return new Response(JSON.stringify({ error: error.message }), {

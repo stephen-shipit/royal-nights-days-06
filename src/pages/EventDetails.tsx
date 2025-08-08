@@ -197,10 +197,7 @@ const EventDetails = () => {
     setIsProcessingPayment(true);
 
     try {
-      // Clean up expired reservations first
-      await supabase.rpc('cleanup_expired_reservations');
-      
-      // Check if table is still available
+      // Check if table is still available before creating payment session
       const { data: isAvailable } = await supabase.rpc('is_table_available', {
         p_event_id: event.id,
         p_table_id: selectedTable.id
@@ -218,43 +215,14 @@ const EventDetails = () => {
         return;
       }
 
-      // Create pending reservation with 30 minutes expiry
-      const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-      
-      const { data: reservation, error: reservationError } = await supabase
-        .from('table_reservations')
-        .insert({
-          event_id: event.id,
-          table_id: selectedTable.id,
-          guest_name: reservationForm.guest_name,
-          guest_email: reservationForm.guest_email,
-          guest_count: reservationForm.guest_count,
-          status: 'pending',
-          expires_at: expiresAt
-        })
-        .select()
-        .single();
-
-      if (reservationError) {
-        console.error('Error creating reservation:', reservationError);
-        toast({
-          title: "Reservation Failed",
-          description: "Could not create your reservation. Please try again.",
-          variant: "destructive",
-        });
-        setIsProcessingPayment(false);
-        return;
-      }
-
       // Calculate pricing
       const tablePrice = selectedTable.reservation_price || 0;
       const birthdayPackagePrice = reservationForm.birthday_package ? 5000 : 0; // $50 in cents
       const totalPrice = tablePrice + birthdayPackagePrice;
 
-      // Create Stripe payment session
+      // Create Stripe payment session directly without creating reservation first
       const { data, error: paymentError } = await supabase.functions.invoke('create-payment-session', {
         body: {
-          reservationId: reservation.id,
           eventId: event.id,
           tableId: selectedTable.id,
           guestName: reservationForm.guest_name,

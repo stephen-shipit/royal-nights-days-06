@@ -441,7 +441,7 @@ const EventDetails = () => {
                                {!isReserved && (
                                  <>
                                    {table.reservation_price && Number(table.reservation_price) > 0 && (
-                                     <span className="text-[10px] font-bold leading-none">
+                                     <span className="text-[8px] font-bold leading-none">
                                        ${Number(table.reservation_price)}
                                      </span>
                                    )}
@@ -594,7 +594,7 @@ const EventDetails = () => {
                              {!isReserved && (
                                <>
                                  {table.reservation_price && Number(table.reservation_price) > 0 && (
-                                   <span className="text-xs font-bold leading-none">
+                                   <span className="text-[10px] font-bold leading-none">
                                      ${Number(table.reservation_price)}
                                    </span>
                                  )}

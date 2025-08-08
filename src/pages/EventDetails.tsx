@@ -42,6 +42,7 @@ type VenueTable = {
   height: number;
   is_available: boolean;
   reservation_price: number;
+  location?: string;
   reserved_guests?: number;
   reservation_type?: string;
 };
@@ -408,9 +409,10 @@ const EventDetails = () => {
                     )}
                   </CardHeader>
                   <CardContent>
-                    <div className="relative w-full h-[400px] bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg overflow-hidden border border-border">
+                    {/* Mobile-friendly table list view */}
+                    <div className="space-y-2">
                       {venueTables.length === 0 ? (
-                        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                        <div className="text-center text-muted-foreground py-8">
                           Loading tables...
                         </div>
                       ) : (
@@ -421,34 +423,44 @@ const EventDetails = () => {
                             <button
                               key={table.id}
                               onClick={() => handleTableSelect(table)}
-                               className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md relative ${
-                                 isReserved
-                                   ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
-                                   : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
-                               }`}
-                               style={{
-                                  left: `${(table.position_x / 1200) * 98}%`,
-                                  top: `${(table.position_y / 500) * 98}%`,
-                                  width: `28px`,
-                                  height: `53px`,
-                                  padding: `1px`,
-                               }}
-                               disabled={isReserved}
+                              className={`w-full p-3 rounded-lg border-2 transition-all duration-200 text-left ${
+                                isReserved
+                                  ? 'bg-red-500/10 border-red-400 text-red-600 cursor-not-allowed'
+                                  : 'bg-background border-border hover:border-primary hover:bg-primary/5 cursor-pointer'
+                              }`}
+                              disabled={isReserved}
                             >
-                               {isReserved && (
-                                 <X className="absolute inset-0 w-8 h-8 text-red-500 m-auto" strokeWidth={3} />
-                               )}
-                               {!isReserved && (
-                                 <>
-                                    {Number(table.reservation_price) > 0 && (
-                                      <span className="text-[8px] font-bold leading-none">
-                                        ${Number(table.reservation_price)}
-                                      </span>
-                                    )}
-                                    <span className="text-xs font-bold">T{table.table_number}</span>
-                                   <span className="text-[10px] leading-none">{table.max_guests}</span>
-                                 </>
-                               )}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-8 h-8 rounded border-2 flex items-center justify-center text-xs font-bold ${
+                                    isReserved ? 'border-red-400 bg-red-500/20' : 'border-primary bg-primary/10'
+                                  }`}>
+                                    {isReserved ? <X className="w-4 h-4" /> : table.table_number}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium">Table {table.table_number}</div>
+                                    <div className="text-sm text-muted-foreground">
+                                      Up to {table.max_guests} guests
+                                      {table.location && ` • ${table.location}`}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  {isReserved ? (
+                                    <span className="text-red-600 font-medium">Reserved</span>
+                                  ) : (
+                                    <div>
+                                      {Number(table.reservation_price) > 0 ? (
+                                        <div className="text-lg font-bold text-secondary">
+                                          ${Number(table.reservation_price)}
+                                        </div>
+                                      ) : (
+                                        <div className="text-sm text-muted-foreground">Free</div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             </button>
                           );
                         })

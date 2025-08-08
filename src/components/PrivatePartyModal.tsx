@@ -139,8 +139,19 @@ const PrivatePartyModal = ({ onOpenReservationModal }: PrivatePartyModalProps) =
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-4xl h-screen md:h-auto max-h-screen md:max-h-none p-0 border-0 bg-transparent my-0 md:my-4 [&>button]:text-white md:[&>button]:text-black [&>button]:opacity-90 [&>button:hover]:opacity-100 [&>button>svg]:h-5 [&>button>svg]:w-5 md:[&>button>svg]:h-4 md:[&>button>svg]:w-4">
+      <DialogContent className="max-w-4xl h-screen md:h-auto max-h-screen md:max-h-none p-0 border-0 bg-transparent my-0 md:my-4 [&>button]:text-white md:[&>button]:text-black [&>button]:opacity-90 [&>button:hover]:opacity-100 [&>button>svg]:h-5 [&>button>svg]:w-5 md:[&>button>svg]:h-4 md:[&>button>svg]:w-4 [&>button]:hidden md:[&>button]:flex">
         <div className="relative bg-card rounded-none md:rounded-2xl overflow-hidden shadow-2xl flex flex-col h-full md:h-[600px]">
+          {/* Mobile close button */}
+          <div className="md:hidden absolute top-4 right-4 z-10">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsOpen(false)}
+              className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white rounded-full"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
           
           <div className="grid md:grid-cols-2 flex-1 md:flex-none overflow-y-auto md:overflow-hidden">
             {/* Image Half */}
@@ -155,7 +166,7 @@ const PrivatePartyModal = ({ onOpenReservationModal }: PrivatePartyModalProps) =
 
             {/* Content Half */}
             <div className="flex flex-col h-full">
-              <div className="p-8 flex-1 overflow-y-auto md:flex md:flex-col md:justify-center space-y-6">
+              <div className="p-8 pt-12 md:pt-8 flex-1 overflow-y-auto md:flex md:flex-col md:justify-center space-y-6">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
                     {modalContent?.title || "Host Your Private Event"}
@@ -167,7 +178,7 @@ const PrivatePartyModal = ({ onOpenReservationModal }: PrivatePartyModalProps) =
               </div>
 
               {/* Sticky buttons container for mobile */}
-              <div className="sticky bottom-0 bg-card p-6 border-t md:border-t-0 md:p-8 md:static">
+              <div className="sticky bottom-0 bg-card p-6 pb-8 border-t md:border-t-0 md:p-8 md:pb-8 md:static">
                 <div className="flex flex-col gap-3">
                   <Button
                     onClick={handlePrimaryAction}
@@ -182,6 +193,15 @@ const PrivatePartyModal = ({ onOpenReservationModal }: PrivatePartyModalProps) =
                     className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold py-3 rounded-lg transition-all duration-300"
                   >
                     {modalContent?.secondary_button_text || "Reserve a Table"}
+                  </Button>
+                  
+                  {/* Mobile close button in button area */}
+                  <Button
+                    onClick={() => setIsOpen(false)}
+                    variant="ghost"
+                    className="md:hidden w-full text-muted-foreground hover:text-foreground py-2"
+                  >
+                    Close
                   </Button>
                 </div>
               </div>

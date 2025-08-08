@@ -688,7 +688,7 @@ const EventDetails = () => {
               </p>
               {selectedTable?.reservation_price > 0 && (
                 <p className="text-sm text-primary mt-1">
-                  ${(selectedTable.reservation_price / 100).toFixed(2)} reservation fee
+                  ${selectedTable.reservation_price} reservation fee
                 </p>
               )}
             </div>
@@ -734,7 +734,7 @@ const EventDetails = () => {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Table Reservation</span>
-                  <span>${selectedTable ? (selectedTable.reservation_price / 100).toFixed(2) : '0.00'}</span>
+                  <span>${selectedTable ? selectedTable.reservation_price : '0'}</span>
                 </div>
                 {reservationForm.birthday_package && (
                   <div className="flex justify-between text-sm">
@@ -745,10 +745,10 @@ const EventDetails = () => {
                 <div className="flex justify-between font-medium text-base border-t pt-2">
                   <span>Total</span>
                   <span>
-                    ${selectedTable 
-                      ? ((selectedTable.reservation_price + (reservationForm.birthday_package ? 5000 : 0)) / 100).toFixed(2) 
-                      : '0.00'
-                    }
+                     ${selectedTable 
+                       ? (selectedTable.reservation_price + (reservationForm.birthday_package ? 50 : 0))
+                       : '0'
+                     }
                   </span>
                 </div>
               </div>

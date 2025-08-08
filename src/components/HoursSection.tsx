@@ -63,7 +63,7 @@ const HoursSection = () => {
                 <span className="text-2xl">🍸</span>
               </div>
               <h3 className="text-3xl font-bold mb-2">
-                Nightlife
+                Social
               </h3>
               <p className="text-primary-foreground/80">Lounge & entertainment</p>
             </div>

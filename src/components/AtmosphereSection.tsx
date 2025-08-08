@@ -45,7 +45,7 @@ const AtmosphereSection = () => {
               </p>
               <p>
                 Our carefully curated ambiance transforms throughout the evening - from refined 
-                dining atmosphere to vibrant nightlife destination, creating the perfect setting 
+                dining atmosphere to vibrant social destination, creating the perfect setting 
                 for any occasion.
               </p>
               <p>

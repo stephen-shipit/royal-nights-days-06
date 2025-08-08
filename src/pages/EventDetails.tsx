@@ -445,7 +445,7 @@ const EventDetails = () => {
                                         ${Number(table.reservation_price)}
                                       </span>
                                     )}
-                                   <span className="text-xs font-bold">T{table.table_number}</span>
+                                    <span className="text-xs font-bold">T{table.table_number}</span>
                                    <span className="text-[10px] leading-none">{table.max_guests}</span>
                                  </>
                                )}
@@ -598,7 +598,7 @@ const EventDetails = () => {
                                       ${Number(table.reservation_price)}
                                     </span>
                                   )}
-                                 <span className="text-sm font-bold">T{table.table_number}</span>
+                                  <span className="text-sm font-bold">T{table.table_number}</span>
                                  <span className="text-xs leading-none">{table.max_guests}</span>
                                </>
                              )}

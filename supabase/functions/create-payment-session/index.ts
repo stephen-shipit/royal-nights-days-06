@@ -117,6 +117,15 @@ serve(async (req) => {
       customer_email: customerId ? undefined : guestEmail,
       line_items: lineItems,
       mode: "payment",
+      allow_promotion_codes: true, // Enable coupon codes
+      billing_address_collection: "required",
+      phone_number_collection: {
+        enabled: true,
+      },
+      customer_update: customerId ? {
+        name: "auto",
+        address: "auto",
+      } : undefined,
       success_url: `${req.headers.get("origin")}/payment-success?session_id={CHECKOUT_SESSION_ID}&reservation_id=${reservationId}`,
       cancel_url: `${req.headers.get("origin")}/payment-cancelled?reservation_id=${reservationId}`,
       metadata: {

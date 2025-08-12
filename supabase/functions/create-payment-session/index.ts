@@ -70,21 +70,23 @@ serve(async (req) => {
     const birthdayPackagePrice = birthdayPackage ? 5000 : 0; // $50 in cents
     const totalAmount = tablePrice + birthdayPackagePrice;
 
-    // Create line items
-    const lineItems = [
-      {
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: "Table Reservation",
-            description: `Table reservation for ${guestCount} guests`,
-          },
-          unit_amount: tablePrice,
+    // Create line items - always show table reservation even if $0
+    const lineItems = [];
+    
+    // Always add table reservation line item
+    lineItems.push({
+      price_data: {
+        currency: "usd",
+        product_data: {
+          name: `Table ${tableId.split('-')[0]} Reservation`,
+          description: `Table reservation for ${guestCount} guests`,
         },
-        quantity: 1,
+        unit_amount: Math.max(tablePrice, 0), // Ensure it's at least 0
       },
-    ];
+      quantity: 1,
+    });
 
+    // Add birthday package if selected
     if (birthdayPackage) {
       lineItems.push({
         price_data: {

@@ -81,7 +81,7 @@ serve(async (req) => {
           name: `Table ${tableId.split('-')[0]} Reservation`,
           description: `Table reservation for ${guestCount} guests`,
         },
-        unit_amount: Math.max(tablePrice, 0), // Ensure it's at least 0
+        unit_amount: Math.max(tablePrice * 100, 0), // Convert dollars to cents
       },
       quantity: 1,
     });

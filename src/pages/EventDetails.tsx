@@ -223,6 +223,14 @@ const EventDetails = () => {
       const screenDisplayPrice = reservationForm.screen_display ? 5000 : 0; // $50 in cents
       const totalPrice = tablePrice + birthdayPackagePrice + screenDisplayPrice;
 
+      console.log("Payment request data:", {
+        eventId: event.id,
+        tableId: selectedTable.id,
+        birthdayPackage: reservationForm.birthday_package,
+        screenDisplay: reservationForm.screen_display,
+        tablePrice: tablePrice
+      });
+
       // Create Stripe payment session directly without creating reservation first
       const { data, error: paymentError } = await supabase.functions.invoke('create-payment-session', {
         body: {

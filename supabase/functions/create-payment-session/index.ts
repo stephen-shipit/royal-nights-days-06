@@ -41,6 +41,8 @@ serve(async (req) => {
     }: PaymentRequest = await req.json();
 
     console.log("Creating payment session for table:", tableId);
+    console.log("Birthday package selected:", birthdayPackage);
+    console.log("Screen display selected:", screenDisplay);
 
     // Create Supabase client for service operations
     const supabase = createClient(

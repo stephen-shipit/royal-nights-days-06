@@ -16,6 +16,7 @@ interface PaymentRequest {
   guestCount: number;
   specialRequests?: string;
   birthdayPackage: boolean;
+  screenDisplay: boolean;
   tablePrice: number;
 }
 
@@ -35,6 +36,7 @@ serve(async (req) => {
       guestCount,
       specialRequests,
       birthdayPackage,
+      screenDisplay,
       tablePrice
     }: PaymentRequest = await req.json();
 
@@ -68,7 +70,8 @@ serve(async (req) => {
 
     // Calculate total amount
     const birthdayPackagePrice = birthdayPackage ? 5000 : 0; // $50 in cents
-    const totalAmount = tablePrice + birthdayPackagePrice;
+    const screenDisplayPrice = screenDisplay ? 5000 : 0; // $50 in cents
+    const totalAmount = tablePrice + birthdayPackagePrice + screenDisplayPrice;
 
     // Create line items - always show table reservation even if $0
     const lineItems = [];
@@ -93,7 +96,22 @@ serve(async (req) => {
           currency: "usd",
           product_data: {
             name: "Birthday Shoutout Package",
-            description: "Includes MC shoutout, screen display, sparklers, lights, and name sign",
+            description: "Includes MC shoutout, sparklers, lights, and name sign",
+          },
+          unit_amount: 5000, // $50 in cents
+        },
+        quantity: 1,
+      });
+    }
+
+    // Add screen display package if selected
+    if (screenDisplay) {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Screen Display Package",
+            description: "Your picture and name displayed on our large screen",
           },
           unit_amount: 5000, // $50 in cents
         },
@@ -134,6 +152,7 @@ serve(async (req) => {
         guestCount,
         specialRequests: specialRequests || '',
         birthdayPackage: birthdayPackage.toString(),
+        screenDisplay: screenDisplay.toString(),
         tablePrice: tablePrice.toString()
       },
     });

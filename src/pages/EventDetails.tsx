@@ -54,6 +54,7 @@ type ReservationForm = {
   guest_count: number;
   special_requests: string;
   birthday_package: boolean;
+  screen_display: boolean;
 };
 
 const EventDetails = () => {
@@ -71,7 +72,8 @@ const EventDetails = () => {
     guest_phone: "",
     guest_count: 1,
     special_requests: "",
-    birthday_package: false
+    birthday_package: false,
+    screen_display: false
   });
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
@@ -218,7 +220,8 @@ const EventDetails = () => {
       // Calculate pricing
       const tablePrice = selectedTable.reservation_price || 0;
       const birthdayPackagePrice = reservationForm.birthday_package ? 5000 : 0; // $50 in cents
-      const totalPrice = tablePrice + birthdayPackagePrice;
+      const screenDisplayPrice = reservationForm.screen_display ? 5000 : 0; // $50 in cents
+      const totalPrice = tablePrice + birthdayPackagePrice + screenDisplayPrice;
 
       // Create Stripe payment session directly without creating reservation first
       const { data, error: paymentError } = await supabase.functions.invoke('create-payment-session', {
@@ -231,6 +234,7 @@ const EventDetails = () => {
           guestCount: reservationForm.guest_count,
           specialRequests: reservationForm.special_requests,
           birthdayPackage: reservationForm.birthday_package,
+          screenDisplay: reservationForm.screen_display,
           tablePrice: tablePrice
         }
       });
@@ -707,9 +711,32 @@ const EventDetails = () => {
                   </Label>
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p>• Special shoutout by our MC</p>
-                    <p>• Your picture and name displayed on our large screen</p>
                     <p>• Sparklers and lights display at your table</p>
                     <p>• Custom name sign at your table</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Screen Display Option */}
+            <div className="border border-accent rounded-lg p-4 bg-accent/5">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="screen_display"
+                  checked={reservationForm.screen_display}
+                  onCheckedChange={(checked) => 
+                    setReservationForm(prev => ({ ...prev, screen_display: checked as boolean }))
+                  }
+                />
+                <div className="space-y-2">
+                  <Label 
+                    htmlFor="screen_display" 
+                    className="text-base font-medium cursor-pointer"
+                  >
+                    📺 Screen Display Package (+$50.00)
+                  </Label>
+                  <div className="text-sm text-muted-foreground">
+                    <p>• Your picture and name displayed on our large screen</p>
                   </div>
                 </div>
               </div>
@@ -738,11 +765,17 @@ const EventDetails = () => {
                     <span>$50.00</span>
                   </div>
                 )}
+                {reservationForm.screen_display && (
+                  <div className="flex justify-between text-sm">
+                    <span>Screen Display Package</span>
+                    <span>$50.00</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-medium text-base border-t pt-2">
                   <span>Total</span>
                   <span>
                      ${selectedTable 
-                       ? (selectedTable.reservation_price + (reservationForm.birthday_package ? 50 : 0))
+                       ? (selectedTable.reservation_price + (reservationForm.birthday_package ? 50 : 0) + (reservationForm.screen_display ? 50 : 0))
                        : '0'
                      }
                   </span>

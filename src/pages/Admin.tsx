@@ -602,6 +602,7 @@ const ReservationManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [eventFilter, setEventFilter] = useState('all');
+  const [reservationType, setReservationType] = useState('all');
 
   const { data: reservations, isLoading } = useQuery({
     queryKey: ["reservations"],
@@ -689,21 +690,26 @@ const ReservationManagement = () => {
     
     const matchesStatus = statusFilter === 'all' || reservation.status === statusFilter;
     const matchesEvent = eventFilter === 'all' || reservation.event_id === eventFilter;
+    const matchesType = reservationType === 'all' || reservation.reservation_type === reservationType;
     
-    return matchesSearch && matchesStatus && matchesEvent;
+    return matchesSearch && matchesStatus && matchesEvent && matchesType;
   });
+
+  // Separate reservations by type
+  const diningReservations = filteredReservations?.filter(r => r.reservation_type === 'dining') || [];
+  const nightlifeReservations = filteredReservations?.filter(r => r.reservation_type === 'nightlife') || [];
 
   if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Event Table Reservations</h2>
+        <h2 className="text-2xl font-bold">Reservations Management</h2>
       </div>
 
       {/* Filters */}
       <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <Label htmlFor="search">Search</Label>
             <Input
@@ -712,6 +718,19 @@ const ReservationManagement = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+          </div>
+          <div>
+            <Label htmlFor="type-filter">Reservation Type</Label>
+            <Select value={reservationType} onValueChange={setReservationType}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="dining">Dining</SelectItem>
+                <SelectItem value="nightlife">Nightlife</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label htmlFor="status-filter">Status</Label>
@@ -751,6 +770,7 @@ const ReservationManagement = () => {
                 setSearchTerm('');
                 setStatusFilter('all');
                 setEventFilter('all');
+                setReservationType('all');
               }}
             >
               Clear Filters
@@ -760,10 +780,18 @@ const ReservationManagement = () => {
       </Card>
 
       {/* Reservations Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <Card className="p-4">
           <div className="text-sm text-muted-foreground">Total Reservations</div>
           <div className="text-2xl font-bold">{filteredReservations?.length || 0}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Dining</div>
+          <div className="text-2xl font-bold text-blue-600">{diningReservations.length}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Nightlife</div>
+          <div className="text-2xl font-bold text-purple-600">{nightlifeReservations.length}</div>
         </Card>
         <Card className="p-4">
           <div className="text-sm text-muted-foreground">Confirmed</div>
@@ -789,11 +817,12 @@ const ReservationManagement = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Event</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Event/Date</TableHead>
               <TableHead>Table</TableHead>
               <TableHead>Guest Name</TableHead>
               <TableHead>Contact</TableHead>
-              <TableHead>Date/Time</TableHead>
+              <TableHead>Time Slot</TableHead>
               <TableHead>Guests</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Payment</TableHead>
@@ -805,8 +834,22 @@ const ReservationManagement = () => {
             {filteredReservations?.map((reservation) => (
               <TableRow key={reservation.id}>
                 <TableCell>
-                  <div className="font-medium">{reservation.events?.title || 'N/A'}</div>
-                  <div className="text-sm text-muted-foreground">{reservation.events?.date}</div>
+                  <Badge variant={reservation.reservation_type === 'dining' ? 'default' : 'secondary'}>
+                    {reservation.reservation_type === 'dining' ? '🍽️ Dining' : '🍸 Nightlife'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {reservation.reservation_type === 'nightlife' ? (
+                    <div>
+                      <div className="font-medium">{reservation.events?.title || 'N/A'}</div>
+                      <div className="text-sm text-muted-foreground">{reservation.events?.date}</div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="font-medium">Regular Dining</div>
+                      <div className="text-sm text-muted-foreground">{reservation.created_at?.split('T')[0]}</div>
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">Table {reservation.venue_tables?.table_number || 'N/A'}</div>
@@ -820,7 +863,7 @@ const ReservationManagement = () => {
                   <div className="text-sm text-muted-foreground">{reservation.guest_phone}</div>
                 </TableCell>
                 <TableCell>
-                  <div>{reservation.events?.date}</div>
+                  <div>{reservation.events?.date || reservation.created_at?.split('T')[0]}</div>
                   <div className="text-sm text-muted-foreground">{reservation.time_slot}</div>
                 </TableCell>
                 <TableCell>{reservation.guest_count}</TableCell>

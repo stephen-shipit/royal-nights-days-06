@@ -784,11 +784,12 @@ const EventManagement = () => {
       date: formData.get("date") as string,
       time: formData.get("time") as string,
       price: formData.get("price") as string,
-      max_attendees: parseInt(formData.get("max_attendees") as string),
+      category: formData.get("category") as string,
+      price_range: formData.get("price_range") as string,
+      host: formData.get("host") as string,
+      dj: formData.get("dj") as string,
+      featured: formData.get("featured") === "on",
       image_url: imageUrl,
-      location: formData.get("location") as string,
-      organizer_name: formData.get("organizer_name") as string,
-      organizer_contact: formData.get("organizer_contact") as string,
     };
     
     if (editingEvent) {
@@ -835,8 +836,8 @@ const EventManagement = () => {
                   <Input id="title" name="title" defaultValue={editingEvent?.title || ""} required />
                 </div>
                 <div>
-                  <Label htmlFor="location">Location</Label>
-                  <Input id="location" name="location" defaultValue={editingEvent?.location || ""} required />
+                  <Label htmlFor="category">Category</Label>
+                  <Input id="category" name="category" defaultValue={editingEvent?.category || ""} required />
                 </div>
                 <div>
                   <Label htmlFor="date">Date</Label>
@@ -844,24 +845,34 @@ const EventManagement = () => {
                 </div>
                 <div>
                   <Label htmlFor="time">Time</Label>
-                  <Input id="time" name="time" type="time" defaultValue={editingEvent?.time || ""} required />
+                  <Input id="time" name="time" defaultValue={editingEvent?.time || ""} required />
                 </div>
                 <div>
                   <Label htmlFor="price">Price</Label>
                   <Input id="price" name="price" defaultValue={editingEvent?.price || ""} required />
                 </div>
                 <div>
-                  <Label htmlFor="max_attendees">Max Attendees</Label>
-                  <Input id="max_attendees" name="max_attendees" type="number" defaultValue={editingEvent?.max_attendees || ""} required />
+                  <Label htmlFor="price_range">Price Range</Label>
+                  <Input id="price_range" name="price_range" defaultValue={editingEvent?.price_range || ""} required />
                 </div>
                 <div>
-                  <Label htmlFor="organizer_name">Organizer Name</Label>
-                  <Input id="organizer_name" name="organizer_name" defaultValue={editingEvent?.organizer_name || ""} />
+                  <Label htmlFor="host">Host</Label>
+                  <Input id="host" name="host" defaultValue={editingEvent?.host || ""} />
                 </div>
                 <div>
-                  <Label htmlFor="organizer_contact">Organizer Contact</Label>
-                  <Input id="organizer_contact" name="organizer_contact" defaultValue={editingEvent?.organizer_contact || ""} />
+                  <Label htmlFor="dj">DJ</Label>
+                  <Input id="dj" name="dj" defaultValue={editingEvent?.dj || ""} />
                 </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="featured"
+                  name="featured"
+                  defaultChecked={editingEvent?.featured || false}
+                />
+                <Label htmlFor="featured">Featured Event</Label>
               </div>
               
               <div>

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { parseLocalDate } from "@/lib/utils";
 
 type FeaturedEvent = {
   id: string;
@@ -117,7 +118,7 @@ const FeaturedEventsCarousel = () => {
               <div className="flex items-center gap-2 mb-4 md:mb-6 text-base md:text-lg">
                 <Calendar className="w-4 md:w-5 h-4 md:h-5 flex-shrink-0" />
                 <span className="line-clamp-1 md:line-clamp-none">
-                  {new Date(currentEvent.date).toLocaleDateString('en-US', {
+                  {parseLocalDate(currentEvent.date).toLocaleDateString('en-US', {
                     weekday: 'short',
                     month: 'short',
                     day: 'numeric'

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Calendar, Clock, MapPin, Music, Search, Filter, Users, DollarSign, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { parseLocalDate } from "@/lib/utils";
 
 type Event = {
   id: string;
@@ -92,9 +93,9 @@ const Events = () => {
     return matchesCategory && matchesSearch && matchesPrice;
   }).sort((a, b) => {
     // Sort upcoming events first, then by date
-    const aDate = new Date(a.date);
-    const bDate = new Date(b.date);
-    const todayDate = new Date(today);
+    const aDate = parseLocalDate(a.date);
+    const bDate = parseLocalDate(b.date);
+    const todayDate = parseLocalDate(today);
     
     const aIsUpcoming = aDate >= todayDate;
     const bIsUpcoming = bDate >= todayDate;
@@ -284,12 +285,12 @@ const Events = () => {
                       <div className="space-y-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
-                          <span>{new Date(event.date).toLocaleDateString('en-US', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}</span>
+                           <span>{parseLocalDate(event.date).toLocaleDateString('en-US', { 
+                             weekday: 'long', 
+                             year: 'numeric', 
+                             month: 'long', 
+                             day: 'numeric' 
+                           })}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4" />

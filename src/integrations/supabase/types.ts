@@ -14,11 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string
           email: string
           id: string
+          metadata: Json | null
           role: string
           updated_at: string
           user_id: string
@@ -27,6 +58,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          metadata?: Json | null
           role?: string
           updated_at?: string
           user_id: string
@@ -35,6 +67,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          metadata?: Json | null
           role?: string
           updated_at?: string
           user_id?: string
@@ -388,6 +421,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      has_temporary_password: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
@@ -395,6 +432,10 @@ export type Database = {
       is_table_available: {
         Args: { p_event_id: string; p_table_id: string }
         Returns: boolean
+      }
+      mark_password_changed: {
+        Args: { user_id: string }
+        Returns: undefined
       }
     }
     Enums: {

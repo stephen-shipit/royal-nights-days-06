@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List, Mail } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { BulkImageUpload } from "@/components/BulkImageUpload";
 import AdminHeader from "@/components/AdminHeader";
@@ -599,11 +599,43 @@ const MenuManagement = () => {
 const ReservationManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [eventFilter, setEventFilter] = useState('all');
 
   const { data: reservations, isLoading } = useQuery({
     queryKey: ["reservations"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("table_reservations").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("table_reservations")
+        .select(`
+          *,
+          events:event_id (
+            id,
+            title,
+            date,
+            time
+          ),
+          venue_tables:table_id (
+            id,
+            table_number,
+            max_guests,
+            location
+          )
+        `)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: events } = useQuery({
+    queryKey: ["admin-events-filter"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("id, title, date")
+        .order("date", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -648,37 +680,149 @@ const ReservationManagement = () => {
     }
   };
 
+  // Filter reservations based on search and filters
+  const filteredReservations = reservations?.filter((reservation) => {
+    const matchesSearch = !searchTerm || 
+      reservation.guest_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reservation.guest_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reservation.guest_phone?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || reservation.status === statusFilter;
+    const matchesEvent = eventFilter === 'all' || reservation.event_id === eventFilter;
+    
+    return matchesSearch && matchesStatus && matchesEvent;
+  });
+
   if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Reservation Management</h2>
+        <h2 className="text-2xl font-bold">Event Table Reservations</h2>
+      </div>
+
+      {/* Filters */}
+      <Card className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <Label htmlFor="search">Search</Label>
+            <Input
+              id="search"
+              placeholder="Search by name, email, or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="status-filter">Status</Label>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="event-filter">Event</Label>
+            <Select value={eventFilter} onValueChange={setEventFilter}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Events</SelectItem>
+                {events?.map((event) => (
+                  <SelectItem key={event.id} value={event.id}>
+                    {event.title} - {event.date}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setEventFilter('all');
+              }}
+            >
+              Clear Filters
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Reservations Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Total Reservations</div>
+          <div className="text-2xl font-bold">{filteredReservations?.length || 0}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Confirmed</div>
+          <div className="text-2xl font-bold text-green-600">
+            {filteredReservations?.filter(r => r.status === 'confirmed').length || 0}
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Pending</div>
+          <div className="text-2xl font-bold text-yellow-600">
+            {filteredReservations?.filter(r => r.status === 'pending').length || 0}
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Total Revenue</div>
+          <div className="text-2xl font-bold text-primary">
+            ${filteredReservations?.reduce((sum, r) => sum + (r.total_price || 0), 0).toLocaleString()}
+          </div>
+        </Card>
       </div>
 
       <Card>
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Event</TableHead>
+              <TableHead>Table</TableHead>
               <TableHead>Guest Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Time</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Date/Time</TableHead>
               <TableHead>Guests</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Special Requests</TableHead>
+              <TableHead>Payment</TableHead>
+              <TableHead>Total</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {reservations?.map((reservation) => (
+            {filteredReservations?.map((reservation) => (
               <TableRow key={reservation.id}>
+                <TableCell>
+                  <div className="font-medium">{reservation.events?.title || 'N/A'}</div>
+                  <div className="text-sm text-muted-foreground">{reservation.events?.date}</div>
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium">Table {reservation.venue_tables?.table_number || 'N/A'}</div>
+                  <div className="text-sm text-muted-foreground">
+                    Max {reservation.venue_tables?.max_guests} • {reservation.venue_tables?.location}
+                  </div>
+                </TableCell>
                 <TableCell className="font-medium">{reservation.guest_name}</TableCell>
-                <TableCell>{reservation.guest_email}</TableCell>
-                <TableCell>{reservation.guest_email}</TableCell>
-                <TableCell>{reservation.created_at?.split('T')[0]}</TableCell>
-                <TableCell>{reservation.time_slot}</TableCell>
+                <TableCell>
+                  <div>{reservation.guest_email}</div>
+                  <div className="text-sm text-muted-foreground">{reservation.guest_phone}</div>
+                </TableCell>
+                <TableCell>
+                  <div>{reservation.events?.date}</div>
+                  <div className="text-sm text-muted-foreground">{reservation.time_slot}</div>
+                </TableCell>
                 <TableCell>{reservation.guest_count}</TableCell>
                 <TableCell>
                   <Select value={reservation.status} onValueChange={(value) => handleStatusUpdate(reservation.id, value)}>
@@ -693,17 +837,47 @@ const ReservationManagement = () => {
                     </SelectContent>
                   </Select>
                 </TableCell>
-                <TableCell className="max-w-xs truncate">{reservation.special_requests || "None"}</TableCell>
                 <TableCell>
-                  <Button size="sm" variant="destructive" onClick={() => handleDelete(reservation.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <Badge variant={reservation.payment_status === 'completed' ? 'default' : 'secondary'}>
+                    {reservation.payment_status || 'pending'}
+                  </Badge>
+                </TableCell>
+                <TableCell className="font-medium">${reservation.total_price || 0}</TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => {
+                      navigator.clipboard.writeText(reservation.guest_email);
+                      toast({ title: "Email copied to clipboard" });
+                    }}>
+                      <Mail className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleDelete(reservation.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </Card>
+
+      {/* Special Requests Modal */}
+      {filteredReservations?.some(r => r.special_requests) && (
+        <Card className="p-4">
+          <h3 className="font-semibold mb-3">Special Requests</h3>
+          <div className="space-y-2">
+            {filteredReservations
+              .filter(r => r.special_requests)
+              .map((reservation) => (
+                <div key={reservation.id} className="p-3 bg-muted rounded-lg">
+                  <div className="font-medium">{reservation.guest_name} - {reservation.events?.title}</div>
+                  <div className="text-sm text-muted-foreground mt-1">{reservation.special_requests}</div>
+                </div>
+              ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 };

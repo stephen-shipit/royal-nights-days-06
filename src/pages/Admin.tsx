@@ -1032,6 +1032,7 @@ const EventManagement = () => {
       dj: formData.get("dj") as string,
       featured: formData.get("featured") === "on",
       sold_out: formData.get("sold_out") === "on",
+      booking_percentage: parseInt(formData.get("booking_percentage") as string) || 0,
       image_url: imageUrl,
     };
     
@@ -1128,17 +1129,44 @@ const EventManagement = () => {
                 <Label htmlFor="sold_out">Mark as Sold Out</Label>
               </div>
 
-              <div>
-                <Label htmlFor="booking_percentage">Booking Percentage (0-100%)</Label>
-                <Input
-                  id="booking_percentage"
-                  name="booking_percentage"
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder="Enter percentage of tables booked"
-                  defaultValue={editingEvent?.booking_percentage || 0}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="partial_booking"
+                  name="partial_booking"
+                  defaultChecked={(editingEvent?.booking_percentage || 0) > 0}
+                  onChange={(e) => {
+                    const percentageInput = document.getElementById('booking_percentage') as HTMLSelectElement;
+                    if (percentageInput) {
+                      percentageInput.style.display = e.target.checked ? 'block' : 'none';
+                      if (!e.target.checked) {
+                        percentageInput.value = '0';
+                      }
+                    }
+                  }}
                 />
+                <Label htmlFor="partial_booking">Mark as Partially Booked</Label>
+              </div>
+
+              <div style={{ display: (editingEvent?.booking_percentage || 0) > 0 ? 'block' : 'none' }}>
+                <Label htmlFor="booking_percentage">Booking Percentage</Label>
+                <Select name="booking_percentage" defaultValue={String(editingEvent?.booking_percentage || 0)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select percentage" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0%</SelectItem>
+                    <SelectItem value="10">10%</SelectItem>
+                    <SelectItem value="20">20%</SelectItem>
+                    <SelectItem value="30">30%</SelectItem>
+                    <SelectItem value="40">40%</SelectItem>
+                    <SelectItem value="50">50%</SelectItem>
+                    <SelectItem value="60">60%</SelectItem>
+                    <SelectItem value="70">70%</SelectItem>
+                    <SelectItem value="80">80%</SelectItem>
+                    <SelectItem value="90">90%</SelectItem>
+                  </SelectContent>
+                </Select>
                 <p className="text-sm text-muted-foreground mt-1">
                   Set what percentage of tables appear unavailable (randomly selected)
                 </p>

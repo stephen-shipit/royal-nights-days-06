@@ -1127,6 +1127,22 @@ const EventManagement = () => {
                 />
                 <Label htmlFor="sold_out">Mark as Sold Out</Label>
               </div>
+
+              <div>
+                <Label htmlFor="booking_percentage">Booking Percentage (0-100%)</Label>
+                <Input
+                  id="booking_percentage"
+                  name="booking_percentage"
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="Enter percentage of tables booked"
+                  defaultValue={editingEvent?.booking_percentage || 0}
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Set what percentage of tables appear unavailable (randomly selected)
+                </p>
+              </div>
               
               <div>
                 <Label htmlFor="description">Description</Label>

@@ -76,6 +76,7 @@ export type Database = {
       }
       events: {
         Row: {
+          booking_percentage: number | null
           category: string
           created_at: string
           date: string
@@ -97,6 +98,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          booking_percentage?: number | null
           category: string
           created_at?: string
           date: string
@@ -118,6 +120,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          booking_percentage?: number | null
           category?: string
           created_at?: string
           date?: string

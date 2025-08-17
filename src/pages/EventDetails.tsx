@@ -110,6 +110,15 @@ const EventDetails = () => {
     }
   };
 
+  // Function to get randomly unavailable tables based on booking percentage
+  const getRandomlyUnavailableTables = (tables: any[], percentage: number) => {
+    if (percentage <= 0) return new Set();
+    
+    const unavailableCount = Math.floor((tables.length * percentage) / 100);
+    const shuffled = [...tables].sort(() => Math.random() - 0.5);
+    return new Set(shuffled.slice(0, unavailableCount).map(table => table.id));
+  };
+
   const fetchVenueTables = async () => {
     try {
       console.log('Fetching venue tables for event:', eventId);
@@ -433,12 +442,13 @@ const EventDetails = () => {
                           Loading tables...
                         </div>
                       ) : (
-                        venueTables.map((table) => {
-                          const isReserved = table.reserved_guests && table.reserved_guests > 0;
-                          const isSoldOut = event?.sold_out;
-                          const isUnavailable = isReserved || isSoldOut;
-                          
-                          console.log('Table render - Event sold_out:', event?.sold_out, 'isSoldOut:', isSoldOut, 'isUnavailable:', isUnavailable);
+                        (() => {
+                          const randomlyUnavailable = getRandomlyUnavailableTables(venueTables, event?.booking_percentage || 0);
+                          return venueTables.map((table) => {
+                            const isReserved = table.reserved_guests && table.reserved_guests > 0;
+                            const isSoldOut = event?.sold_out;
+                            const isRandomlyUnavailable = randomlyUnavailable.has(table.id);
+                            const isUnavailable = isReserved || isSoldOut || isRandomlyUnavailable;
                           
                           return (
                             <button
@@ -475,8 +485,8 @@ const EventDetails = () => {
                               )}
                             </button>
                           );
-                        })
-                      )}
+                        });
+                      })()
                     </div>
                     
                     {/* Legend */}
@@ -589,52 +599,54 @@ const EventDetails = () => {
                       <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                         Loading tables...
                       </div>
-                    ) : (
-                       venueTables.map((table) => {
-                         const isReserved = table.reserved_guests && table.reserved_guests > 0;
-                         const isSoldOut = event?.sold_out;
-                         const isUnavailable = isReserved || isSoldOut;
-                         
-                         console.log('Desktop Table render - Event sold_out:', event?.sold_out, 'isSoldOut:', isSoldOut, 'isUnavailable:', isUnavailable);
-                         
-                         return (
-                           <button
-                             key={table.id}
-                             onClick={() => !isUnavailable && handleTableSelect(table)}
-                              className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md py-1 px-1 m-1 ${
-                                isUnavailable
-                                  ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
-                                  : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
-                              }`}
-                             style={{
-                                left: `${Math.max(1, Math.min(94, (table.position_x / 1200) * 94 + 1))}%`,
-                                top: `${Math.max(1, Math.min(94, (table.position_y / 500) * 94 + 1))}%`,
-                                width: `40px`,
-                                height: `55px`,
-                               paddingTop: `4px`,
-                               paddingBottom: `4px`,
-                             }}
-                              disabled={isUnavailable}
-                           >
-                              {isUnavailable && (
-                                <X className="absolute inset-0 w-10 h-10 text-red-500 m-auto" strokeWidth={3} />
+                      ) : (
+                         (() => {
+                           const randomlyUnavailable = getRandomlyUnavailableTables(venueTables, event?.booking_percentage || 0);
+                           return venueTables.map((table) => {
+                             const isReserved = table.reserved_guests && table.reserved_guests > 0;
+                             const isSoldOut = event?.sold_out;
+                             const isRandomlyUnavailable = randomlyUnavailable.has(table.id);
+                             const isUnavailable = isReserved || isSoldOut || isRandomlyUnavailable;
+                          
+                          return (
+                            <button
+                              key={table.id}
+                              onClick={() => !isUnavailable && handleTableSelect(table)}
+                               className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md py-1 px-1 m-1 ${
+                                 isUnavailable
+                                   ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
+                                   : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
+                               }`}
+                              style={{
+                                 left: `${Math.max(1, Math.min(94, (table.position_x / 1200) * 94 + 1))}%`,
+                                 top: `${Math.max(1, Math.min(94, (table.position_y / 500) * 94 + 1))}%`,
+                                 width: `40px`,
+                                 height: `55px`,
+                                paddingTop: `4px`,
+                                paddingBottom: `4px`,
+                              }}
+                               disabled={isUnavailable}
+                            >
+                               {isUnavailable && (
+                                 <X className="absolute inset-0 w-10 h-10 text-red-500 m-auto" strokeWidth={3} />
+                               )}
+                               {!isUnavailable && (
+                                <>
+                                   {Number(table.reservation_price) > 0 && (
+                                     <span className="text-[10px] font-bold leading-none">
+                                       ${Number(table.reservation_price)}
+                                     </span>
+                                   )}
+                                   <span className="text-sm font-bold">T{table.table_number}</span>
+                                  <span className="text-xs leading-none">{table.max_guests}</span>
+                                </>
                               )}
-                              {!isUnavailable && (
-                               <>
-                                  {Number(table.reservation_price) > 0 && (
-                                    <span className="text-[10px] font-bold leading-none">
-                                      ${Number(table.reservation_price)}
-                                    </span>
-                                  )}
-                                  <span className="text-sm font-bold">T{table.table_number}</span>
-                                 <span className="text-xs leading-none">{table.max_guests}</span>
-                               </>
-                             )}
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
+                            </button>
+                          );
+                           });
+                         })()
+                       )}
+                   </div>
                   
                   {/* Legend */}
                   <div className="flex flex-wrap gap-4 mt-4 text-sm">

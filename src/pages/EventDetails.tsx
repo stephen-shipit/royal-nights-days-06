@@ -31,6 +31,7 @@ type Event = {
   category: string;
   price_range: string;
   sold_out?: boolean;
+  booking_percentage?: number;
 };
 
 type VenueTable = {
@@ -485,9 +486,10 @@ const EventDetails = () => {
                               )}
                             </button>
                           );
-                        });
-                      })()
-                    </div>
+                         });
+                       })()
+                       )}
+                     </div>
                     
                     {/* Legend */}
                     <div className="flex flex-wrap gap-4 mt-4 text-sm">

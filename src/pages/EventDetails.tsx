@@ -30,6 +30,7 @@ type Event = {
   price: string;
   category: string;
   price_range: string;
+  sold_out?: boolean;
 };
 
 type VenueTable = {
@@ -163,6 +164,15 @@ const EventDetails = () => {
   };
 
   const handleTableSelect = (table: VenueTable) => {
+    if (event?.sold_out) {
+      toast({
+        title: "Event Sold Out",
+        description: "This event is sold out and no longer accepting reservations",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (table.reserved_guests && table.reserved_guests > 0) {
       toast({
         title: "Table Unavailable",
@@ -423,13 +433,15 @@ const EventDetails = () => {
                       ) : (
                         venueTables.map((table) => {
                           const isReserved = table.reserved_guests && table.reserved_guests > 0;
+                          const isSoldOut = event?.sold_out;
+                          const isUnavailable = isReserved || isSoldOut;
                           
                           return (
                             <button
                               key={table.id}
-                              onClick={() => handleTableSelect(table)}
+                              onClick={() => !isUnavailable && handleTableSelect(table)}
                               className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-xs font-medium shadow-md ${
-                                isReserved
+                                isUnavailable
                                   ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
                                   : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
                               }`}
@@ -441,12 +453,12 @@ const EventDetails = () => {
                                 fontSize: 'clamp(8px, 1.5vw, 12px)',
                                 transform: 'translate(-50%, -50%)',
                               }}
-                              disabled={isReserved}
+                              disabled={isUnavailable}
                             >
-                              {isReserved && (
+                              {isUnavailable && (
                                 <X className="w-3 h-3 md:w-4 md:h-4 text-red-500" strokeWidth={3} />
                               )}
-                              {!isReserved && (
+                              {!isUnavailable && (
                                 <>
                                   {Number(table.reservation_price) > 0 && (
                                     <span className="text-[6px] md:text-[8px] font-bold leading-none">
@@ -574,18 +586,20 @@ const EventDetails = () => {
                         Loading tables...
                       </div>
                     ) : (
-                      venueTables.map((table) => {
-                        const isReserved = table.reserved_guests && table.reserved_guests > 0;
-                        
-                        return (
-                          <button
-                            key={table.id}
-                            onClick={() => handleTableSelect(table)}
-                             className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md py-1 px-1 m-1 ${
-                               isReserved
-                                 ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
-                                 : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
-                             }`}
+                       venueTables.map((table) => {
+                         const isReserved = table.reserved_guests && table.reserved_guests > 0;
+                         const isSoldOut = event?.sold_out;
+                         const isUnavailable = isReserved || isSoldOut;
+                         
+                         return (
+                           <button
+                             key={table.id}
+                             onClick={() => !isUnavailable && handleTableSelect(table)}
+                              className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md py-1 px-1 m-1 ${
+                                isUnavailable
+                                  ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
+                                  : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
+                              }`}
                              style={{
                                 left: `${Math.max(1, Math.min(94, (table.position_x / 1200) * 94 + 1))}%`,
                                 top: `${Math.max(1, Math.min(94, (table.position_y / 500) * 94 + 1))}%`,
@@ -594,12 +608,12 @@ const EventDetails = () => {
                                paddingTop: `4px`,
                                paddingBottom: `4px`,
                              }}
-                             disabled={isReserved}
-                          >
-                             {isReserved && (
-                               <X className="absolute inset-0 w-10 h-10 text-red-500 m-auto" strokeWidth={3} />
-                             )}
-                             {!isReserved && (
+                              disabled={isUnavailable}
+                           >
+                              {isUnavailable && (
+                                <X className="absolute inset-0 w-10 h-10 text-red-500 m-auto" strokeWidth={3} />
+                              )}
+                              {!isUnavailable && (
                                <>
                                   {Number(table.reservation_price) > 0 && (
                                     <span className="text-[10px] font-bold leading-none">

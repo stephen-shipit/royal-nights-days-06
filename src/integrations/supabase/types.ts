@@ -90,6 +90,7 @@ export type Database = {
           price_range: string
           recurrence_end_date: string | null
           recurrence_pattern: string | null
+          sold_out: boolean
           tickets_url: string | null
           time: string
           title: string
@@ -110,6 +111,7 @@ export type Database = {
           price_range: string
           recurrence_end_date?: string | null
           recurrence_pattern?: string | null
+          sold_out?: boolean
           tickets_url?: string | null
           time: string
           title: string
@@ -130,6 +132,7 @@ export type Database = {
           price_range?: string
           recurrence_end_date?: string | null
           recurrence_pattern?: string | null
+          sold_out?: boolean
           tickets_url?: string | null
           time?: string
           title?: string

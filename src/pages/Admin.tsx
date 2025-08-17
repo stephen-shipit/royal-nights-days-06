@@ -992,6 +992,31 @@ const EventManagement = () => {
     },
   });
 
+  const handleToggleSoldOut = async (eventId: string, currentSoldOut: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update({ sold_out: !currentSoldOut })
+        .eq('id', eventId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Event marked as ${!currentSoldOut ? 'sold out' : 'available'}`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    } catch (error) {
+      console.error('Error updating event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update event status",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -1134,10 +1159,18 @@ const EventManagement = () => {
                   <p><strong>Category:</strong> {event.category}</p>
                   <p><strong>Price:</strong> {event.price}</p>
                   <p><strong>Featured:</strong> {event.featured ? 'Yes' : 'No'}</p>
+                  <p><strong>Status:</strong> <span className={event.sold_out ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>{event.sold_out ? 'Sold Out' : 'Available'}</span></p>
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button size="sm" variant="outline" onClick={() => handleEdit(event)}>
                     <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={event.sold_out ? "destructive" : "outline"}
+                    onClick={() => handleToggleSoldOut(event.id, event.sold_out)}
+                  >
+                    {event.sold_out ? "Sold Out" : "Available"}
                   </Button>
                   <Button size="sm" variant="destructive" onClick={() => handleDelete(event.id)}>
                     <Trash2 className="h-4 w-4" />

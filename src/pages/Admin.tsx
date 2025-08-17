@@ -1031,6 +1031,7 @@ const EventManagement = () => {
       host: formData.get("host") as string,
       dj: formData.get("dj") as string,
       featured: formData.get("featured") === "on",
+      sold_out: formData.get("sold_out") === "on",
       image_url: imageUrl,
     };
     
@@ -1115,6 +1116,16 @@ const EventManagement = () => {
                   defaultChecked={editingEvent?.featured || false}
                 />
                 <Label htmlFor="featured">Featured Event</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="sold_out"
+                  name="sold_out"
+                  defaultChecked={editingEvent?.sold_out || false}
+                />
+                <Label htmlFor="sold_out">Mark as Sold Out</Label>
               </div>
               
               <div>

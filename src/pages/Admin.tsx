@@ -1136,19 +1136,19 @@ const EventManagement = () => {
                   name="partial_booking"
                   defaultChecked={(editingEvent?.booking_percentage || 0) > 0}
                   onChange={(e) => {
-                    const percentageInput = document.getElementById('booking_percentage') as HTMLSelectElement;
-                    if (percentageInput) {
-                      percentageInput.style.display = e.target.checked ? 'block' : 'none';
-                      if (!e.target.checked) {
-                        percentageInput.value = '0';
-                      }
+                    const percentageDiv = document.getElementById('booking_percentage_container');
+                    if (percentageDiv) {
+                      percentageDiv.style.display = e.target.checked ? 'block' : 'none';
                     }
                   }}
                 />
                 <Label htmlFor="partial_booking">Mark as Partially Booked</Label>
               </div>
 
-              <div style={{ display: (editingEvent?.booking_percentage || 0) > 0 ? 'block' : 'none' }}>
+              <div 
+                id="booking_percentage_container"
+                style={{ display: (editingEvent?.booking_percentage || 0) > 0 ? 'block' : 'none' }}
+              >
                 <Label htmlFor="booking_percentage">Booking Percentage</Label>
                 <Select name="booking_percentage" defaultValue={String(editingEvent?.booking_percentage || 0)}>
                   <SelectTrigger>

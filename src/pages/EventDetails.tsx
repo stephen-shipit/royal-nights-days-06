@@ -101,6 +101,8 @@ const EventDetails = () => {
           variant: "destructive",
         });
       } else {
+        console.log('Event data fetched:', data);
+        console.log('Event sold_out status:', data.sold_out);
         setEvent(data);
       }
     } catch (error) {
@@ -436,6 +438,8 @@ const EventDetails = () => {
                           const isSoldOut = event?.sold_out;
                           const isUnavailable = isReserved || isSoldOut;
                           
+                          console.log('Table render - Event sold_out:', event?.sold_out, 'isSoldOut:', isSoldOut, 'isUnavailable:', isUnavailable);
+                          
                           return (
                             <button
                               key={table.id}
@@ -590,6 +594,8 @@ const EventDetails = () => {
                          const isReserved = table.reserved_guests && table.reserved_guests > 0;
                          const isSoldOut = event?.sold_out;
                          const isUnavailable = isReserved || isSoldOut;
+                         
+                         console.log('Desktop Table render - Event sold_out:', event?.sold_out, 'isSoldOut:', isSoldOut, 'isUnavailable:', isUnavailable);
                          
                          return (
                            <button

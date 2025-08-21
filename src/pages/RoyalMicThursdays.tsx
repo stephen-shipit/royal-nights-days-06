@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Header from "@/components/Header";
 import MobileHeader from "@/components/MobileHeader";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -31,7 +31,6 @@ const RoyalMicThursdays = () => {
 
   // Secondary menu state
   const [activeMenuItem, setActiveMenuItem] = useState("");
-  const [showSecondaryMenu, setShowSecondaryMenu] = useState(false);
   const [kickoffDrawerOpen, setKickoffDrawerOpen] = useState(false);
   const [rightDrawerOpen, setRightDrawerOpen] = useState(false);
   const [rightDrawerType, setRightDrawerType] = useState<'auditions' | 'events'>('auditions');
@@ -103,23 +102,6 @@ const RoyalMicThursdays = () => {
     scrollToForm();
   };
 
-  // Show secondary menu after hero section
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setShowSecondaryMenu(!entry.isIntersecting);
-      },
-      { threshold: 0.1 }
-    );
-
-    const heroSection = document.querySelector('section');
-    if (heroSection) {
-      observer.observe(heroSection);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <div className="min-h-screen">
       <Header />
@@ -184,7 +166,7 @@ const RoyalMicThursdays = () => {
         <SecondaryMenuBar
           onMenuClick={handleMenuClick}
           activeItem={activeMenuItem}
-          isVisible={showSecondaryMenu}
+          isVisible={true}
         />
 
         {/* FAQ Accordion */}

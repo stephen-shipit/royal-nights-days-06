@@ -22,10 +22,10 @@ export default function SecondaryMenuBar({ onMenuClick, activeItem, isVisible }:
 
   useEffect(() => {
     const handleScroll = () => {
-      const heroSection = document.querySelector('section');
-      if (heroSection) {
-        const heroBottom = heroSection.offsetHeight;
-        setIsSticky(window.scrollY >= heroBottom - 60);
+      const secondaryMenu = document.querySelector('[data-secondary-menu]') as HTMLElement;
+      if (secondaryMenu) {
+        const menuTop = secondaryMenu.offsetTop;
+        setIsSticky(window.scrollY >= menuTop);
       }
     };
 
@@ -37,6 +37,7 @@ export default function SecondaryMenuBar({ onMenuClick, activeItem, isVisible }:
 
   return (
     <div 
+      data-secondary-menu
       className={cn(
         "bg-black border-b border-secondary/20 transition-all duration-300 ease-in-out z-40",
         isSticky ? "fixed top-0 left-0 right-0 shadow-lg" : "relative"

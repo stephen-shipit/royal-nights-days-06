@@ -64,7 +64,7 @@ export default function RightSideDrawer({ isOpen, onClose, type, onBookAudition 
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 max-h-0">
           {isAuditions ? (
             <>
               {/* Venue Info */}

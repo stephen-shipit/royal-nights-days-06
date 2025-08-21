@@ -256,7 +256,7 @@ const RoyalMicThursdays = () => {
             
             {/* Performance Categories */}
             <div className="text-center mb-16">
-              <h3 className="text-3xl font-bold mb-12">Performance Categories</h3>
+              <h3 className="text-3xl font-bold mb-12 mt-5">Performance Categories</h3>
               <div className="flex flex-wrap justify-center gap-6">
                 {['R&B Vocalists', 'Neo-Soul Singers', 'Jazz Artists', 'Comedians', 'Poets', 'Instrumentalists'].map((category) => (
                   <span 

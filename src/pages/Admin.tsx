@@ -603,6 +603,7 @@ const ReservationManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [eventFilter, setEventFilter] = useState('all');
   const [reservationType, setReservationType] = useState('all');
+  const [dateFilter, setDateFilter] = useState('');
 
   const { data: reservations, isLoading } = useQuery({
     queryKey: ["reservations"],
@@ -691,8 +692,9 @@ const ReservationManagement = () => {
     const matchesStatus = statusFilter === 'all' || reservation.status === statusFilter;
     const matchesEvent = eventFilter === 'all' || reservation.event_id === eventFilter;
     const matchesType = reservationType === 'all' || reservation.reservation_type === reservationType;
+    const matchesDate = !dateFilter || reservation.events?.date === dateFilter;
     
-    return matchesSearch && matchesStatus && matchesEvent && matchesType;
+    return matchesSearch && matchesStatus && matchesEvent && matchesType && matchesDate;
   });
 
   // Separate reservations by type
@@ -794,7 +796,7 @@ const ReservationManagement = () => {
 
       {/* Filters */}
       <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           <div>
             <Label htmlFor="search">Search</Label>
             <Input
@@ -802,6 +804,15 @@ const ReservationManagement = () => {
               placeholder="Search by name, email, or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="date-filter">Date</Label>
+            <Input
+              id="date-filter"
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
             />
           </div>
           <div>
@@ -842,7 +853,7 @@ const ReservationManagement = () => {
                 <SelectItem value="all">All Events</SelectItem>
                 {events?.map((event) => (
                   <SelectItem key={event.id} value={event.id}>
-                    {event.title} - {event.date}
+                    {event.title} - {formatDate(event.date)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -853,6 +864,7 @@ const ReservationManagement = () => {
               variant="outline"
               onClick={() => {
                 setSearchTerm('');
+                setDateFilter('');
                 setStatusFilter('all');
                 setEventFilter('all');
                 setReservationType('all');

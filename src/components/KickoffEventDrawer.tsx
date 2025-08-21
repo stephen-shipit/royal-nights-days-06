@@ -107,7 +107,7 @@ export default function KickoffEventDrawer({ isOpen, onClose, onRegister }: Kick
                 <MapPin className="w-6 h-6 text-secondary flex-shrink-0" />
                 <div>
                   <p className="text-secondary font-semibold">Location</p>
-                  <p className="text-white">Royal Palace, Dallas</p>
+                  <p className="text-white">Royal Palace, Addison</p>
                 </div>
               </div>
             </div>

@@ -205,7 +205,7 @@ const RoyalMicThursdays = () => {
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16">
               <h2 className="text-5xl md:text-6xl font-bold mb-6 luxury-text">
-                Dallas's Premier Live Talent Showcase
+                Addison's Premier Live Talent Showcase
               </h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                 Join the city's most prestigious weekly competition where talent meets opportunity
@@ -264,7 +264,7 @@ const RoyalMicThursdays = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
                 <div className="absolute bottom-6 left-6 text-white">
                   <h3 className="text-2xl font-bold">Your Moment to Shine</h3>
-                  <p className="text-white/90">Command the stage at Dallas's premier venue</p>
+                  <p className="text-white/90">Command the stage at Addison's premier venue</p>
                 </div>
               </div>
               
@@ -355,7 +355,7 @@ const RoyalMicThursdays = () => {
                   <MapPin className="w-8 h-8 text-secondary mb-4" />
                   <h3 className="text-2xl font-bold mb-3">Where</h3>
                   <p className="text-lg text-muted-foreground">Royal Palace</p>
-                  <p className="text-xl font-semibold">Dallas, TX</p>
+                  <p className="text-xl font-semibold">Addison, TX</p>
                 </CardContent>
               </Card>
             </div>

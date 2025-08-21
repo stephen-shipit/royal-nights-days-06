@@ -131,8 +131,7 @@ const RoyalMicThursdays = () => {
             style={{
               backgroundImage: 'url(/lovable-uploads/3ab9ebb4-7bb7-48fe-a33e-04fb7711e8ec.png)',
               backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundAttachment: 'fixed'
+              backgroundPosition: 'center'
             }}
           />
           <div className="relative z-10 max-w-4xl mx-auto px-6">

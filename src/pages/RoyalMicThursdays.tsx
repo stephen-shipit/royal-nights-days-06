@@ -59,7 +59,7 @@ const RoyalMicThursdays = () => {
           <div 
             className="absolute inset-0 z-0"
             style={{
-              backgroundImage: 'url(/lovable-uploads/lounge-atmosphere.jpg)',
+              backgroundImage: 'url(/lovable-uploads/3ab9ebb4-7bb7-48fe-a33e-04fb7711e8ec.png)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundAttachment: 'fixed'

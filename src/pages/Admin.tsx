@@ -722,9 +722,21 @@ const ReservationManagement = () => {
     const todayStr = today.toISOString().split('T')[0];
     const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     
+    console.log('Debug - Today:', todayStr);
+    console.log('Debug - Category:', category);
+    
     return filteredReservations?.filter((reservation) => {
       const reservationDate = reservation.events?.date || reservation.created_at?.split('T')[0];
       const createdDate = reservation.created_at?.split('T')[0];
+      
+      console.log('Debug - Reservation:', {
+        guestName: reservation.guest_name,
+        reservationDate,
+        createdDate,
+        todayStr,
+        type: reservation.reservation_type,
+        comparison: reservationDate > todayStr
+      });
       
       switch (category) {
         case 'recent':

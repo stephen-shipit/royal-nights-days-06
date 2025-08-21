@@ -172,6 +172,17 @@ const RoyalMicThursdays = () => {
         {/* FAQ Accordion */}
         <FAQAccordion isOpen={faqOpen} onClose={() => setFaqOpen(false)} />
 
+        {/* Mobile Sticky Register Button */}
+        <div className="fixed bottom-24 left-4 right-4 z-50 md:hidden">
+          <Button 
+            onClick={scrollToForm}
+            className="w-full bg-secondary text-black font-bold py-4 text-lg shadow-2xl hover:bg-secondary/90 transition-all duration-300 transform hover:scale-105"
+          >
+            <Mic className="mr-2" />
+            Register to Perform
+          </Button>
+        </div>
+
         {/* Why Perform Section */}
         <section className="py-24 bg-muted/30" id="details">
           <div className="max-w-6xl mx-auto px-6">

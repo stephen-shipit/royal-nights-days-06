@@ -32,6 +32,9 @@ type Event = {
   price_range: string;
   sold_out?: boolean;
   booking_percentage?: number;
+  block_table_reservations?: boolean;
+  external_reservation_url?: string;
+  block_message?: string;
 };
 
 type VenueTable = {
@@ -176,6 +179,10 @@ const EventDetails = () => {
   };
 
   const handleTableSelect = (table: VenueTable) => {
+    if (event?.block_table_reservations) {
+      return; // Blocked events shouldn't allow table selection
+    }
+    
     if (event?.sold_out) {
       toast({
         title: "Event Sold Out",
@@ -436,60 +443,79 @@ const EventDetails = () => {
                       </p>
                     )}
                   </CardHeader>
-                  <CardContent>
-                    <div className="relative w-full h-[300px] md:h-[400px] bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg overflow-hidden border border-border">
-                      {venueTables.length === 0 ? (
-                        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                          Loading tables...
-                        </div>
-                      ) : (
-                        (() => {
-                          const randomlyUnavailable = getRandomlyUnavailableTables(venueTables, event?.booking_percentage || 0);
-                          return venueTables.map((table) => {
-                            const isReserved = table.reserved_guests && table.reserved_guests > 0;
-                            const isSoldOut = event?.sold_out;
-                            const isRandomlyUnavailable = randomlyUnavailable.has(table.id);
-                            const isUnavailable = isReserved || isSoldOut || isRandomlyUnavailable;
-                          
-                          return (
-                            <button
-                              key={table.id}
-                              onClick={() => !isUnavailable && handleTableSelect(table)}
-                              className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-xs font-medium shadow-md ${
-                                isUnavailable
-                                  ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
-                                  : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
-                              }`}
-                              style={{
-                                left: `${(table.position_x / 1200) * 100}%`,
-                                top: `${(table.position_y / 500) * 100}%`,
-                                width: `clamp(20px, ${(table.width / 1200) * 100}%, 60px)`,
-                                height: `clamp(16px, ${(table.height / 500) * 100}%, 48px)`,
-                                fontSize: 'clamp(8px, 1.5vw, 12px)',
-                                transform: 'translate(-50%, -50%)',
-                              }}
-                              disabled={isUnavailable}
-                            >
-                              {isUnavailable && (
-                                <X className="w-3 h-3 md:w-4 md:h-4 text-red-500" strokeWidth={3} />
-                              )}
-                              {!isUnavailable && (
-                                <>
-                                  {Number(table.reservation_price) > 0 && (
-                                    <span className="text-[6px] md:text-[8px] font-bold leading-none">
-                                      ${Number(table.reservation_price)}
-                                    </span>
-                                  )}
-                                  <span className="text-[8px] md:text-[10px] font-bold">T{table.table_number}</span>
-                                  <span className="text-[6px] md:text-[8px] leading-none">{table.max_guests}</span>
-                                </>
-                              )}
-                            </button>
-                          );
-                         });
-                       })()
+                   <CardContent>
+                     <div className="relative w-full h-[300px] md:h-[400px] bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg overflow-hidden border border-border">
+                       {venueTables.length === 0 ? (
+                         <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                           Loading tables...
+                         </div>
+                       ) : (
+                         (() => {
+                           const randomlyUnavailable = getRandomlyUnavailableTables(venueTables, event?.booking_percentage || 0);
+                           return venueTables.map((table) => {
+                             const isReserved = table.reserved_guests && table.reserved_guests > 0;
+                             const isSoldOut = event?.sold_out;
+                             const isRandomlyUnavailable = randomlyUnavailable.has(table.id);
+                             const isUnavailable = isReserved || isSoldOut || isRandomlyUnavailable;
+                           
+                           return (
+                             <button
+                               key={table.id}
+                               onClick={() => !isUnavailable && handleTableSelect(table)}
+                               className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-xs font-medium shadow-md ${
+                                 isUnavailable
+                                   ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
+                                   : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
+                               }`}
+                               style={{
+                                 left: `${(table.position_x / 1200) * 100}%`,
+                                 top: `${(table.position_y / 500) * 100}%`,
+                                 width: `clamp(20px, ${(table.width / 1200) * 100}%, 60px)`,
+                                 height: `clamp(16px, ${(table.height / 500) * 100}%, 48px)`,
+                                 fontSize: 'clamp(8px, 1.5vw, 12px)',
+                                 transform: 'translate(-50%, -50%)',
+                               }}
+                               disabled={isUnavailable}
+                             >
+                               {isUnavailable && (
+                                 <X className="w-3 h-3 md:w-4 md:h-4 text-red-500" strokeWidth={3} />
+                               )}
+                               {!isUnavailable && (
+                                 <>
+                                   {Number(table.reservation_price) > 0 && (
+                                     <span className="text-[6px] md:text-[8px] font-bold leading-none">
+                                       ${Number(table.reservation_price)}
+                                     </span>
+                                   )}
+                                   <span className="text-[8px] md:text-[10px] font-bold">T{table.table_number}</span>
+                                   <span className="text-[6px] md:text-[8px] leading-none">{table.max_guests}</span>
+                                 </>
+                               )}
+                             </button>
+                           );
+                          });
+                        })()
+                        )}
+                        
+                       {/* Glass Overlay for Blocked Reservations */}
+                       {event.block_table_reservations && (
+                         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
+                           <div className="bg-white rounded-lg p-6 text-center shadow-lg max-w-sm w-full">
+                             <h3 className="text-lg font-semibold mb-3 text-gray-900">
+                               {event.block_message || "This is a special event, for table reservations please purchase here"}
+                             </h3>
+                             {event.external_reservation_url && (
+                               <Button
+                                 onClick={() => window.open(event.external_reservation_url, '_blank')}
+                                 className="w-full"
+                               >
+                                 Reserve Here
+                               </Button>
+                             )}
+                           </div>
+                         </div>
                        )}
-                     </div>
+                      </div>
                     
                     {/* Legend */}
                     <div className="flex flex-wrap gap-4 mt-4 text-sm">
@@ -595,60 +621,79 @@ const EventDetails = () => {
                     </p>
                   )}
                 </CardHeader>
-                <CardContent>
-                  <div className="relative w-full h-[500px] bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg overflow-hidden border border-border">
-                    {venueTables.length === 0 ? (
-                      <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                        Loading tables...
-                      </div>
-                      ) : (
-                         (() => {
-                           const randomlyUnavailable = getRandomlyUnavailableTables(venueTables, event?.booking_percentage || 0);
-                           return venueTables.map((table) => {
-                             const isReserved = table.reserved_guests && table.reserved_guests > 0;
-                             const isSoldOut = event?.sold_out;
-                             const isRandomlyUnavailable = randomlyUnavailable.has(table.id);
-                             const isUnavailable = isReserved || isSoldOut || isRandomlyUnavailable;
-                          
-                          return (
-                            <button
-                              key={table.id}
-                              onClick={() => !isUnavailable && handleTableSelect(table)}
-                               className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md py-1 px-1 m-1 ${
-                                 isUnavailable
-                                   ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
-                                   : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
-                               }`}
-                              style={{
-                                 left: `${Math.max(1, Math.min(94, (table.position_x / 1200) * 94 + 1))}%`,
-                                 top: `${Math.max(1, Math.min(94, (table.position_y / 500) * 94 + 1))}%`,
-                                 width: `40px`,
-                                 height: `55px`,
-                                paddingTop: `4px`,
-                                paddingBottom: `4px`,
-                              }}
-                               disabled={isUnavailable}
-                            >
-                               {isUnavailable && (
-                                 <X className="absolute inset-0 w-10 h-10 text-red-500 m-auto" strokeWidth={3} />
+                 <CardContent>
+                   <div className="relative w-full h-[500px] bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg overflow-hidden border border-border">
+                     {venueTables.length === 0 ? (
+                       <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                         Loading tables...
+                       </div>
+                       ) : (
+                          (() => {
+                            const randomlyUnavailable = getRandomlyUnavailableTables(venueTables, event?.booking_percentage || 0);
+                            return venueTables.map((table) => {
+                              const isReserved = table.reserved_guests && table.reserved_guests > 0;
+                              const isSoldOut = event?.sold_out;
+                              const isRandomlyUnavailable = randomlyUnavailable.has(table.id);
+                              const isUnavailable = isReserved || isSoldOut || isRandomlyUnavailable;
+                           
+                           return (
+                             <button
+                               key={table.id}
+                               onClick={() => !isUnavailable && handleTableSelect(table)}
+                                className={`absolute rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center text-sm font-medium shadow-md py-1 px-1 m-1 ${
+                                  isUnavailable
+                                    ? 'bg-red-500/20 border-red-400 text-red-600 cursor-not-allowed'
+                                    : 'bg-background border-primary hover:border-primary hover:bg-primary/10 cursor-pointer hover:shadow-lg'
+                                }`}
+                               style={{
+                                  left: `${Math.max(1, Math.min(94, (table.position_x / 1200) * 94 + 1))}%`,
+                                  top: `${Math.max(1, Math.min(94, (table.position_y / 500) * 94 + 1))}%`,
+                                  width: `40px`,
+                                  height: `55px`,
+                                 paddingTop: `4px`,
+                                 paddingBottom: `4px`,
+                               }}
+                                disabled={isUnavailable}
+                             >
+                                {isUnavailable && (
+                                  <X className="absolute inset-0 w-10 h-10 text-red-500 m-auto" strokeWidth={3} />
+                                )}
+                                {!isUnavailable && (
+                                 <>
+                                    {Number(table.reservation_price) > 0 && (
+                                      <span className="text-[10px] font-bold leading-none">
+                                        ${Number(table.reservation_price)}
+                                      </span>
+                                    )}
+                                    <span className="text-sm font-bold">T{table.table_number}</span>
+                                   <span className="text-xs leading-none">{table.max_guests}</span>
+                                 </>
                                )}
-                               {!isUnavailable && (
-                                <>
-                                   {Number(table.reservation_price) > 0 && (
-                                     <span className="text-[10px] font-bold leading-none">
-                                       ${Number(table.reservation_price)}
-                                     </span>
-                                   )}
-                                   <span className="text-sm font-bold">T{table.table_number}</span>
-                                  <span className="text-xs leading-none">{table.max_guests}</span>
-                                </>
-                              )}
-                            </button>
-                          );
-                           });
-                         })()
+                             </button>
+                           );
+                            });
+                          })()
+                        )}
+                        
+                       {/* Glass Overlay for Blocked Reservations */}
+                       {event.block_table_reservations && (
+                         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
+                           <div className="bg-white rounded-lg p-6 text-center shadow-lg max-w-sm w-full">
+                             <h3 className="text-lg font-semibold mb-3 text-gray-900">
+                               {event.block_message || "This is a special event, for table reservations please purchase here"}
+                             </h3>
+                             {event.external_reservation_url && (
+                               <Button
+                                 onClick={() => window.open(event.external_reservation_url, '_blank')}
+                                 className="w-full"
+                               >
+                                 Reserve Here
+                               </Button>
+                             )}
+                           </div>
+                         </div>
                        )}
-                   </div>
+                    </div>
                   
                   {/* Legend */}
                   <div className="flex flex-wrap gap-4 mt-4 text-sm">

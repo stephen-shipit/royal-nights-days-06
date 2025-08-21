@@ -1307,6 +1307,9 @@ const EventManagement = () => {
       featured: formData.get("featured") === "on",
       sold_out: formData.get("sold_out") === "on",
       booking_percentage: parseInt(formData.get("booking_percentage") as string) || 0,
+      block_table_reservations: formData.get("block_table_reservations") === "on",
+      external_reservation_url: formData.get("external_reservation_url") as string,
+      block_message: formData.get("block_message") as string,
       image_url: imageUrl,
     };
     
@@ -1449,6 +1452,57 @@ const EventManagement = () => {
                   Set what percentage of tables appear unavailable (randomly selected)
                 </p>
               </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="block_table_reservations"
+                  name="block_table_reservations"
+                  defaultChecked={editingEvent?.block_table_reservations || false}
+                  onChange={(e) => {
+                    const externalUrlDiv = document.getElementById('external_url_container');
+                    const blockMessageDiv = document.getElementById('block_message_container');
+                    if (externalUrlDiv && blockMessageDiv) {
+                      externalUrlDiv.style.display = e.target.checked ? 'block' : 'none';
+                      blockMessageDiv.style.display = e.target.checked ? 'block' : 'none';
+                    }
+                  }}
+                />
+                <Label htmlFor="block_table_reservations">Block Table Reservations</Label>
+              </div>
+
+              <div 
+                id="external_url_container"
+                style={{ display: editingEvent?.block_table_reservations ? 'block' : 'none' }}
+              >
+                <Label htmlFor="external_reservation_url">External Reservation URL</Label>
+                <Input 
+                  id="external_reservation_url" 
+                  name="external_reservation_url" 
+                  type="url" 
+                  defaultValue={editingEvent?.external_reservation_url || ""} 
+                  placeholder="https://example.com/book-table" 
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  URL where users will be redirected for reservations
+                </p>
+              </div>
+
+              <div 
+                id="block_message_container"
+                style={{ display: editingEvent?.block_table_reservations ? 'block' : 'none' }}
+              >
+                <Label htmlFor="block_message">Block Message</Label>
+                <Textarea 
+                  id="block_message" 
+                  name="block_message" 
+                  defaultValue={editingEvent?.block_message || "This is a special event, for table reservations please purchase here"}
+                  placeholder="Custom message to show when table reservations are blocked"
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Message displayed to users when table reservations are blocked
+                </p>
+              </div>
               
               <div>
                 <Label htmlFor="description">Description</Label>
@@ -1493,6 +1547,9 @@ const EventManagement = () => {
                   <p><strong>Price:</strong> {event.price}</p>
                   <p><strong>Featured:</strong> {event.featured ? 'Yes' : 'No'}</p>
                   <p><strong>Status:</strong> <span className={event.sold_out ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>{event.sold_out ? 'Sold Out' : 'Available'}</span></p>
+                  {event.block_table_reservations && (
+                    <p><strong>Table Reservations:</strong> <span className="text-orange-600 font-medium">Blocked</span></p>
+                  )}
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button size="sm" variant="outline" onClick={() => handleEdit(event)}>

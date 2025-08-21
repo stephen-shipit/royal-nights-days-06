@@ -76,12 +76,15 @@ export type Database = {
       }
       events: {
         Row: {
+          block_message: string | null
+          block_table_reservations: boolean | null
           booking_percentage: number | null
           category: string
           created_at: string
           date: string
           description: string
           dj: string | null
+          external_reservation_url: string | null
           featured: boolean
           host: string | null
           id: string
@@ -98,12 +101,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          block_message?: string | null
+          block_table_reservations?: boolean | null
           booking_percentage?: number | null
           category: string
           created_at?: string
           date: string
           description: string
           dj?: string | null
+          external_reservation_url?: string | null
           featured?: boolean
           host?: string | null
           id?: string
@@ -120,12 +126,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          block_message?: string | null
+          block_table_reservations?: boolean | null
           booking_percentage?: number | null
           category?: string
           created_at?: string
           date?: string
           description?: string
           dj?: string | null
+          external_reservation_url?: string | null
           featured?: boolean
           host?: string | null
           id?: string

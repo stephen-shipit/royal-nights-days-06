@@ -40,7 +40,7 @@ export default function SecondaryMenuBar({ onMenuClick, activeItem, isVisible }:
       data-secondary-menu
       className={cn(
         "bg-black border-b border-secondary/20 transition-all duration-300 ease-in-out z-40",
-        isSticky ? "fixed top-0 left-0 right-0 shadow-lg" : "relative"
+        isSticky ? "fixed top-16 left-0 right-0 shadow-lg" : "relative"
       )}
     >
       <div className="max-w-7xl mx-auto">

@@ -42,7 +42,7 @@ export default function RightSideDrawer({ isOpen, onClose, type, onBookAudition 
       {/* Drawer */}
       <div className={cn(
         "fixed top-0 right-0 h-full w-full md:w-[40%] bg-black border-l-2 border-secondary z-50",
-        "transform transition-transform duration-300 ease-out",
+        "transform transition-transform duration-300 ease-out flex flex-col",
         isOpen ? "translate-x-0" : "translate-x-full"
       )}>
         {/* Header */}

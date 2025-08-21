@@ -73,7 +73,7 @@ const RoyalMicThursdays = () => {
               THE STAGE IS <span className="luxury-text">YOURS</span>
             </h1>
             <h2 className="text-3xl md:text-5xl font-bold mb-6 text-secondary">
-              THE CROWN AWAITS 👑
+              Royal Mic Thursdays 👑
             </h2>
             <p className="text-xl md:text-2xl text-white/90 mb-12 leading-relaxed max-w-3xl mx-auto">
               Compete for <span className="text-secondary font-bold">$1,000 in cash prizes</span> every Thursday at Royal Palace. 

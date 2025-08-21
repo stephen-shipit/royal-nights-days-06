@@ -45,7 +45,7 @@ export default function SecondaryMenuBar({ onMenuClick, activeItem, isVisible }:
     >
       <div className="max-w-7xl mx-auto">
         <nav className="flex items-center justify-center overflow-x-auto scrollbar-hide">
-          <div className="flex items-center space-x-1 md:space-x-4 px-4 py-0">
+          <div className="flex items-center space-x-1 md:space-x-4 px-4">
             {menuItems.map((item) => (
               <button
                 key={item.id}

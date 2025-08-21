@@ -701,11 +701,96 @@ const ReservationManagement = () => {
 
   if (isLoading) return <div>Loading...</div>;
 
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Filter reservations for today
+  const todaysReservations = reservations?.filter((reservation) => {
+    if (!reservation.events?.date) return false;
+    return reservation.events.date === today;
+  }) || [];
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric'
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Reservations Management</h2>
       </div>
+
+      {/* Today's Reservations Section */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-semibold">Today's Reservations</h3>
+          <div className="text-sm text-muted-foreground">
+            {formatDate(today)} • {todaysReservations.length} reservations
+          </div>
+        </div>
+        {todaysReservations.length > 0 ? (
+          <div className="space-y-3">
+            {todaysReservations.map((reservation) => (
+              <div key={reservation.id} className="flex items-center justify-between p-4 border rounded-lg bg-card">
+                <div className="flex-1">
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <p className="font-medium">{reservation.guest_name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {reservation.guest_email} • {reservation.guest_phone}
+                      </p>
+                    </div>
+                    <div className="text-sm">
+                      <p className="font-medium">{reservation.events?.title}</p>
+                      <p className="text-muted-foreground">{reservation.events?.time}</p>
+                    </div>
+                    <div className="text-sm">
+                      <p className="font-medium">{reservation.guest_count} guests</p>
+                      <p className="text-muted-foreground">
+                        Table {reservation.venue_tables?.table_number} • {reservation.reservation_type}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={
+                    reservation.status === 'confirmed' ? 'default' : 
+                    reservation.status === 'pending' ? 'secondary' : 
+                    reservation.status === 'cancelled' ? 'destructive' : 'outline'
+                  }>
+                    {reservation.status}
+                  </Badge>
+                  <Select
+                    value={reservation.status}
+                    onValueChange={(status) => handleStatusUpdate(reservation.id, status)}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No reservations for today</p>
+          </div>
+        )}
+      </Card>
 
       {/* Filters */}
       <Card className="p-4">

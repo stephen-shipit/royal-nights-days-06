@@ -108,6 +108,12 @@
     background: var(--gradient-overlay);
   }
   
+  @media (max-width: 768px) {
+    .hero-overlay {
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5));
+    }
+  }
+  
   .elegant-shadow {
     box-shadow: var(--shadow-elegant);
   }

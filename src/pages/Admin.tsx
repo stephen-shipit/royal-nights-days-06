@@ -9,10 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from "@/components/ui/drawer";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List, Mail } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List, Mail, Eye } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { BulkImageUpload } from "@/components/BulkImageUpload";
 import AdminHeader from "@/components/AdminHeader";
@@ -604,6 +605,8 @@ const ReservationManagement = () => {
   const [eventFilter, setEventFilter] = useState('all');
   const [reservationType, setReservationType] = useState('all');
   const [dateFilter, setDateFilter] = useState('');
+  const [selectedReservation, setSelectedReservation] = useState<any>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const { data: reservations, isLoading } = useQuery({
     queryKey: ["reservations"],
@@ -712,7 +715,7 @@ const ReservationManagement = () => {
     return reservation.events.date === today;
   }) || [];
 
-  // Format date for display
+  // Format date for display (MM/DD/YYYY)
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -720,6 +723,11 @@ const ReservationManagement = () => {
       day: '2-digit',
       year: 'numeric'
     });
+  };
+
+  const handleViewDetails = (reservation: any) => {
+    setSelectedReservation(reservation);
+    setIsDrawerOpen(true);
   };
 
   return (
@@ -868,6 +876,8 @@ const ReservationManagement = () => {
                 setStatusFilter('all');
                 setEventFilter('all');
                 setReservationType('all');
+                setIsDrawerOpen(false);
+                setSelectedReservation(null);
               }}
             >
               Clear Filters
@@ -914,15 +924,11 @@ const ReservationManagement = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Event/Date</TableHead>
-              <TableHead>Table</TableHead>
               <TableHead>Guest Name</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Time Slot</TableHead>
+              <TableHead>Event/Date</TableHead>
               <TableHead>Guests</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Payment</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -930,40 +936,30 @@ const ReservationManagement = () => {
           <TableBody>
             {filteredReservations?.map((reservation) => (
               <TableRow key={reservation.id}>
+                <TableCell className="font-medium">{reservation.guest_name}</TableCell>
+                <TableCell>
+                  {reservation.reservation_type === 'nightlife' ? (
+                    <div>
+                      <div className="font-medium">{reservation.events?.title || 'N/A'}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {reservation.events?.date ? formatDate(reservation.events.date) : 'N/A'}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="font-medium">Regular Dining</div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatDate(reservation.created_at?.split('T')[0] || '')}
+                      </div>
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>{reservation.guest_count}</TableCell>
                 <TableCell>
                   <Badge variant={reservation.reservation_type === 'dining' ? 'default' : 'secondary'}>
                     {reservation.reservation_type === 'dining' ? '🍽️ Dining' : '🍸 Nightlife'}
                   </Badge>
                 </TableCell>
-                <TableCell>
-                  {reservation.reservation_type === 'nightlife' ? (
-                    <div>
-                      <div className="font-medium">{reservation.events?.title || 'N/A'}</div>
-                      <div className="text-sm text-muted-foreground">{reservation.events?.date}</div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="font-medium">Regular Dining</div>
-                      <div className="text-sm text-muted-foreground">{reservation.created_at?.split('T')[0]}</div>
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="font-medium">Table {reservation.venue_tables?.table_number || 'N/A'}</div>
-                  <div className="text-sm text-muted-foreground">
-                    Max {reservation.venue_tables?.max_guests} • {reservation.venue_tables?.location}
-                  </div>
-                </TableCell>
-                <TableCell className="font-medium">{reservation.guest_name}</TableCell>
-                <TableCell>
-                  <div>{reservation.guest_email}</div>
-                  <div className="text-sm text-muted-foreground">{reservation.guest_phone}</div>
-                </TableCell>
-                <TableCell>
-                  <div>{reservation.events?.date || reservation.created_at?.split('T')[0]}</div>
-                  <div className="text-sm text-muted-foreground">{reservation.time_slot}</div>
-                </TableCell>
-                <TableCell>{reservation.guest_count}</TableCell>
                 <TableCell>
                   <Select value={reservation.status} onValueChange={(value) => handleStatusUpdate(reservation.id, value)}>
                     <SelectTrigger className="w-32">
@@ -977,14 +973,12 @@ const ReservationManagement = () => {
                     </SelectContent>
                   </Select>
                 </TableCell>
-                <TableCell>
-                  <Badge variant={reservation.payment_status === 'completed' ? 'default' : 'secondary'}>
-                    {reservation.payment_status || 'pending'}
-                  </Badge>
-                </TableCell>
                 <TableCell className="font-medium">${reservation.total_price || 0}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => handleViewDetails(reservation)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => {
                       navigator.clipboard.writeText(reservation.guest_email);
                       toast({ title: "Email copied to clipboard" });
@@ -1001,6 +995,156 @@ const ReservationManagement = () => {
           </TableBody>
         </Table>
       </Card>
+
+      {/* Reservation Details Drawer */}
+      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <DrawerContent className="h-[80vh]">
+          <DrawerHeader>
+            <DrawerTitle>Reservation Details</DrawerTitle>
+            <DrawerClose />
+          </DrawerHeader>
+          <div className="p-6 overflow-y-auto">
+            {selectedReservation && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Guest Information</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Name</Label>
+                        <p className="text-sm">{selectedReservation.guest_name}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Email</Label>
+                        <p className="text-sm">{selectedReservation.guest_email}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Phone</Label>
+                        <p className="text-sm">{selectedReservation.guest_phone || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Number of Guests</Label>
+                        <p className="text-sm">{selectedReservation.guest_count}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Reservation Details</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Type</Label>
+                        <p className="text-sm">
+                          <Badge variant={selectedReservation.reservation_type === 'dining' ? 'default' : 'secondary'}>
+                            {selectedReservation.reservation_type === 'dining' ? '🍽️ Dining' : '🍸 Nightlife'}
+                          </Badge>
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                        <p className="text-sm">
+                          <Badge variant={
+                            selectedReservation.status === 'confirmed' ? 'default' : 
+                            selectedReservation.status === 'pending' ? 'secondary' : 
+                            selectedReservation.status === 'cancelled' ? 'destructive' : 'outline'
+                          }>
+                            {selectedReservation.status}
+                          </Badge>
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Time Slot</Label>
+                        <p className="text-sm">{selectedReservation.time_slot || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Created</Label>
+                        <p className="text-sm">
+                          {formatDate(selectedReservation.created_at?.split('T')[0] || '')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedReservation.reservation_type === 'nightlife' && selectedReservation.events && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Event Information</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Event Title</Label>
+                        <p className="text-sm">{selectedReservation.events.title}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Date</Label>
+                        <p className="text-sm">{formatDate(selectedReservation.events.date)}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Time</Label>
+                        <p className="text-sm">{selectedReservation.events.time}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {selectedReservation.venue_tables && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Table Information</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Table Number</Label>
+                        <p className="text-sm">Table {selectedReservation.venue_tables.table_number}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Max Capacity</Label>
+                        <p className="text-sm">{selectedReservation.venue_tables.max_guests} guests</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Location</Label>
+                        <p className="text-sm">{selectedReservation.venue_tables.location || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Payment Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Payment Status</Label>
+                      <p className="text-sm">
+                        <Badge variant={selectedReservation.payment_status === 'completed' ? 'default' : 'secondary'}>
+                          {selectedReservation.payment_status || 'pending'}
+                        </Badge>
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Total Amount</Label>
+                      <p className="text-sm font-semibold">${selectedReservation.total_price || 0}</p>
+                    </div>
+                    {selectedReservation.birthday_package && (
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Birthday Package</Label>
+                        <p className="text-sm">
+                          <Badge variant="outline">🎂 Birthday Package Added</Badge>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {selectedReservation.special_requests && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Special Requests</h3>
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm">{selectedReservation.special_requests}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {/* Special Requests Modal */}
       {filteredReservations?.some(r => r.special_requests) && (

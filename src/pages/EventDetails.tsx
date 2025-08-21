@@ -503,12 +503,14 @@ const EventDetails = () => {
                        {/* Glass Overlay for Blocked Reservations */}
                        {event?.block_table_reservations && (
                          <div 
-                           className="absolute inset-0 flex items-center justify-center p-4 z-50" 
+                           className="absolute inset-0 flex items-center justify-center p-4"
                            style={{ 
-                             backgroundColor: 'rgba(0, 0, 0, 0.7)', 
+                             backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                             zIndex: 9999,
                              backdropFilter: 'blur(8px)',
                              WebkitBackdropFilter: 'blur(8px)'
                            }}
+                           onClick={() => console.log('Overlay clicked!')}
                          >
                            <div className="bg-white rounded-lg p-6 text-center shadow-lg max-w-sm w-full">
                              <h3 className="text-lg font-semibold mb-3 text-gray-900">
@@ -688,12 +690,14 @@ const EventDetails = () => {
                        {/* Glass Overlay for Blocked Reservations */}
                        {event?.block_table_reservations && (
                          <div 
-                           className="absolute inset-0 flex items-center justify-center p-4 z-50" 
+                           className="absolute inset-0 flex items-center justify-center p-4"
                            style={{ 
-                             backgroundColor: 'rgba(0, 0, 0, 0.7)', 
+                             backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                             zIndex: 9999,
                              backdropFilter: 'blur(8px)',
                              WebkitBackdropFilter: 'blur(8px)'
                            }}
+                           onClick={() => console.log('Overlay clicked!')}
                          >
                            <div className="bg-white rounded-lg p-6 text-center shadow-lg max-w-sm w-full">
                              <h3 className="text-lg font-semibold mb-3 text-gray-900">

@@ -361,10 +361,13 @@ const RoyalMicThursdays = () => {
             </div>
             
             <div className="text-center">
-              <h3 className="text-3xl font-bold mb-8">Performance Categories</h3>
-              <div className="flex flex-wrap justify-center gap-4">
+              <h3 className="text-3xl font-bold mb-12">Performance Categories</h3>
+              <div className="flex flex-wrap justify-center gap-6">
                 {['R&B Vocalists', 'Neo-Soul Singers', 'Jazz Artists', 'Comedians', 'Poets', 'Instrumentalists'].map((category) => (
-                  <span key={category} className="bg-secondary/20 text-secondary px-6 py-3 rounded-full font-semibold text-lg">
+                  <span 
+                    key={category} 
+                    className="bg-gradient-to-r from-secondary to-secondary/80 text-primary px-8 py-4 rounded-full font-bold text-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer border border-secondary/30"
+                  >
                     {category}
                   </span>
                 ))}

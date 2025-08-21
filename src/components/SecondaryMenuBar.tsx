@@ -39,7 +39,7 @@ export default function SecondaryMenuBar({ onMenuClick, activeItem, isVisible }:
     <div 
       data-secondary-menu
       className={cn(
-        "bg-black border-b border-secondary/20 transition-all duration-300 ease-in-out z-40",
+        "bg-black border-b border-secondary/20 transition-all duration-300 ease-in-out z-40 -mt-1",
         isSticky ? "fixed top-16 left-0 right-0 shadow-lg" : "relative"
       )}
     >

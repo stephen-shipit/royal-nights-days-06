@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import MobileHeader from "@/components/MobileHeader";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -37,6 +37,7 @@ const RoyalMicThursdays = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'rules' | 'guidelines' | 'contact'>('rules');
   const [faqOpen, setFaqOpen] = useState(false);
+  const [showStickyButton, setShowStickyButton] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +102,20 @@ const RoyalMicThursdays = () => {
     setModalOpen(false);
     scrollToForm();
   };
+
+  // Show sticky button after scrolling past hero
+  useEffect(() => {
+    const handleScroll = () => {
+      const heroSection = document.querySelector('section');
+      if (heroSection) {
+        const heroBottom = heroSection.offsetHeight;
+        setShowStickyButton(window.scrollY >= heroBottom - 200);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -173,15 +188,17 @@ const RoyalMicThursdays = () => {
         <FAQAccordion isOpen={faqOpen} onClose={() => setFaqOpen(false)} />
 
         {/* Mobile Sticky Register Button */}
-        <div className="fixed bottom-24 left-4 right-4 z-50 md:hidden">
-          <Button 
-            onClick={scrollToForm}
-            className="w-full bg-secondary text-black font-bold py-4 text-lg shadow-2xl hover:bg-secondary/90 transition-all duration-300 transform hover:scale-105"
-          >
-            <Mic className="mr-2" />
-            Register to Perform
-          </Button>
-        </div>
+        {showStickyButton && (
+          <div className="fixed bottom-24 left-4 right-4 z-50 md:hidden">
+            <Button 
+              onClick={scrollToForm}
+              className="w-full bg-secondary text-black font-bold py-4 text-lg shadow-2xl hover:bg-secondary/90 transition-all duration-300 transform hover:scale-105"
+            >
+              <Mic className="mr-2" />
+              Register to Perform
+            </Button>
+          </div>
+        )}
 
         {/* Why Perform Section */}
         <section className="py-24 bg-muted/30" id="details">

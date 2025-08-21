@@ -177,7 +177,7 @@ const RoyalMicThursdays = () => {
               
               <div className="relative rounded-2xl overflow-hidden elegant-shadow">
                 <img 
-                  src="/lovable-uploads/food-fusion.jpg" 
+                  src="/lovable-uploads/32901699-a539-4588-93cf-e407f8f10857.png" 
                   alt="Enthusiastic crowd"
                   className="w-full h-80 object-cover"
                 />

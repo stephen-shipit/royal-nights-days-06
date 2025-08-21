@@ -14,6 +14,7 @@ import Events from "./pages/Events";
 import EventDetails from "./pages/EventDetails";
 import PlanEvent from "./pages/PlanEvent";
 import Perform from "./pages/Perform";
+import RoyalMicThursdays from "./pages/RoyalMicThursdays";
 import ThankYou from "./pages/ThankYou";
 import Admin from "./pages/Admin";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -70,6 +71,7 @@ const App = () => {
               <Route path="/events/:eventId" element={<EventDetails />} />
               <Route path="/plan-event" element={<PlanEvent />} />
               <Route path="/perform" element={<Perform />} />
+              <Route path="/royal-mic-thursdays" element={<RoyalMicThursdays />} />
               <Route path="/thank-you" element={<ThankYou />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />

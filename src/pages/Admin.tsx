@@ -1030,6 +1030,7 @@ const EventManagement = () => {
       price_range: formData.get("price_range") as string,
       host: formData.get("host") as string,
       dj: formData.get("dj") as string,
+      tickets_url: formData.get("tickets_url") as string,
       featured: formData.get("featured") === "on",
       sold_out: formData.get("sold_out") === "on",
       booking_percentage: parseInt(formData.get("booking_percentage") as string) || 0,
@@ -1106,6 +1107,10 @@ const EventManagement = () => {
                 <div>
                   <Label htmlFor="dj">DJ</Label>
                   <Input id="dj" name="dj" defaultValue={editingEvent?.dj || ""} />
+                </div>
+                <div>
+                  <Label htmlFor="tickets_url">Tickets URL</Label>
+                  <Input id="tickets_url" name="tickets_url" type="url" defaultValue={editingEvent?.tickets_url || ""} placeholder="https://example.com/tickets" />
                 </div>
               </div>
               

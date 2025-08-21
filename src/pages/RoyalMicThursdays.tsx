@@ -135,7 +135,7 @@ const RoyalMicThursdays = () => {
             }}
           />
           <div className="relative z-10 max-w-4xl mx-auto px-6">
-            <div className="flex items-center justify-center mb-6">
+            <div className="flex items-center justify-center mb-6 mt-16 md:mt-0">
               <Crown className="w-16 h-16 text-secondary animate-pulse" />
             </div>
             <h1 className="text-6xl md:text-8xl font-bold mb-8 text-white tracking-tight">

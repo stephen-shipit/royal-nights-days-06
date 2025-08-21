@@ -164,7 +164,7 @@ const RoyalMicThursdays = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-16">
               <div className="relative rounded-2xl overflow-hidden elegant-shadow">
                 <img 
-                  src="/lovable-uploads/lounge-atmosphere.jpg" 
+                  src="/lovable-uploads/1e23e4ca-958c-4d13-80f8-9ed4516de8af.png" 
                   alt="Performer in spotlight"
                   className="w-full h-80 object-cover"
                 />

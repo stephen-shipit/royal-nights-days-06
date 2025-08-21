@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import MobileHeader from "@/components/MobileHeader";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
+import SecondaryMenuBar from "@/components/SecondaryMenuBar";
+import KickoffEventDrawer from "@/components/KickoffEventDrawer";
+import RightSideDrawer from "@/components/RightSideDrawer";
+import RoyalMicModal from "@/components/RoyalMicModal";
+import FAQAccordion from "@/components/FAQAccordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,6 +28,16 @@ const RoyalMicThursdays = () => {
     sampleLink: "",
     agreedToTerms: false
   });
+
+  // Secondary menu state
+  const [activeMenuItem, setActiveMenuItem] = useState("");
+  const [showSecondaryMenu, setShowSecondaryMenu] = useState(false);
+  const [kickoffDrawerOpen, setKickoffDrawerOpen] = useState(false);
+  const [rightDrawerOpen, setRightDrawerOpen] = useState(false);
+  const [rightDrawerType, setRightDrawerType] = useState<'auditions' | 'events'>('auditions');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<'rules' | 'guidelines' | 'contact'>('rules');
+  const [faqOpen, setFaqOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +61,64 @@ const RoyalMicThursdays = () => {
   const scrollToForm = () => {
     document.getElementById('registration-form')?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Secondary menu handlers
+  const handleMenuClick = (menuItem: string) => {
+    setActiveMenuItem(menuItem);
+    
+    switch (menuItem) {
+      case 'kickoff':
+        setKickoffDrawerOpen(true);
+        break;
+      case 'auditions':
+        setRightDrawerType('auditions');
+        setRightDrawerOpen(true);
+        break;
+      case 'events':
+        setRightDrawerType('events');
+        setRightDrawerOpen(true);
+        break;
+      case 'rules':
+        setModalType('rules');
+        setModalOpen(true);
+        break;
+      case 'guidelines':
+        setModalType('guidelines');
+        setModalOpen(true);
+        break;
+      case 'contact':
+        setModalType('contact');
+        setModalOpen(true);
+        break;
+      case 'faqs':
+        setFaqOpen(!faqOpen);
+        break;
+    }
+  };
+
+  const handleRegisterClick = () => {
+    setKickoffDrawerOpen(false);
+    setRightDrawerOpen(false);
+    setModalOpen(false);
+    scrollToForm();
+  };
+
+  // Show secondary menu after hero section
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowSecondaryMenu(!entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+
+    const heroSection = document.querySelector('section');
+    if (heroSection) {
+      observer.observe(heroSection);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -106,6 +179,16 @@ const RoyalMicThursdays = () => {
             </div>
           </div>
         </section>
+
+        {/* Secondary Menu Bar */}
+        <SecondaryMenuBar
+          onMenuClick={handleMenuClick}
+          activeItem={activeMenuItem}
+          isVisible={showSecondaryMenu}
+        />
+
+        {/* FAQ Accordion */}
+        <FAQAccordion isOpen={faqOpen} onClose={() => setFaqOpen(false)} />
 
         {/* Why Perform Section */}
         <section className="py-24 bg-muted/30" id="details">
@@ -499,6 +582,26 @@ const RoyalMicThursdays = () => {
         <Footer />
       </div>
       <MobileBottomNav />
+
+      {/* Modals and Drawers */}
+      <KickoffEventDrawer
+        isOpen={kickoffDrawerOpen}
+        onClose={() => setKickoffDrawerOpen(false)}
+        onRegister={handleRegisterClick}
+      />
+      
+      <RightSideDrawer
+        isOpen={rightDrawerOpen}
+        onClose={() => setRightDrawerOpen(false)}
+        type={rightDrawerType}
+        onBookAudition={handleRegisterClick}
+      />
+      
+      <RoyalMicModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        type={modalType}
+      />
     </div>
   );
 };

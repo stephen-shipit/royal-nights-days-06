@@ -13,11 +13,12 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, Drawer
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List, Mail, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List, Mail, Eye, Settings } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { BulkImageUpload } from "@/components/BulkImageUpload";
 import AdminHeader from "@/components/AdminHeader";
 import AdminFooter from "@/components/AdminFooter";
+import NotificationSettings from "@/components/NotificationSettings";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -102,7 +103,7 @@ const Admin = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Overview
@@ -130,6 +131,10 @@ const Admin = () => {
               <TabsTrigger value="modals" className="flex items-center gap-2">
                 <Layers className="h-4 w-4" />
                 Modals
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Settings
               </TabsTrigger>
             </TabsList>
 
@@ -250,6 +255,10 @@ const Admin = () => {
 
             <TabsContent value="modals">
               <ModalManagement />
+            </TabsContent>
+
+            <TabsContent value="settings">
+              <NotificationSettings />
             </TabsContent>
           </Tabs>
         </div>

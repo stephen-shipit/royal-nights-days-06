@@ -607,6 +607,7 @@ const ReservationManagement = () => {
   const [dateFilter, setDateFilter] = useState('');
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [activeReservationTab, setActiveReservationTab] = useState('recent');
 
   const { data: reservations, isLoading } = useQuery({
     queryKey: ["reservations"],
@@ -715,6 +716,115 @@ const ReservationManagement = () => {
     return reservation.events.date === today;
   }) || [];
 
+  // Get reservations by category
+  const getReservationsByCategory = (category: string) => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    return filteredReservations?.filter((reservation) => {
+      const reservationDate = reservation.events?.date || reservation.created_at?.split('T')[0];
+      const createdDate = reservation.created_at?.split('T')[0];
+      
+      switch (category) {
+        case 'recent':
+          return createdDate >= sevenDaysAgo;
+        case 'today':
+          return reservationDate === todayStr;
+        case 'upcoming':
+          return reservationDate > todayStr;
+        case 'past':
+          return reservationDate < todayStr;
+        default:
+          return true;
+      }
+    }) || [];
+  };
+
+  const renderReservationsTable = (reservationsList: any[]) => (
+    <Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Guest Name</TableHead>
+            <TableHead>Event/Date</TableHead>
+            <TableHead>Guests</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Total</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {reservationsList.map((reservation) => (
+            <TableRow key={reservation.id}>
+              <TableCell className="font-medium">{reservation.guest_name}</TableCell>
+              <TableCell>
+                {reservation.reservation_type === 'nightlife' ? (
+                  <div>
+                    <div className="font-medium">{reservation.events?.title || 'N/A'}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {reservation.events?.date ? formatDate(reservation.events.date) : 'N/A'}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="font-medium">Regular Dining</div>
+                    <div className="text-sm text-muted-foreground">
+                      {formatDate(reservation.created_at?.split('T')[0] || '')}
+                    </div>
+                  </div>
+                )}
+              </TableCell>
+              <TableCell>{reservation.guest_count}</TableCell>
+              <TableCell>
+                <Badge variant={reservation.reservation_type === 'dining' ? 'default' : 'secondary'}>
+                  {reservation.reservation_type === 'dining' ? '🍽️ Dining' : '🍸 Nightlife'}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Select value={reservation.status} onValueChange={(value) => handleStatusUpdate(reservation.id, value)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TableCell>
+              <TableCell className="font-medium">${reservation.total_price || 0}</TableCell>
+              <TableCell>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => handleViewDetails(reservation)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => {
+                    navigator.clipboard.writeText(reservation.guest_email);
+                    toast({ title: "Email copied to clipboard" });
+                  }}>
+                    <Mail className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleDelete(reservation.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      {reservationsList.length === 0 && (
+        <div className="text-center py-8">
+          <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">No reservations found</p>
+        </div>
+      )}
+    </Card>
+  );
+
   // Format date for display (MM/DD/YYYY)
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -735,72 +845,6 @@ const ReservationManagement = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Reservations Management</h2>
       </div>
-
-      {/* Today's Reservations Section */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold">Today's Reservations</h3>
-          <div className="text-sm text-muted-foreground">
-            {formatDate(today)} • {todaysReservations.length} reservations
-          </div>
-        </div>
-        {todaysReservations.length > 0 ? (
-          <div className="space-y-3">
-            {todaysReservations.map((reservation) => (
-              <div key={reservation.id} className="flex items-center justify-between p-4 border rounded-lg bg-card">
-                <div className="flex-1">
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <p className="font-medium">{reservation.guest_name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {reservation.guest_email} • {reservation.guest_phone}
-                      </p>
-                    </div>
-                    <div className="text-sm">
-                      <p className="font-medium">{reservation.events?.title}</p>
-                      <p className="text-muted-foreground">{reservation.events?.time}</p>
-                    </div>
-                    <div className="text-sm">
-                      <p className="font-medium">{reservation.guest_count} guests</p>
-                      <p className="text-muted-foreground">
-                        Table {reservation.venue_tables?.table_number} • {reservation.reservation_type}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={
-                    reservation.status === 'confirmed' ? 'default' : 
-                    reservation.status === 'pending' ? 'secondary' : 
-                    reservation.status === 'cancelled' ? 'destructive' : 'outline'
-                  }>
-                    {reservation.status}
-                  </Badge>
-                  <Select
-                    value={reservation.status}
-                    onValueChange={(status) => handleStatusUpdate(reservation.id, status)}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No reservations for today</p>
-          </div>
-        )}
-      </Card>
 
       {/* Filters */}
       <Card className="p-4">
@@ -920,81 +964,61 @@ const ReservationManagement = () => {
         </Card>
       </div>
 
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Guest Name</TableHead>
-              <TableHead>Event/Date</TableHead>
-              <TableHead>Guests</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredReservations?.map((reservation) => (
-              <TableRow key={reservation.id}>
-                <TableCell className="font-medium">{reservation.guest_name}</TableCell>
-                <TableCell>
-                  {reservation.reservation_type === 'nightlife' ? (
-                    <div>
-                      <div className="font-medium">{reservation.events?.title || 'N/A'}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {reservation.events?.date ? formatDate(reservation.events.date) : 'N/A'}
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="font-medium">Regular Dining</div>
-                      <div className="text-sm text-muted-foreground">
-                        {formatDate(reservation.created_at?.split('T')[0] || '')}
-                      </div>
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell>{reservation.guest_count}</TableCell>
-                <TableCell>
-                  <Badge variant={reservation.reservation_type === 'dining' ? 'default' : 'secondary'}>
-                    {reservation.reservation_type === 'dining' ? '🍽️ Dining' : '🍸 Nightlife'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Select value={reservation.status} onValueChange={(value) => handleStatusUpdate(reservation.id, value)}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                <TableCell className="font-medium">${reservation.total_price || 0}</TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleViewDetails(reservation)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => {
-                      navigator.clipboard.writeText(reservation.guest_email);
-                      toast({ title: "Email copied to clipboard" });
-                    }}>
-                      <Mail className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(reservation.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+      {/* Reservation Tabs */}
+      <Tabs value={activeReservationTab} onValueChange={setActiveReservationTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="recent" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Recent ({getReservationsByCategory('recent').length})
+          </TabsTrigger>
+          <TabsTrigger value="today" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Today ({getReservationsByCategory('today').length})
+          </TabsTrigger>
+          <TabsTrigger value="upcoming" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Upcoming ({getReservationsByCategory('upcoming').length})
+          </TabsTrigger>
+          <TabsTrigger value="past" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Past ({getReservationsByCategory('past').length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="recent" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Recently Added Reservations</h3>
+            <p className="text-sm text-muted-foreground">Added in the last 7 days</p>
+          </div>
+          {renderReservationsTable(getReservationsByCategory('recent'))}
+        </TabsContent>
+
+        <TabsContent value="today" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Today's Reservations</h3>
+            <div className="text-sm text-muted-foreground">
+              {formatDate(today)} • {getReservationsByCategory('today').length} reservations
+            </div>
+          </div>
+          {renderReservationsTable(getReservationsByCategory('today'))}
+        </TabsContent>
+
+        <TabsContent value="upcoming" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Upcoming Reservations</h3>
+            <p className="text-sm text-muted-foreground">Future reservations</p>
+          </div>
+          {renderReservationsTable(getReservationsByCategory('upcoming'))}
+        </TabsContent>
+
+        <TabsContent value="past" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Past Reservations</h3>
+            <p className="text-sm text-muted-foreground">Completed reservations</p>
+          </div>
+          {renderReservationsTable(getReservationsByCategory('past'))}
+        </TabsContent>
+      </Tabs>
 
       {/* Reservation Details Drawer */}
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>

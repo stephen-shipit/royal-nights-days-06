@@ -107,6 +107,9 @@ const EventDetails = () => {
       } else {
         console.log('Event data fetched:', data);
         console.log('Event sold_out status:', data.sold_out);
+        console.log('Event block_table_reservations:', data.block_table_reservations);
+        console.log('Event external_reservation_url:', data.external_reservation_url);
+        console.log('Event block_message:', data.block_message);
         setEvent(data);
       }
     } catch (error) {
@@ -498,8 +501,8 @@ const EventDetails = () => {
                         )}
                         
                        {/* Glass Overlay for Blocked Reservations */}
-                       {event.block_table_reservations && (
-                         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
+                       {event?.block_table_reservations && (
+                         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-10">
                            <div className="bg-white rounded-lg p-6 text-center shadow-lg max-w-sm w-full">
                              <h3 className="text-lg font-semibold mb-3 text-gray-900">
                                {event.block_message || "This is a special event, for table reservations please purchase here"}
@@ -676,8 +679,8 @@ const EventDetails = () => {
                         )}
                         
                        {/* Glass Overlay for Blocked Reservations */}
-                       {event.block_table_reservations && (
-                         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
+                       {event?.block_table_reservations && (
+                         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-10">
                            <div className="bg-white rounded-lg p-6 text-center shadow-lg max-w-sm w-full">
                              <h3 className="text-lg font-semibold mb-3 text-gray-900">
                                {event.block_message || "This is a special event, for table reservations please purchase here"}

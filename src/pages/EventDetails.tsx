@@ -505,7 +505,7 @@ const EventDetails = () => {
                          <div 
                            className="absolute inset-0 flex items-center justify-center p-4"
                            style={{ 
-                             backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                             backgroundColor: 'rgba(0, 0, 0, 0.3)',
                              zIndex: 9999,
                              backdropFilter: 'blur(8px)',
                              WebkitBackdropFilter: 'blur(8px)'
@@ -692,7 +692,7 @@ const EventDetails = () => {
                          <div 
                            className="absolute inset-0 flex items-center justify-center p-4"
                            style={{ 
-                             backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                             backgroundColor: 'rgba(0, 0, 0, 0.3)',
                              zIndex: 9999,
                              backdropFilter: 'blur(8px)',
                              WebkitBackdropFilter: 'blur(8px)'

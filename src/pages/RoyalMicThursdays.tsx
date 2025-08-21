@@ -254,6 +254,21 @@ const RoyalMicThursdays = () => {
               </Card>
             </div>
             
+            {/* Performance Categories */}
+            <div className="text-center mb-16">
+              <h3 className="text-3xl font-bold mb-12">Performance Categories</h3>
+              <div className="flex flex-wrap justify-center gap-6">
+                {['R&B Vocalists', 'Neo-Soul Singers', 'Jazz Artists', 'Comedians', 'Poets', 'Instrumentalists'].map((category) => (
+                  <span 
+                    key={category} 
+                    className="bg-gradient-to-r from-secondary to-secondary/80 text-primary px-8 py-4 rounded-full font-bold text-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer border border-secondary/30"
+                  >
+                    {category}
+                  </span>
+                ))}
+              </div>
+            </div>
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-16">
               <div className="relative rounded-2xl overflow-hidden elegant-shadow">
                 <img 
@@ -358,20 +373,6 @@ const RoyalMicThursdays = () => {
                   <p className="text-xl font-semibold">Addison, TX</p>
                 </CardContent>
               </Card>
-            </div>
-            
-            <div className="text-center">
-              <h3 className="text-3xl font-bold mb-12">Performance Categories</h3>
-              <div className="flex flex-wrap justify-center gap-6">
-                {['R&B Vocalists', 'Neo-Soul Singers', 'Jazz Artists', 'Comedians', 'Poets', 'Instrumentalists'].map((category) => (
-                  <span 
-                    key={category} 
-                    className="bg-gradient-to-r from-secondary to-secondary/80 text-primary px-8 py-4 rounded-full font-bold text-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer border border-secondary/30"
-                  >
-                    {category}
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
         </section>

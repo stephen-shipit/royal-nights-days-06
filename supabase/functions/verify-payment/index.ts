@@ -119,6 +119,32 @@ serve(async (req) => {
       // Payment failed - no reservation created
       console.log("Payment failed, no reservation created");
       
+      // Send payment failure notification emails
+      try {
+        const metadata = session.metadata;
+        const totalAmount = (parseInt(metadata.tablePrice) || 0) + (metadata.birthdayPackage === 'true' ? 5000 : 0);
+        
+        const { error: failureEmailError } = await supabase.functions.invoke('send-payment-failure-email', {
+          body: { 
+            sessionId,
+            guestEmail: metadata.guestEmail,
+            guestName: metadata.guestName,
+            eventTitle: metadata.eventTitle || 'Event',
+            eventDate: metadata.eventDate || new Date().toISOString(),
+            eventTime: metadata.eventTime || 'TBD',
+            totalAmount,
+            failureReason: session.payment_status === 'unpaid' ? 'Payment was not completed' : 'Payment processing failed'
+          }
+        });
+
+        if (failureEmailError) {
+          console.error("Error sending payment failure email:", failureEmailError);
+          // Don't fail the whole operation if email fails
+        }
+      } catch (emailError) {
+        console.error("Error invoking payment failure email function:", emailError);
+      }
+      
       return new Response(JSON.stringify({ 
         status: paymentStatus,
         amount: session.amount_total,

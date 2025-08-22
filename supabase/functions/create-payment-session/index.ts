@@ -54,6 +54,18 @@ serve(async (req) => {
     // Clean up expired reservations before processing
     await supabase.rpc('cleanup_expired_reservations');
 
+    // Get event details for metadata
+    const { data: event, error: eventError } = await supabase
+      .from("events")
+      .select("title, date, time")
+      .eq("id", eventId)
+      .single();
+
+    if (eventError || !event) {
+      console.error("Error fetching event details:", eventError);
+      throw new Error("Event not found");
+    }
+
     // Double-check table availability
     const { data: isAvailable } = await supabase.rpc('is_table_available', {
       p_event_id: eventId,
@@ -155,7 +167,10 @@ serve(async (req) => {
         specialRequests: specialRequests || '',
         birthdayPackage: birthdayPackage.toString(),
         screenDisplay: screenDisplay.toString(),
-        tablePrice: tablePrice.toString()
+        tablePrice: tablePrice.toString(),
+        eventTitle: event.title,
+        eventDate: event.date,
+        eventTime: event.time
       },
     });
 

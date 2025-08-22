@@ -10,8 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, RotateCcw, Mail, Eye, EyeOff } from "lucide-react";
-import { format } from "date-fns";
+import { Plus, Edit, Trash2, RotateCcw } from "lucide-react";
 
 interface AdminUser {
   id: string;
@@ -252,10 +251,10 @@ const UserManagement = () => {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {format(new Date(user.created_at), "MMM d, yyyy")}
+                    {new Date(user.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    {format(new Date(user.updated_at), "MMM d, yyyy")}
+                    {new Date(user.updated_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

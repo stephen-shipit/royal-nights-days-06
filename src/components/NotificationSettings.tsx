@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trash2, Plus, Mail } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Trash2, Plus, Mail, Send, TestTube } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface NotificationEmail {
@@ -18,6 +20,8 @@ interface NotificationEmail {
 
 const NotificationSettings = () => {
   const [newEmail, setNewEmail] = useState("");
+  const [testEmail, setTestEmail] = useState("");
+  const [testEmailType, setTestEmailType] = useState<"reservation" | "general">("reservation");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -120,6 +124,54 @@ const NotificationSettings = () => {
     removeEmailMutation.mutate(emailId);
   };
 
+  // Send test email mutation
+  const sendTestEmailMutation = useMutation({
+    mutationFn: async ({ email, emailType }: { email: string; emailType: "reservation" | "general" }) => {
+      const { data, error } = await supabase.functions.invoke('send-test-email', {
+        body: {
+          toEmail: email,
+          emailType: emailType
+        }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Test Email Sent",
+        description: "Test email has been sent successfully! Check your inbox.",
+      });
+      setTestEmail("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Send Test Email",
+        description: error.message || "There was an error sending the test email. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSendTestEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(testEmail.trim())) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    sendTestEmailMutation.mutate({
+      email: testEmail,
+      emailType: testEmailType
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -205,6 +257,55 @@ const NotificationSettings = () => {
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TestTube className="h-5 w-5" />
+            Test Email System
+          </CardTitle>
+          <CardDescription>
+            Send a test email to verify your notification system is working correctly.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={handleSendTestEmail} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="test-email">Test Email Address</Label>
+                <Input
+                  id="test-email"
+                  type="email"
+                  placeholder="test@example.com"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="test-type">Email Type</Label>
+                <Select value={testEmailType} onValueChange={(value: "reservation" | "general") => setTestEmailType(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="reservation">Reservation Confirmation</SelectItem>
+                    <SelectItem value="general">General Test</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button 
+              type="submit" 
+              disabled={sendTestEmailMutation.isPending || !testEmail.trim()}
+              className="flex items-center gap-2"
+            >
+              <Send className="h-4 w-4" />
+              {sendTestEmailMutation.isPending ? "Sending..." : "Send Test Email"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
 

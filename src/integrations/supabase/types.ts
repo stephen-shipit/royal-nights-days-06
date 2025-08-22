@@ -463,6 +463,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_admin_user: {
+        Args: { p_email: string; p_role?: string }
+        Returns: string
+      }
+      delete_admin_user: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       has_temporary_password: {
         Args: { user_id: string }
         Returns: boolean
@@ -477,6 +485,14 @@ export type Database = {
       }
       mark_password_changed: {
         Args: { user_id: string }
+        Returns: undefined
+      }
+      reset_admin_password: {
+        Args: { p_user_id: string }
+        Returns: string
+      }
+      update_admin_user_role: {
+        Args: { p_role: string; p_user_id: string }
         Returns: undefined
       }
     }

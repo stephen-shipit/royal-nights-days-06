@@ -19,6 +19,7 @@ import { BulkImageUpload } from "@/components/BulkImageUpload";
 import AdminHeader from "@/components/AdminHeader";
 import AdminFooter from "@/components/AdminFooter";
 import NotificationSettings from "@/components/NotificationSettings";
+import UserManagement from "@/components/UserManagement";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -103,7 +104,7 @@ const Admin = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-8">
+            <TabsList className="grid w-full grid-cols-9">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Overview
@@ -131,6 +132,10 @@ const Admin = () => {
               <TabsTrigger value="modals" className="flex items-center gap-2">
                 <Layers className="h-4 w-4" />
                 Modals
+              </TabsTrigger>
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Users
               </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
@@ -255,6 +260,10 @@ const Admin = () => {
 
             <TabsContent value="modals">
               <ModalManagement />
+            </TabsContent>
+
+            <TabsContent value="users">
+              <UserManagement />
             </TabsContent>
 
             <TabsContent value="settings">

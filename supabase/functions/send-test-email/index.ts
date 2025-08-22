@@ -121,7 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailResponse = await resend.emails.send({
-      from: "Royal Palace <onboarding@resend.dev>",
+      from: "Royal Palace <noreply@royalpalacedtx.email>",
       to: [toEmail],
       subject,
       html,

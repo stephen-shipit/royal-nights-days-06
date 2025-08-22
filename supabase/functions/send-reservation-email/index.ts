@@ -136,7 +136,7 @@ serve(async (req) => {
             </p>
             <p style="color: #666; font-size: 14px;">
               For questions or assistance, please contact us<br>
-              Email: reservations@venue.com | Phone: (555) 123-4567
+              Email: reservations@royalpalacedtx.email | Phone: (555) 123-4567
             </p>
           </div>
         </div>
@@ -200,7 +200,7 @@ serve(async (req) => {
     // Send guest confirmation email
     emailPromises.push(
       resend.emails.send({
-        from: "Reservations <reservations@venue.com>",
+        from: "Royal Palace Reservations <reservations@royalpalacedtx.email>",
         to: [reservation.guest_email],
         subject: `Reservation Confirmed - ${reservation.events.title}`,
         html: guestEmailHtml,
@@ -214,7 +214,7 @@ serve(async (req) => {
       
       emailPromises.push(
         resend.emails.send({
-          from: "Restaurant Notifications <notifications@venue.com>",
+          from: "Royal Palace Notifications <notifications@royalpalacedtx.email>",
           to: adminEmailAddresses,
           subject: `New Reservation: ${reservation.guest_name} - ${reservation.events.title}`,
           html: adminEmailHtml,

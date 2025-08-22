@@ -70,7 +70,11 @@ const Reservations = () => {
         throw new Error('No tables available');
       }
 
-      const { error } = await supabase
+      // For dinner reservations, set status to 'confirmed' and send emails immediately
+      // For nightlife reservations, keep 'pending' status until payment is completed
+      const reservationStatus = reservationType === 'dining' ? 'confirmed' : 'pending';
+      
+      const { data: reservationData, error } = await supabase
         .from('table_reservations')
         .insert({
           event_id: events[0].id,
@@ -80,16 +84,40 @@ const Reservations = () => {
           guest_count: guestCount,
           reservation_type: reservationType,
           time_slot: reservationType === 'dining' ? '3pm-9pm' : '9pm-5am',
-          status: 'pending'
-        });
+          status: reservationStatus
+        })
+        .select('id')
+        .single();
 
       if (error) {
         throw error;
       }
 
+      // For dinner reservations, send email notifications immediately
+      if (reservationType === 'dining' && reservationData?.id) {
+        try {
+          const { error: emailError } = await supabase.functions.invoke('send-reservation-email', {
+            body: { 
+              reservationId: reservationData.id,
+              sessionId: null // No payment session for free dinner reservations
+            }
+          });
+
+          if (emailError) {
+            console.error('Error sending reservation email:', emailError);
+            // Don't fail the reservation if email fails, just log it
+          }
+        } catch (emailError) {
+          console.error('Error invoking email function:', emailError);
+          // Don't fail the reservation if email fails, just log it
+        }
+      }
+
       toast({
         title: "Reservation Submitted Successfully",
-        description: "We'll contact you shortly to confirm your reservation.",
+        description: reservationType === 'dining' 
+          ? "Your reservation has been confirmed! You'll receive a confirmation email shortly."
+          : "We'll contact you shortly to confirm your reservation.",
       });
       
       // Navigate to thank you page

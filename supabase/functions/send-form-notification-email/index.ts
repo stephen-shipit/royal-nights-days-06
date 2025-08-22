@@ -41,10 +41,10 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Error fetching notification emails:', emailError);
     }
 
-    // Use fetched emails or fallback to default
+    // Use fetched emails or fallback to existing valid notification emails
     const adminEmails = notificationEmails?.length 
       ? notificationEmails.map(n => n.email)
-      : ["admin@royalpalacedtx.email", "manager@royalpalacedtx.email"]; // Fallback
+      : ["elvisngyia@gmail.com", "info@royalpalacedtx.com", "pmuchilwa@gmail.com", "stephen.munabo@gmail.com"]; // Fallback to existing valid emails
 
     console.log('Sending to admin emails:', adminEmails);
 

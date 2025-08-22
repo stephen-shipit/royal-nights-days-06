@@ -31,3 +31,18 @@ verify_jwt = false
 
 [functions.send-reservation-email]
 verify_jwt = false
+
+[functions.submit-form-data]
+verify_jwt = false
+
+[functions.send-form-notification-email]
+verify_jwt = false
+
+[functions.send-admin-welcome-email]
+verify_jwt = false
+
+[functions.send-payment-failure-email]
+verify_jwt = false
+
+[functions.send-test-email]
+verify_jwt = false

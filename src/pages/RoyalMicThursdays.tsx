@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Crown, Trophy, Users, Clock, MapPin, Mic, DollarSign, Star } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const RoyalMicThursdays = () => {
   const [formData, setFormData] = useState({
@@ -39,23 +40,43 @@ const RoyalMicThursdays = () => {
   const [faqOpen, setFaqOpen] = useState(false);
   const [showStickyButton, setShowStickyButton] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.agreedToTerms) {
       toast.error("Please agree to bring or sell 10+ tickets to secure your performance slot.");
       return;
     }
-    toast.success("Registration submitted! We'll contact you soon with performance details.");
-    // Reset form
-    setFormData({
-      fullName: "",
-      stageName: "",
-      performanceType: "",
-      phone: "",
-      email: "",
-      sampleLink: "",
-      agreedToTerms: false
-    });
+
+    try {
+      const { error } = await supabase.functions.invoke('submit-form-data', {
+        body: {
+          formType: 'royal_mic_registration',
+          formData: formData
+        }
+      });
+
+      if (error) {
+        console.error('Form submission error:', error);
+        toast.error("Failed to submit registration. Please try again.");
+        return;
+      }
+
+      toast.success("Registration submitted! We'll contact you soon with performance details.");
+      
+      // Reset form
+      setFormData({
+        fullName: "",
+        stageName: "",
+        performanceType: "",
+        phone: "",
+        email: "",
+        sampleLink: "",
+        agreedToTerms: false
+      });
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast.error("An unexpected error occurred. Please try again.");
+    }
   };
 
   const scrollToForm = () => {

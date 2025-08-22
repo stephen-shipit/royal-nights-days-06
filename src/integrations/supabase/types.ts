@@ -152,6 +152,45 @@ export type Database = {
         }
         Relationships: []
       }
+      form_data: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          email: string
+          form_data: Json
+          form_type: string
+          full_name: string
+          id: string
+          status: string
+          submission_date: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          email: string
+          form_data?: Json
+          form_type: string
+          full_name: string
+          id?: string
+          status?: string
+          submission_date?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          email?: string
+          form_data?: Json
+          form_type?: string
+          full_name?: string
+          id?: string
+          status?: string
+          submission_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gallery_items: {
         Row: {
           alt: string

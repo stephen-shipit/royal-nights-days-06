@@ -1,7 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.52.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL") ?? "",
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,6 +29,24 @@ const handler = async (req: Request): Promise<Response> => {
     const { formType, formData, submissionId }: FormNotificationRequest = await req.json();
 
     console.log('Sending form notification email:', { formType, submissionId });
+
+    // Fetch admin emails from notification_settings
+    const { data: notificationEmails, error: emailError } = await supabase
+      .from('notification_settings')
+      .select('email')
+      .eq('notification_type', 'form_submission')
+      .eq('is_active', true);
+
+    if (emailError) {
+      console.error('Error fetching notification emails:', emailError);
+    }
+
+    // Use fetched emails or fallback to default
+    const adminEmails = notificationEmails?.length 
+      ? notificationEmails.map(n => n.email)
+      : ["admin@example.com"]; // Fallback
+
+    console.log('Sending to admin emails:', adminEmails);
 
     // Format form data for email display
     const formatFormData = (data: Record<string, any>) => {
@@ -49,8 +72,8 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     const emailResponse = await resend.emails.send({
-      from: "Royal Palace <noreply@royalpalace.com>",
-      to: ["admin@royalpalace.com"], // You can replace this with dynamic admin emails from notification_settings
+      from: "Royal Palace <onboarding@resend.dev>",
+      to: adminEmails,
       subject: `New ${getFormTypeDisplayName(formType)} - ${formData.fullName || formData.name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

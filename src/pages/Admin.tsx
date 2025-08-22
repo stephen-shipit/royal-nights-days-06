@@ -735,9 +735,19 @@ const ReservationManagement = () => {
       reservation.guest_phone?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || reservation.status === statusFilter;
-    const matchesEvent = eventFilter === 'all' || reservation.event_id === eventFilter;
+    
+    // For event filter, handle null event_id for dining reservations
+    const matchesEvent = eventFilter === 'all' || 
+      (reservation.reservation_type === 'dining' && eventFilter === 'dining') ||
+      (reservation.reservation_type !== 'dining' && reservation.event_id === eventFilter);
+      
     const matchesType = reservationType === 'all' || reservation.reservation_type === reservationType;
-    const matchesDate = !dateFilter || reservation.events?.date === dateFilter;
+    
+    // For date filter, use event date for nightlife, created date for dining
+    const reservationDate = reservation.reservation_type === 'dining' 
+      ? reservation.created_at?.split('T')[0] 
+      : reservation.events?.date;
+    const matchesDate = !dateFilter || reservationDate === dateFilter;
     
     return matchesSearch && matchesStatus && matchesEvent && matchesType && matchesDate;
   });
@@ -844,7 +854,13 @@ const ReservationManagement = () => {
                   </SelectContent>
                 </Select>
               </TableCell>
-              <TableCell className="font-medium">${reservation.total_price || 0}</TableCell>
+               <TableCell>
+                 {reservation.reservation_type === 'nightlife' ? (
+                   `$${reservation.total_price || 0}`
+                 ) : (
+                   'No charge'
+                 )}
+               </TableCell>
               <TableCell>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => handleViewDetails(reservation)}>
@@ -1179,31 +1195,37 @@ const ReservationManagement = () => {
                   </div>
                 )}
 
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Payment Information</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Payment Status</Label>
-                      <p className="text-sm">
-                        <Badge variant={selectedReservation.payment_status === 'completed' ? 'default' : 'secondary'}>
-                          {selectedReservation.payment_status || 'pending'}
-                        </Badge>
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Total Amount</Label>
-                      <p className="text-sm font-semibold">${selectedReservation.total_price || 0}</p>
-                    </div>
-                    {selectedReservation.birthday_package && (
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Birthday Package</Label>
-                        <p className="text-sm">
-                          <Badge variant="outline">🎂 Birthday Package Added</Badge>
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                 {selectedReservation.reservation_type === 'nightlife' && (
+                   <div>
+                     <h3 className="text-lg font-semibold mb-4">Payment Information</h3>
+                     <div className="space-y-3">
+                       <div>
+                         <Label className="text-sm font-medium text-muted-foreground">Payment Status</Label>
+                         <p className="text-sm">
+                           <Badge variant={selectedReservation.payment_status === 'completed' ? 'default' : 'secondary'}>
+                             {selectedReservation.payment_status || 'pending'}
+                           </Badge>
+                         </p>
+                       </div>
+                       <div>
+                         <Label className="text-sm font-medium text-muted-foreground">Total Amount</Label>
+                         <p className="text-sm font-semibold">${selectedReservation.total_price || 0}</p>
+                       </div>
+                       <div>
+                         <Label className="text-sm font-medium text-muted-foreground">Stripe Session</Label>
+                         <p className="text-sm">{selectedReservation.stripe_session_id || 'N/A'}</p>
+                       </div>
+                       {selectedReservation.birthday_package && (
+                         <div>
+                           <Label className="text-sm font-medium text-muted-foreground">Birthday Package</Label>
+                           <p className="text-sm">
+                             <Badge variant="outline">🎂 Birthday Package Added</Badge>
+                           </p>
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 )}
 
                 {selectedReservation.special_requests && (
                   <div>
@@ -1227,10 +1249,12 @@ const ReservationManagement = () => {
             {filteredReservations
               .filter(r => r.special_requests)
               .map((reservation) => (
-                <div key={reservation.id} className="p-3 bg-muted rounded-lg">
-                  <div className="font-medium">{reservation.guest_name} - {reservation.events?.title}</div>
-                  <div className="text-sm text-muted-foreground mt-1">{reservation.special_requests}</div>
-                </div>
+                 <div key={reservation.id} className="p-3 bg-muted rounded-lg">
+                   <div className="font-medium">
+                     {reservation.guest_name} - {reservation.reservation_type === 'dining' ? 'Dinner Reservation' : reservation.events?.title}
+                   </div>
+                   <div className="text-sm text-muted-foreground mt-1">{reservation.special_requests}</div>
+                 </div>
               ))}
           </div>
         </Card>

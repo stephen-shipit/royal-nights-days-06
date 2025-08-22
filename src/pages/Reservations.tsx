@@ -48,15 +48,20 @@ const Reservations = () => {
     const guestCount = parseInt(formData.get('guests') as string);
     
     try {
-      // For now, we'll create a dummy event ID since we need one for the reservation
-      // In a real app, you'd select an actual event
-      const { data: events } = await supabase
-        .from('events')
-        .select('id')
-        .limit(1);
+      let eventId = null;
       
-      if (!events || events.length === 0) {
-        throw new Error('No events available');
+      // Only get event for entertainment/nightlife reservations
+      if (reservationType === 'entertainment') {
+        const { data: eventData, error: eventError } = await supabase
+          .from('events')
+          .select('id')
+          .eq('date', selectedDate?.toISOString().split('T')[0])
+          .single();
+
+        if (eventError) {
+          throw new Error('No event found for selected date');
+        }
+        eventId = eventData.id;
       }
 
       // Get the first available table
@@ -74,7 +79,7 @@ const Reservations = () => {
       const { data: reservationData, error } = await supabase
         .from('table_reservations')
         .insert({
-          event_id: events[0].id,
+          event_id: eventId, // null for dining, event ID for entertainment
           table_id: tables[0].id,
           guest_name: guestName,
           guest_email: guestEmail,

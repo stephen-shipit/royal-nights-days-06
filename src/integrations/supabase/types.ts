@@ -335,7 +335,7 @@ export type Database = {
         Row: {
           birthday_package: boolean | null
           created_at: string
-          event_id: string
+          event_id: string | null
           expires_at: string | null
           guest_count: number
           guest_email: string
@@ -355,7 +355,7 @@ export type Database = {
         Insert: {
           birthday_package?: boolean | null
           created_at?: string
-          event_id: string
+          event_id?: string | null
           expires_at?: string | null
           guest_count: number
           guest_email: string
@@ -375,7 +375,7 @@ export type Database = {
         Update: {
           birthday_package?: boolean | null
           created_at?: string
-          event_id?: string
+          event_id?: string | null
           expires_at?: string | null
           guest_count?: number
           guest_email?: string

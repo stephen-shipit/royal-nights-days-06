@@ -44,7 +44,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Use fetched emails or fallback to default
     const adminEmails = notificationEmails?.length 
       ? notificationEmails.map(n => n.email)
-      : ["admin@example.com"]; // Fallback
+      : ["admin@royalpalacedtx.email", "manager@royalpalacedtx.email"]; // Fallback
 
     console.log('Sending to admin emails:', adminEmails);
 
@@ -72,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     const emailResponse = await resend.emails.send({
-      from: "Royal Palace <notifications@royalpalacedtx.email>",
+      from: "Royal Palace <noreply@royalpalacedtx.email>",
       to: adminEmails,
       subject: `New ${getFormTypeDisplayName(formType)} - ${formData.fullName || formData.name}`,
       html: `

@@ -70,10 +70,7 @@ const Reservations = () => {
         throw new Error('No tables available');
       }
 
-      // For dinner reservations, set status to 'confirmed' and send emails immediately
-      // For nightlife reservations, keep 'pending' status until payment is completed
-      const reservationStatus = reservationType === 'dining' ? 'confirmed' : 'pending';
-      
+      // All reservations start as 'pending' status until manually confirmed by staff
       const { data: reservationData, error } = await supabase
         .from('table_reservations')
         .insert({
@@ -84,7 +81,7 @@ const Reservations = () => {
           guest_count: guestCount,
           reservation_type: reservationType,
           time_slot: reservationType === 'dining' ? '3pm-9pm' : '9pm-5am',
-          status: reservationStatus
+          status: 'pending'
         })
         .select('id')
         .single();
@@ -93,13 +90,14 @@ const Reservations = () => {
         throw error;
       }
 
-      // For dinner reservations, send email notifications immediately
+      // For dinner reservations, send initial "request received" email notifications
       if (reservationType === 'dining' && reservationData?.id) {
         try {
           const { error: emailError } = await supabase.functions.invoke('send-reservation-email', {
             body: { 
               reservationId: reservationData.id,
-              sessionId: null // No payment session for free dinner reservations
+              sessionId: null, // No payment session for free dinner reservations
+              emailType: 'request_received' // Indicate this is an initial request email
             }
           });
 
@@ -114,9 +112,9 @@ const Reservations = () => {
       }
 
       toast({
-        title: "Reservation Submitted Successfully",
+        title: "Reservation Request Submitted",
         description: reservationType === 'dining' 
-          ? "Your reservation has been confirmed! You'll receive a confirmation email shortly."
+          ? "Your dinner reservation request has been submitted! You'll receive a confirmation email once our staff reviews and approves your reservation."
           : "We'll contact you shortly to confirm your reservation.",
       });
       

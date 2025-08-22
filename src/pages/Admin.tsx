@@ -666,12 +666,31 @@ const ReservationManagement = () => {
   });
 
   const updateReservationMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string, status: string }) => {
+    mutationFn: async ({ id, status, previousStatus }: { id: string, status: string, previousStatus?: string }) => {
       const { data, error } = await supabase.from("table_reservations").update({ status }).eq("id", id).select();
       if (error) throw error;
-      return data;
+      return { data, previousStatus, newStatus: status, reservationId: id };
     },
-    onSuccess: () => {
+    onSuccess: async ({ data, previousStatus, newStatus, reservationId }) => {
+      // If status changed from pending to confirmed, send confirmation email
+      if (previousStatus !== 'confirmed' && newStatus === 'confirmed') {
+        try {
+          const { error: emailError } = await supabase.functions.invoke('send-reservation-email', {
+            body: { 
+              reservationId: reservationId,
+              sessionId: null,
+              emailType: 'confirmed' // Indicate this is a confirmation email
+            }
+          });
+
+          if (emailError) {
+            console.error('Error sending confirmation email:', emailError);
+          }
+        } catch (emailError) {
+          console.error('Error invoking confirmation email function:', emailError);
+        }
+      }
+      
       toast({ title: "Reservation updated successfully!" });
       queryClient.invalidateQueries({ queryKey: ["reservations"] });
     },
@@ -695,7 +714,11 @@ const ReservationManagement = () => {
   });
 
   const handleStatusUpdate = (id: string, status: string) => {
-    updateReservationMutation.mutate({ id, status });
+    // Find the current reservation to get its previous status
+    const currentReservation = filteredReservations?.find(r => r.id === id);
+    const previousStatus = currentReservation?.status;
+    
+    updateReservationMutation.mutate({ id, status, previousStatus });
   };
 
   const handleDelete = (id: string) => {

@@ -72,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     const emailResponse = await resend.emails.send({
-      from: "Royal Palace <onboarding@resend.dev>",
+      from: "Royal Palace <notifications@royalpalacedtx.email>",
       to: adminEmails,
       subject: `New ${getFormTypeDisplayName(formType)} - ${formData.fullName || formData.name}`,
       html: `

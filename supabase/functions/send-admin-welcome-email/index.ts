@@ -43,7 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send welcome email to the new admin user
     const welcomeEmailResponse = await resend.emails.send({
-      from: "Royal Palace <noreply@royalpalace.com>",
+      from: "Royal Palace <noreply@royalpalacedtx.email>",
       to: [email],
       subject: "Welcome to Royal Palace Admin - Your Access Details",
       html: `
@@ -147,7 +147,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send notification to admin team about new user
     if (adminEmails.length > 0) {
       await resend.emails.send({
-        from: "Royal Palace Admin <noreply@royalpalace.com>",
+        from: "Royal Palace Admin <noreply@royalpalacedtx.email>",
         to: adminEmails,
         subject: "New Admin User Added to Royal Palace System",
         html: `

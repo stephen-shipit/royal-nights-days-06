@@ -465,7 +465,7 @@ export type Database = {
       }
       create_admin_user: {
         Args: { p_email: string; p_role?: string }
-        Returns: string
+        Returns: Json
       }
       delete_admin_user: {
         Args: { p_user_id: string }

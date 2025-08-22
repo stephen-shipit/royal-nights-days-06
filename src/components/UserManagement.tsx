@@ -52,9 +52,42 @@ const UserManagement = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-      toast({ title: "Admin user created successfully!" });
+      
+      // Send welcome email with temporary password
+      try {
+        const result = data as { user_id: string; temp_password: string };
+        const { error: emailError } = await supabase.functions.invoke('send-admin-welcome-email', {
+          body: {
+            email: variables.email,
+            tempPassword: result.temp_password,
+            role: variables.role
+          }
+        });
+        
+        if (emailError) {
+          console.error('Failed to send welcome email:', emailError);
+          toast({ 
+            title: "User created but email failed", 
+            description: "User was created successfully, but we couldn't send the welcome email. Please share their credentials manually.", 
+            variant: "destructive" 
+          });
+        } else {
+          toast({ 
+            title: "Admin user created and welcomed!", 
+            description: "User account created and welcome email sent with login credentials." 
+          });
+        }
+      } catch (error) {
+        console.error('Error sending welcome email:', error);
+        toast({ 
+          title: "User created but email failed", 
+          description: "User was created successfully, but we couldn't send the welcome email.", 
+          variant: "destructive" 
+        });
+      }
+      
       setIsAddingUser(false);
     },
     onError: (error: any) => {

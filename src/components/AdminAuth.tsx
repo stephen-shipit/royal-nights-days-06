@@ -37,8 +37,11 @@ export function AdminAuth({ onAuthSuccess }: AdminAuthProps) {
               .rpc('is_admin', { user_id: session.user.id });
             
             if (isAdmin) {
-              // Check if using temp password (TempPass123!)
-              if (password === "TempPass123!") {
+              // Check if user has temporary password using database function
+              const { data: hasTempPassword } = await supabase
+                .rpc('has_temporary_password', { user_id: session.user.id });
+              
+              if (hasTempPassword) {
                 setShowPasswordChange(true);
               } else {
                 onAuthSuccess();
@@ -128,6 +131,15 @@ export function AdminAuth({ onAuthSuccess }: AdminAuthProps) {
           variant: "destructive",
         });
       } else {
+        // Mark password as changed in database
+        const { error: markError } = await supabase.rpc('mark_password_changed', { 
+          user_id: user?.id 
+        });
+        
+        if (markError) {
+          console.error('Failed to mark password as changed:', markError);
+        }
+        
         toast({
           title: "Password Updated",
           description: "Your password has been successfully updated.",

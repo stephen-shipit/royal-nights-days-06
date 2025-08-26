@@ -30,7 +30,7 @@ const UserManagement = () => {
   const [showTempPassword, setShowTempPassword] = useState<string | null>(null);
 
   // Fetch admin users
-  const { data: adminUsers, isLoading } = useQuery({
+  const { data: adminUsers, isLoading, refetch } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -80,8 +80,35 @@ const UserManagement = () => {
       
       return { user_id: authUser.user.id, temp_password };
     },
-    onSuccess: async (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    onMutate: async (variables) => {
+      // Add optimistic update - create temporary user object
+      const tempUser: AdminUser = {
+        id: crypto.randomUUID(),
+        user_id: crypto.randomUUID(),
+        email: variables.email,
+        role: variables.role,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        metadata: { has_temp_password: true }
+      };
+
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["admin-users"] });
+
+      // Snapshot the previous value
+      const previousUsers = queryClient.getQueryData<AdminUser[]>(["admin-users"]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData<AdminUser[]>(["admin-users"], (old) => 
+        old ? [tempUser, ...old] : [tempUser]
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousUsers, tempUser };
+    },
+    onSuccess: async (data, variables, context) => {
+      // Force refetch to get the real data from server
+      await refetch();
       
       // Send welcome email with temporary password
       try {
@@ -118,7 +145,12 @@ const UserManagement = () => {
       
       setIsAddingUser(false);
     },
-    onError: (error: any) => {
+    onError: (error: any, variables, context) => {
+      // Rollback optimistic update on error
+      if (context?.previousUsers) {
+        queryClient.setQueryData(["admin-users"], context.previousUsers);
+      }
+      
       toast({ 
         title: "Error creating user", 
         description: error.message, 
@@ -136,8 +168,8 @@ const UserManagement = () => {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    onSuccess: async () => {
+      await refetch();
       toast({ title: "User role updated successfully!" });
       setEditingUser(null);
     },
@@ -158,8 +190,8 @@ const UserManagement = () => {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    onSuccess: async () => {
+      await refetch();
       toast({ title: "User deleted successfully!" });
     },
     onError: (error: any) => {
@@ -180,8 +212,8 @@ const UserManagement = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (tempPassword, userId) => {
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    onSuccess: async (tempPassword, userId) => {
+      await refetch();
       setShowTempPassword(tempPassword);
       toast({ title: "Password reset successfully!" });
     },

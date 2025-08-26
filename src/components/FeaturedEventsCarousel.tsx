@@ -110,7 +110,7 @@ const FeaturedEventsCarousel = () => {
                     className="w-full h-full object-cover"
                   />
                 </button>
-                <h1 className="text-2xl md:text-6xl font-bold leading-tight line-clamp-2 md:line-clamp-none">
+                <h1 className="text-2xl md:text-6xl font-bold leading-tight line-clamp-3">
                   {currentEvent.title}
                 </h1>
               </div>

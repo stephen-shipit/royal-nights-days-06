@@ -45,40 +45,15 @@ const UserManagement = () => {
   // Create admin user mutation
   const createUserMutation = useMutation({
     mutationFn: async ({ email, role }: { email: string; role: string }) => {
-      // First get user_id and temp_password from our function
-      const { data: userData, error: rpcError } = await supabase.rpc('create_admin_user', {
-        p_email: email,
-        p_role: role
-      });
-      if (rpcError) throw rpcError;
-      
-      const { user_id, temp_password } = userData as { user_id: string; temp_password: string };
-      
-      // Create the auth user with the temp password using auth admin API
-      const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-        email,
-        password: temp_password,
-        user_metadata: {
-          role,
-          has_temp_password: true
-        }
+      // Use the edge function to create admin user with proper service role permissions
+      const { data, error } = await supabase.functions.invoke('create-admin-user', {
+        body: { email, role }
       });
       
-      if (authError) {
-        // If auth creation fails, clean up the admin_users record
-        await supabase.from('admin_users').delete().eq('user_id', user_id);
-        throw authError;
-      }
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error || 'Failed to create admin user');
       
-      // Update the admin_users record with the actual auth user_id
-      const { error: updateError } = await supabase
-        .from('admin_users')
-        .update({ user_id: authUser.user.id })
-        .eq('user_id', user_id);
-      
-      if (updateError) throw updateError;
-      
-      return { user_id: authUser.user.id, temp_password };
+      return { user_id: data.user_id, temp_password: data.temp_password };
     },
     onMutate: async (variables) => {
       // Add optimistic update - create temporary user object
@@ -110,38 +85,11 @@ const UserManagement = () => {
       // Force refetch to get the real data from server
       await refetch();
       
-      // Send welcome email with temporary password
-      try {
-        const result = data as { user_id: string; temp_password: string };
-        const { error: emailError } = await supabase.functions.invoke('send-admin-welcome-email', {
-          body: {
-            email: variables.email,
-            tempPassword: result.temp_password,
-            role: variables.role
-          }
-        });
-        
-        if (emailError) {
-          console.error('Failed to send welcome email:', emailError);
-          toast({ 
-            title: "User created but email failed", 
-            description: "User was created successfully, but we couldn't send the welcome email. Please share their credentials manually.", 
-            variant: "destructive" 
-          });
-        } else {
-          toast({ 
-            title: "Admin user created and welcomed!", 
-            description: "User account created and welcome email sent with login credentials." 
-          });
-        }
-      } catch (error) {
-        console.error('Error sending welcome email:', error);
-        toast({ 
-          title: "User created but email failed", 
-          description: "User was created successfully, but we couldn't send the welcome email.", 
-          variant: "destructive" 
-        });
-      }
+      // Email sending is handled in the edge function now
+      toast({ 
+        title: "Admin user created successfully!", 
+        description: "User account created and welcome email sent with login credentials." 
+      });
       
       setIsAddingUser(false);
     },

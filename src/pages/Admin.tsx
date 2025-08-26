@@ -93,9 +93,31 @@ const Admin = () => {
     return <AdminAuth onAuthSuccess={() => setIsAuthenticated(true)} />;
   }
 
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout error:', error);
+        toast({ 
+          title: "Logout Error", 
+          description: error.message, 
+          variant: "destructive" 
+        });
+      }
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({ 
+        title: "Logout Error", 
+        description: "An unexpected error occurred during logout", 
+        variant: "destructive" 
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
-      <AdminHeader onLogout={() => setIsAuthenticated(false)} />
+      <AdminHeader onLogout={handleLogout} />
       
       <main className="p-8">
         <div className="max-w-7xl mx-auto">

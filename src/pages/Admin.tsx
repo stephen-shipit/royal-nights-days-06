@@ -922,11 +922,11 @@ const ReservationManagement = () => {
     const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     
     return filteredReservations?.filter((reservation) => {
-      // For nightlife reservations, use event date
-      // For dining reservations, we need to determine the reservation date
+      // For nightlife reservations, use event date (when the event happens)
+      // For dining reservations, use creation date (when they're dining) since there's no separate reservation date field
       const reservationDate = reservation.reservation_type === 'nightlife' 
         ? reservation.events?.date 
-        : reservation.created_at?.split('T')[0]; // For dining, we might need a different field
+        : reservation.created_at?.split('T')[0];
       
       const createdDate = reservation.created_at?.split('T')[0];
       
@@ -937,6 +937,8 @@ const ReservationManagement = () => {
         case 'recent':
           return createdDate >= sevenDaysAgo;
         case 'today':
+          // For nightlife: events happening today
+          // For dining: dining reservations made today (since no separate dining date field)
           return reservationDate === todayStr;
         case 'upcoming':
           return reservationDate > todayStr;
@@ -1216,6 +1218,8 @@ const ReservationManagement = () => {
             <h3 className="text-lg font-semibold">Today's Reservations</h3>
             <div className="text-sm text-muted-foreground">
               {formatDate(today)} • {getReservationsByCategory('today').length} reservations
+              <br />
+              <span className="text-xs">Events happening today & dining reservations made today</span>
             </div>
           </div>
           {renderReservationsTable(getReservationsByCategory('today'))}

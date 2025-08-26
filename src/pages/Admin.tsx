@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminAuth } from "@/components/AdminAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1986,6 +1986,21 @@ const InlinePriceEdit = ({ table, onUpdate }: { table: any, onUpdate: (id: strin
   const [isEditing, setIsEditing] = useState(false);
   const [tempPrice, setTempPrice] = useState(table.reservation_price?.toString() || '0');
   const [isLoading, setIsLoading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside to cancel edit
+  useEffect(() => {
+    if (!isEditing) return;
+    
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        handleCancel();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isEditing]);
 
   const handleDoubleClick = () => {
     setIsEditing(true);
@@ -2000,10 +2015,13 @@ const InlinePriceEdit = ({ table, onUpdate }: { table: any, onUpdate: (id: strin
     }
     
     setIsLoading(true);
+    setIsEditing(false); // Optimistically close edit mode
+    
     try {
       await onUpdate(table.id, price);
-      setIsEditing(false);
     } catch (error) {
+      // On error, revert and allow re-editing
+      setIsEditing(true);
       setTempPrice(table.reservation_price?.toString() || '0');
     } finally {
       setIsLoading(false);
@@ -2025,14 +2043,13 @@ const InlinePriceEdit = ({ table, onUpdate }: { table: any, onUpdate: (id: strin
 
   if (isEditing) {
     return (
-      <div className="flex items-center gap-2">
+      <div ref={containerRef} className="flex items-center gap-2">
         <Input
           type="number"
           min="0"
           value={tempPrice}
           onChange={(e) => setTempPrice(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={handleCancel}
           className="w-20 h-8 text-sm"
           autoFocus
           disabled={isLoading}
@@ -2040,6 +2057,7 @@ const InlinePriceEdit = ({ table, onUpdate }: { table: any, onUpdate: (id: strin
         <Button
           size="sm"
           variant="ghost"
+          onMouseDown={(e) => e.preventDefault()} // Prevent blur from canceling
           onClick={handleSave}
           disabled={isLoading}
           className="h-8 w-8 p-0 hover:bg-green-100"
@@ -2127,7 +2145,6 @@ const TableManagement = () => {
     },
     onError: (error) => {
       toast({ title: "Error updating price", description: error.message, variant: "destructive" });
-      throw error;
     },
   });
 

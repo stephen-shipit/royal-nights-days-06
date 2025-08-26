@@ -8,7 +8,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface AdminAuthProps {
-  onAuthSuccess: () => void;
+  onAuthSuccess: (skipCheck?: boolean) => void;
 }
 
 export function AdminAuth({ onAuthSuccess }: AdminAuthProps) {
@@ -145,7 +145,7 @@ export function AdminAuth({ onAuthSuccess }: AdminAuthProps) {
           description: "Your password has been successfully updated.",
         });
         setShowPasswordChange(false);
-        onAuthSuccess();
+        onAuthSuccess(true); // Skip auth check since password was just changed
       }
     } catch (error) {
       toast({

@@ -192,9 +192,15 @@ const Admin = () => {
   if (!isAuthenticated) {
     return (
       <AdminAuth 
-        onAuthSuccess={() => {
-          // The auth state change listener will handle the access check
-          setIsLoading(true);
+        onAuthSuccess={(skipCheck) => {
+          if (skipCheck) {
+            // Password was just changed, skip authentication check
+            setIsAuthenticated(true);
+            setIsLoading(false);
+          } else {
+            // Normal login, let auth state change listener handle the access check
+            setIsLoading(true);
+          }
         }} 
       />
     );

@@ -17,6 +17,7 @@ import {
   Node,
 } from "@xyflow/react";
 import { CheckInModal } from "@/components/CheckInModal";
+import { GuestListDrawer } from "@/components/GuestListDrawer";
 import { toast } from "sonner";
 import "@xyflow/react/dist/style.css";
 
@@ -371,6 +372,13 @@ export default function AdminTableLayout() {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Guest List Drawer */}
+            <GuestListDrawer
+              reservations={reservations}
+              tables={tables}
+              onGuestClick={handleTableClick}
+            />
           </div>
         </div>
 

@@ -49,7 +49,7 @@ serve(async (req) => {
     if (session.payment_status === "paid") {
       // Payment successful - create the reservation now
       const metadata = session.metadata;
-      const totalAmount = (parseInt(metadata.tablePrice) || 0) + (metadata.birthdayPackage === 'true' ? 5000 : 0) + (metadata.screenDisplay === 'true' ? 5000 : 0);
+      const totalAmount = ((parseInt(metadata.tablePrice) || 0) * 100) + (metadata.birthdayPackage === 'true' ? 5000 : 0) + (metadata.screenDisplay === 'true' ? 5000 : 0);
       
       // Create the confirmed reservation
       const { data: reservation, error: reservationError } = await supabase
@@ -123,7 +123,7 @@ serve(async (req) => {
       // Send payment failure notification emails
       try {
         const metadata = session.metadata;
-        const totalAmount = (parseInt(metadata.tablePrice) || 0) + (metadata.birthdayPackage === 'true' ? 5000 : 0) + (metadata.screenDisplay === 'true' ? 5000 : 0);
+        const totalAmount = ((parseInt(metadata.tablePrice) || 0) * 100) + (metadata.birthdayPackage === 'true' ? 5000 : 0) + (metadata.screenDisplay === 'true' ? 5000 : 0);
         
         const { error: failureEmailError } = await supabase.functions.invoke('send-payment-failure-email', {
           body: { 

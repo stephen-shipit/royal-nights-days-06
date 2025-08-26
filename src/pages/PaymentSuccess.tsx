@@ -59,8 +59,7 @@ const PaymentSuccess = () => {
       // Verify the payment with Stripe
       const { data: paymentData, error: paymentError } = await supabase.functions.invoke('verify-payment', {
         body: {
-          sessionId,
-          reservationId
+          sessionId
         }
       });
 

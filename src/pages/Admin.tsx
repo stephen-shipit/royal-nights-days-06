@@ -937,9 +937,8 @@ const ReservationManagement = () => {
         case 'recent':
           return createdDate >= sevenDaysAgo;
         case 'today':
-          // For nightlife: events happening today
-          // For dining: dining reservations made today (since no separate dining date field)
-          return reservationDate === todayStr;
+          // Show all reservations created today (regardless of event date)
+          return createdDate === todayStr;
         case 'upcoming':
           return reservationDate > todayStr;
         case 'past':
@@ -1219,7 +1218,7 @@ const ReservationManagement = () => {
             <div className="text-sm text-muted-foreground">
               {formatDate(today)} • {getReservationsByCategory('today').length} reservations
               <br />
-              <span className="text-xs">Events happening today & dining reservations made today</span>
+              <span className="text-xs">All reservations created today</span>
             </div>
           </div>
           {renderReservationsTable(getReservationsByCategory('today'))}

@@ -9,7 +9,7 @@ import {
   MiniMap,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface VenueTable {
   id: string;
@@ -30,32 +30,65 @@ interface TableLayoutSelectorProps {
   onTableSelect: (tableId: string) => void;
   reservationType: 'dining' | 'nightlife';
   className?: string;
+  existingReservations?: Array<{
+    table_id: string;
+    status: string;
+    guest_name?: string;
+    guest_count?: number;
+  }>;
 }
 
 const TableNode = ({ data }: { data: any }) => {
-  const { table, isSelected, onClick, reservationType } = data;
+  const { table, isSelected, onClick, reservationType, isReserved, reservation } = data;
+  
+  const getTableStatus = () => {
+    if (isReserved) return 'reserved';
+    if (!table.is_available) return 'unavailable';
+    return 'available';
+  };
+
+  const getTableClasses = () => {
+    const status = getTableStatus();
+    const baseClasses = "flex flex-col items-center justify-center text-xs font-medium rounded-md border-2 transition-colors min-w-[60px] min-h-[60px] p-2";
+    
+    if (isSelected) {
+      return cn(baseClasses, "bg-primary text-primary-foreground border-primary shadow-lg cursor-pointer");
+    }
+    
+    switch (status) {
+      case 'reserved':
+        return cn(baseClasses, "bg-red-100 text-red-800 border-red-300 cursor-not-allowed opacity-75 relative");
+      case 'unavailable':
+        return cn(baseClasses, "bg-muted text-muted-foreground border-muted cursor-not-allowed opacity-50");
+      default:
+        return cn(baseClasses, "bg-background text-foreground border-border hover:bg-muted hover:border-muted-foreground cursor-pointer");
+    }
+  };
   
   return (
     <div
-      onClick={() => onClick(table.id)}
-      className={cn(
-        "flex flex-col items-center justify-center text-xs font-medium cursor-pointer rounded-md border-2 transition-colors",
-        "min-w-[60px] min-h-[60px] p-2",
-        isSelected 
-          ? "bg-primary text-primary-foreground border-primary shadow-lg" 
-          : table.is_available
-            ? "bg-background text-foreground border-border hover:bg-muted hover:border-muted-foreground"
-            : "bg-muted text-muted-foreground border-muted cursor-not-allowed opacity-50"
-      )}
+      onClick={() => getTableStatus() === 'available' && onClick(table.id)}
+      className={getTableClasses()}
       style={{
         width: `${Math.max(table.width, 60)}px`,
         height: `${Math.max(table.height, 60)}px`,
       }}
     >
+      {isReserved && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 bg-red-500 opacity-20 rounded-md"></div>
+          <div className="text-red-600 font-bold text-lg z-10">✕</div>
+        </div>
+      )}
       <div className="font-bold">T{table.table_number}</div>
       <div className="text-[10px] text-center">
         {table.max_guests} seats
       </div>
+      {isReserved && reservation && (
+        <div className="text-[9px] text-center font-medium text-red-700">
+          {reservation.guest_name}
+        </div>
+      )}
       {reservationType === 'nightlife' && table.reservation_price > 0 && (
         <div className="text-[10px] text-center font-medium">
           ${(table.reservation_price / 100).toFixed(0)}
@@ -80,22 +113,30 @@ export const TableLayoutSelector: React.FC<TableLayoutSelectorProps> = ({
   onTableSelect,
   reservationType,
   className,
+  existingReservations = [],
 }) => {
   const initialNodes: Node[] = useMemo(() => {
-    return tables.map((table) => ({
-      id: table.id,
-      type: 'tableNode',
-      position: { x: table.position_x, y: table.position_y },
-      data: {
-        table,
-        isSelected: selectedTableId === table.id,
-        onClick: onTableSelect,
-        reservationType,
-      },
-      draggable: false,
-      selectable: false,
-    }));
-  }, [tables, selectedTableId, onTableSelect, reservationType]);
+    return tables.map((table) => {
+      const reservation = existingReservations.find(r => r.table_id === table.id);
+      const isReserved = reservation && ['confirmed', 'pending'].includes(reservation.status);
+      
+      return {
+        id: table.id,
+        type: 'tableNode',
+        position: { x: table.position_x, y: table.position_y },
+        data: {
+          table,
+          isSelected: selectedTableId === table.id,
+          onClick: onTableSelect,
+          reservationType,
+          isReserved,
+          reservation,
+        },
+        draggable: false,
+        selectable: false,
+      };
+    });
+  }, [tables, selectedTableId, onTableSelect, reservationType, existingReservations]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -181,6 +222,12 @@ export const TableLayoutSelector: React.FC<TableLayoutSelectorProps> = ({
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-primary border-2 border-primary rounded"></div>
             <span>Selected</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-100 border-2 border-red-300 rounded relative">
+              <div className="absolute inset-0 flex items-center justify-center text-red-600 text-xs">✕</div>
+            </div>
+            <span>Reserved</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-muted border-2 border-muted rounded opacity-50"></div>

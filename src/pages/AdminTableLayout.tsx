@@ -69,11 +69,11 @@ const TableNode = ({ data }: { data: any }) => {
   const getStatusColor = () => {
     const status = getTableStatus();
     switch (status) {
-      case "available": return "bg-success text-success-foreground";
-      case "reserved": return "bg-warning text-warning-foreground";
-      case "checked_in": return "bg-info text-info-foreground";
-      case "checked_out": return "bg-muted text-muted-foreground";
-      default: return "bg-muted text-muted-foreground";
+      case "available": return "bg-green-100 text-green-800 border-green-300";
+      case "reserved": return "bg-yellow-100 text-yellow-800 border-yellow-300";
+      case "checked_in": return "bg-blue-100 text-blue-800 border-blue-300";
+      case "checked_out": return "bg-gray-100 text-gray-600 border-gray-300";
+      default: return "bg-gray-100 text-gray-600 border-gray-300";
     }
   };
 
@@ -383,20 +383,20 @@ export default function AdminTableLayout() {
 
         {/* Status Summary */}
         <div className="px-4 pb-4 flex gap-4">
-          <Badge variant="outline" className="bg-success/10 text-success">
-            <div className="w-2 h-2 rounded-full bg-success mr-2"></div>
+          <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+            <div className="w-2 h-2 rounded-full bg-green-600 mr-2"></div>
             Available: {statusCounts.available}
           </Badge>
-          <Badge variant="outline" className="bg-warning/10 text-warning">
-            <div className="w-2 h-2 rounded-full bg-warning mr-2"></div>
+          <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+            <div className="w-2 h-2 rounded-full bg-yellow-600 mr-2"></div>
             Reserved: {statusCounts.reserved}
           </Badge>
-          <Badge variant="outline" className="bg-info/10 text-info">
-            <div className="w-2 h-2 rounded-full bg-info mr-2"></div>
+          <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
+            <div className="w-2 h-2 rounded-full bg-blue-600 mr-2"></div>
             Checked In: {statusCounts.checked_in}
           </Badge>
-          <Badge variant="outline" className="bg-muted/10 text-muted-foreground">
-            <div className="w-2 h-2 rounded-full bg-muted-foreground mr-2"></div>
+          <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300">
+            <div className="w-2 h-2 rounded-full bg-gray-600 mr-2"></div>
             Checked Out: {statusCounts.checked_out}
           </Badge>
         </div>
@@ -420,10 +420,10 @@ export default function AdminTableLayout() {
           <MiniMap 
             nodeColor={(node) => {
               const reservation = reservations.find(r => r.table_id === node.id);
-              if (!reservation) return "hsl(var(--success))";
-              if (reservation.checked_out_at) return "hsl(var(--muted-foreground))";
-              if (reservation.checked_in_at) return "hsl(var(--info))";
-              return "hsl(var(--warning))";
+              if (!reservation) return "#10b981"; // green
+              if (reservation.checked_out_at) return "#6b7280"; // gray
+              if (reservation.checked_in_at) return "#3b82f6"; // blue
+              return "#f59e0b"; // yellow
             }}
           />
         </ReactFlow>

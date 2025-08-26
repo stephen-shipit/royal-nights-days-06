@@ -20,7 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List, Mail, Eye, Settings, FileText, Check } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { BulkImageUpload } from "@/components/BulkImageUpload";
-import { TableLayoutSelector } from "@/components/TableLayoutSelector";
+import { CreateReservationTableSelector } from "@/components/CreateReservationTableSelector";
 import AdminHeader from "@/components/AdminHeader";
 import AdminFooter from "@/components/AdminFooter";
 import NotificationSettings from "@/components/NotificationSettings";
@@ -1369,11 +1369,13 @@ const ReservationManagement = () => {
 
                 <div>
                   <FormLabel>Table Selection *</FormLabel>
-                  <TableLayoutSelector
+                  <CreateReservationTableSelector
                     tables={venueTables || []}
                     selectedTableId={form.watch('table_id')}
                     onTableSelect={(tableId) => form.setValue('table_id', tableId)}
                     reservationType={form.watch('reservation_type') as 'dining' | 'nightlife'}
+                    selectedDate={form.watch('event_id') ? undefined : new Date().toISOString().split('T')[0]}
+                    eventId={form.watch('event_id')}
                     className="mt-2"
                   />
                   {!form.watch('table_id') && (

@@ -42,6 +42,12 @@ serve(async (req) => {
       tablePrice
     }: PaymentRequest = await req.json();
 
+    // Payment sessions are only for nightlife/entertainment reservations
+    // Dining reservations should never go through payment flow
+    if (!eventId) {
+      throw new Error("Payment sessions are only available for nightlife events");
+    }
+
     console.log("Creating payment session for table:", tableId);
     console.log("Birthday package selected:", birthdayPackage);
     console.log("Screen display selected:", screenDisplay);

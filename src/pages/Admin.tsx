@@ -985,9 +985,14 @@ const ReservationManagement = () => {
               </TableCell>
               <TableCell>{reservation.guest_count}</TableCell>
               <TableCell>
-                <Badge variant={reservation.reservation_type === 'dining' ? 'default' : 'secondary'}>
-                  {reservation.reservation_type === 'dining' ? '🍽️ Dining' : '🍸 Nightlife'}
-                </Badge>
+                <div className="space-y-1">
+                  <Badge variant={reservation.reservation_type === 'dining' ? 'default' : 'secondary'}>
+                    {reservation.reservation_type === 'dining' ? '🍽️ Dining' : '🍸 Nightlife'}
+                  </Badge>
+                  <div className="text-xs text-muted-foreground">
+                    {reservation.reservation_type === 'dining' ? '3pm-9pm' : '9pm-5am'}
+                  </div>
+                </div>
               </TableCell>
               <TableCell>
                 <Select value={reservation.status} onValueChange={(value) => handleStatusUpdate(reservation.id, value)}>
@@ -1003,10 +1008,10 @@ const ReservationManagement = () => {
                 </Select>
               </TableCell>
                <TableCell>
-                 {reservation.reservation_type === 'nightlife' ? (
-                   `$${reservation.total_price || 0}`
+                 {reservation.reservation_type === 'dining' ? (
+                   'No Charge'
                  ) : (
-                   'No charge'
+                   `$${((reservation.total_price || 0) / 100).toFixed(2)}`
                  )}
                </TableCell>
               <TableCell>
@@ -1170,9 +1175,9 @@ const ReservationManagement = () => {
           </div>
         </Card>
         <Card className="p-4">
-          <div className="text-sm text-muted-foreground">Total Revenue</div>
+          <div className="text-sm text-muted-foreground">Total Revenue (Nightlife Only)</div>
           <div className="text-2xl font-bold text-primary">
-            ${(filteredReservations?.reduce((sum, r) => sum + (r.total_price || 0), 0) / 100).toFixed(2)}
+            ${(filteredReservations?.filter(r => r.reservation_type === 'nightlife').reduce((sum, r) => sum + (r.total_price || 0), 0) / 100).toFixed(2)}
           </div>
         </Card>
       </div>

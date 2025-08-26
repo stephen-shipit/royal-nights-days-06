@@ -51,7 +51,7 @@ serve(async (req) => {
       const metadata = session.metadata;
       const totalAmount = ((parseInt(metadata.tablePrice) || 0) * 100) + (metadata.birthdayPackage === 'true' ? 5000 : 0) + (metadata.screenDisplay === 'true' ? 5000 : 0);
       
-      // Create the confirmed reservation
+      // Create the confirmed reservation - since this went through payment, it's nightlife
       const { data: reservation, error: reservationError } = await supabase
         .from("table_reservations")
         .insert({
@@ -67,7 +67,9 @@ serve(async (req) => {
           total_price: totalAmount,
           stripe_session_id: sessionId,
           status: "confirmed",
-          payment_status: "confirmed"
+          payment_status: "confirmed",
+          reservation_type: "nightlife", // Paid reservations are always nightlife
+          time_slot: "9pm-5am" // Nightlife time slot
         })
         .select()
         .single();

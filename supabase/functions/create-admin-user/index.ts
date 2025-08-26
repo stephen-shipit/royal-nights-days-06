@@ -54,6 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('RPC created user_id:', user_id);
     
     // Create the auth user with the temp password using auth admin API
+    // Auto-confirm email to bypass email confirmation requirement
     const authResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
       method: 'POST',
       headers: {
@@ -64,6 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         email,
         password: temp_password,
+        email_confirm: true, // Auto-confirm the email
         user_metadata: {
           role,
           has_temp_password: true

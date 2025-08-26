@@ -231,13 +231,72 @@ export default function AdminTableLayout() {
       (table.location && table.location.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    const newNodes: Node[] = filteredTables.map((table) => {
+    // Function to check if two tables overlap
+    const tablesOverlap = (table1: any, table2: any) => {
+      const padding = 20; // Add padding between tables
+      return !(
+        table1.x + table1.width + padding <= table2.x ||
+        table2.x + table2.width + padding <= table1.x ||
+        table1.y + table1.height + padding <= table2.y ||
+        table2.y + table2.height + padding <= table1.y
+      );
+    };
+
+    // Function to adjust positions to prevent overlapping
+    const adjustPositions = (tableData: any[]) => {
+      const adjusted = tableData.map(table => ({
+        ...table,
+        x: table.position_x,
+        y: table.position_y,
+        width: Math.max(table.width, 80), // Minimum width
+        height: Math.max(table.height, 80) // Minimum height
+      }));
+
+      // Sort by position to process from top-left to bottom-right
+      adjusted.sort((a, b) => a.y - b.y || a.x - b.x);
+
+      for (let i = 0; i < adjusted.length; i++) {
+        for (let j = 0; j < i; j++) {
+          if (tablesOverlap(adjusted[i], adjusted[j])) {
+            // Move the current table to avoid overlap
+            const padding = 25;
+            // Try to move right first
+            let newX = adjusted[j].x + adjusted[j].width + padding;
+            let newY = adjusted[i].y;
+
+            // Check if the new position would cause overlap with other tables
+            let hasOverlap = false;
+            for (let k = 0; k < adjusted.length; k++) {
+              if (k !== i && tablesOverlap({...adjusted[i], x: newX, y: newY}, adjusted[k])) {
+                hasOverlap = true;
+                break;
+              }
+            }
+
+            // If moving right causes overlap, try moving down
+            if (hasOverlap) {
+              newX = adjusted[i].x;
+              newY = adjusted[j].y + adjusted[j].height + padding;
+            }
+
+            adjusted[i].x = newX;
+            adjusted[i].y = newY;
+          }
+        }
+      }
+
+      return adjusted;
+    };
+
+    const adjustedTables = adjustPositions(filteredTables);
+
+    const newNodes: Node[] = adjustedTables.map((table) => {
       const reservation = reservations.find(r => r.table_id === table.id);
       
       return {
         id: table.id,
         type: "table",
-        position: { x: table.position_x, y: table.position_y },
+        position: { x: table.x, y: table.y },
         data: {
           table,
           reservation,

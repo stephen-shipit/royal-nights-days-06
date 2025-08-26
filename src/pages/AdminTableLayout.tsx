@@ -335,7 +335,7 @@ export default function AdminTableLayout() {
                 Back to Admin
               </Link>
             </Button>
-            <h1 className="text-2xl font-bold">Table Layout</h1>
+            <h1 className="text-2xl font-bold">Tables</h1>
             <GuestListDrawer
               reservations={reservations}
               tables={tables}

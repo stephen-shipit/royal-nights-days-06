@@ -372,8 +372,10 @@ export default function AdminTableLayout() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
 
-            {/* Guest List Drawer */}
+          {/* Guest List Drawer - Second Row */}
+          <div className="flex justify-end">
             <GuestListDrawer
               reservations={reservations}
               tables={tables}

@@ -27,22 +27,70 @@ const Admin = () => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check admin permissions and temporary password status
+  const checkUserAccess = async (userId: string) => {
+    try {
+      const [{ data: isAdmin }, { data: hasTemp }] = await Promise.all([
+        supabase.rpc('is_admin', { user_id: userId }),
+        supabase.rpc('has_temporary_password', { user_id: userId })
+      ]);
+
+      if (!isAdmin) {
+        await supabase.auth.signOut();
+        toast({
+          title: "Access Denied",
+          description: "You don't have admin permissions",
+          variant: "destructive"
+        });
+        setIsAuthenticated(false);
+        return;
+      }
+
+      // If user has temporary password, they need to change it first
+      if (hasTemp) {
+        setIsAuthenticated(false);
+        return;
+      }
+
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Error checking user access:', error);
+      await supabase.auth.signOut();
+      toast({
+        title: "Authentication Error",
+        description: "Unable to verify permissions",
+        variant: "destructive"
+      });
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Listen to Supabase auth state changes
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        setIsLoading(true);
+        
         if (event === 'SIGNED_OUT' || !session) {
           setIsAuthenticated(false);
-        } else if (event === 'SIGNED_IN' && session) {
-          setIsAuthenticated(true);
+          setIsLoading(false);
+        } else if (session?.user) {
+          await checkUserAccess(session.user.id);
         }
       }
     );
 
     // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        await checkUserAccess(session.user.id);
+      } else {
+        setIsLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -109,8 +157,27 @@ const Admin = () => {
     enabled: isAuthenticated,
   });
 
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
-    return <AdminAuth onAuthSuccess={() => setIsAuthenticated(true)} />;
+    return (
+      <AdminAuth 
+        onAuthSuccess={() => {
+          // The auth state change listener will handle the access check
+          setIsLoading(true);
+        }} 
+      />
+    );
   }
 
   const handleLogout = async () => {

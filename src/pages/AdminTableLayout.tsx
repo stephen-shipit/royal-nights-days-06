@@ -335,7 +335,12 @@ export default function AdminTableLayout() {
                 Back to Admin
               </Link>
             </Button>
-            <h1 className="text-2xl font-bold">Table Layout Management</h1>
+            <h1 className="text-2xl font-bold">Table Layout</h1>
+            <GuestListDrawer
+              reservations={reservations}
+              tables={tables}
+              onGuestClick={handleTableClick}
+            />
           </div>
 
           <div className="flex items-center gap-4">
@@ -372,15 +377,6 @@ export default function AdminTableLayout() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          {/* Guest List Drawer - Second Row */}
-          <div className="flex justify-end">
-            <GuestListDrawer
-              reservations={reservations}
-              tables={tables}
-              onGuestClick={handleTableClick}
-            />
           </div>
         </div>
 

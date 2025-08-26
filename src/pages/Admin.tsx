@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminAuth } from "@/components/AdminAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +27,26 @@ const Admin = () => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Listen to Supabase auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_OUT' || !session) {
+          setIsAuthenticated(false);
+        } else if (event === 'SIGNED_IN' && session) {
+          setIsAuthenticated(true);
+        }
+      }
+    );
+
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Fetch data for overview - moved before early return to follow rules of hooks
   const { data: menuItems } = useQuery({
@@ -103,8 +123,10 @@ const Admin = () => {
           description: error.message, 
           variant: "destructive" 
         });
+        // Force logout state even if Supabase logout fails
+        setIsAuthenticated(false);
       }
-      setIsAuthenticated(false);
+      // Don't manually set state here - auth listener will handle it
     } catch (error) {
       console.error('Logout error:', error);
       toast({ 
@@ -112,6 +134,8 @@ const Admin = () => {
         description: "An unexpected error occurred during logout", 
         variant: "destructive" 
       });
+      // Force logout state on unexpected errors
+      setIsAuthenticated(false);
     }
   };
 

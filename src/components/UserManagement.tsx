@@ -232,12 +232,12 @@ const UserManagement = () => {
               </div>
               <div>
                 <Label htmlFor="role">Role</Label>
-                <Select name="role" defaultValue="admin">
+                <Select name="role" defaultValue="admin_user">
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="admin_user">Admin User</SelectItem>
                     <SelectItem value="moderator">Moderator</SelectItem>
                   </SelectContent>
                 </Select>
@@ -317,7 +317,7 @@ const UserManagement = () => {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="admin">Admin</SelectItem>
+                                  <SelectItem value="admin_user">Admin User</SelectItem>
                                   <SelectItem value="moderator">Moderator</SelectItem>
                                 </SelectContent>
                               </Select>

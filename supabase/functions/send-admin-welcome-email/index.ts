@@ -49,11 +49,11 @@ const handler = async (req: Request): Promise<Response> => {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
           <!-- Header with Royal Palace branding -->
-          <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); padding: 40px 30px; text-align: center;">
-            <h1 style="color: white; font-size: 32px; margin: 0; font-weight: bold;">
+          <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); background-color: #7C3AED; padding: 40px 30px; text-align: center;">
+            <h1 style="color: #ffffff; font-size: 32px; margin: 0; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
               👑 Royal Palace
             </h1>
-            <p style="color: #E5E7EB; margin: 10px 0 0 0; font-size: 16px;">
+            <p style="color: #ffffff; opacity: 0.9; margin: 10px 0 0 0; font-size: 16px; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
               Administrative Access Portal
             </p>
           </div>
@@ -95,15 +95,17 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="text-align: center; margin: 30px 0;">
               <a href="${loginUrl}" 
                  style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); 
-                        color: white; 
+                        background-color: #7C3AED;
+                        color: #ffffff !important; 
                         text-decoration: none; 
                         padding: 15px 40px; 
                         border-radius: 8px; 
                         font-weight: bold; 
                         font-size: 16px; 
                         display: inline-block;
-                        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);">
-                Access Admin Dashboard →
+                        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+                        text-shadow: none;">
+                <span style="color: #ffffff;">Access Admin Dashboard →</span>
               </a>
             </div>
             

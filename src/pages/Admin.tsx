@@ -13,7 +13,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, Drawer
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List, Mail, Eye, Settings, FileText } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List, Mail, Eye, Settings, FileText, Check } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { BulkImageUpload } from "@/components/BulkImageUpload";
 import AdminHeader from "@/components/AdminHeader";
@@ -1981,6 +1981,90 @@ const GalleryManagement = () => {
   );
 };
 
+// Inline Price Edit Component
+const InlinePriceEdit = ({ table, onUpdate }: { table: any, onUpdate: (id: string, price: number) => void }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempPrice, setTempPrice] = useState(table.reservation_price?.toString() || '0');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleDoubleClick = () => {
+    setIsEditing(true);
+    setTempPrice(table.reservation_price?.toString() || '0');
+  };
+
+  const handleSave = async () => {
+    const price = parseInt(tempPrice) || 0;
+    if (price < 0) {
+      setTempPrice(table.reservation_price?.toString() || '0');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      await onUpdate(table.id, price);
+      setIsEditing(false);
+    } catch (error) {
+      setTempPrice(table.reservation_price?.toString() || '0');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setTempPrice(table.reservation_price?.toString() || '0');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    } else if (e.key === 'Escape') {
+      handleCancel();
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center gap-2">
+        <Input
+          type="number"
+          min="0"
+          value={tempPrice}
+          onChange={(e) => setTempPrice(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={handleCancel}
+          className="w-20 h-8 text-sm"
+          autoFocus
+          disabled={isLoading}
+        />
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleSave}
+          disabled={isLoading}
+          className="h-8 w-8 p-0 hover:bg-green-100"
+        >
+          {isLoading ? (
+            <div className="animate-spin rounded-full h-3 w-3 border-b border-green-600" />
+          ) : (
+            <Check className="h-3 w-3 text-green-600" />
+          )}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <span
+      onDoubleClick={handleDoubleClick}
+      className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors select-none"
+      title="Double-click to edit price"
+    >
+      ${table.reservation_price || 0}
+    </span>
+  );
+};
+
 // Table Management Component
 const TableManagement = () => {
   const { toast } = useToast();
@@ -2031,6 +2115,22 @@ const TableManagement = () => {
     },
   });
 
+  const updatePriceMutation = useMutation({
+    mutationFn: async ({ id, price }: { id: string, price: number }) => {
+      const { data, error } = await supabase.from("venue_tables").update({ reservation_price: price }).eq("id", id).select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Price updated successfully!" });
+      queryClient.invalidateQueries({ queryKey: ["venue-tables"] });
+    },
+    onError: (error) => {
+      toast({ title: "Error updating price", description: error.message, variant: "destructive" });
+      throw error;
+    },
+  });
+
   const deleteTableMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("venue_tables").delete().eq("id", id);
@@ -2072,6 +2172,10 @@ const TableManagement = () => {
     if (confirm("Are you sure you want to delete this table?")) {
       deleteTableMutation.mutate(id);
     }
+  };
+
+  const handlePriceUpdate = async (id: string, price: number) => {
+    await updatePriceMutation.mutateAsync({ id, price });
   };
 
   if (isLoading) return <div>Loading...</div>;
@@ -2164,7 +2268,9 @@ const TableManagement = () => {
                 <TableCell className="font-medium">{table.table_number}</TableCell>
                 <TableCell>{table.max_guests}</TableCell>
                 <TableCell>{(table as any).location || "Not specified"}</TableCell>
-                <TableCell>${table.reservation_price || 0}</TableCell>
+                <TableCell>
+                  <InlinePriceEdit table={table} onUpdate={handlePriceUpdate} />
+                </TableCell>
                 <TableCell>
                   <Badge variant={table.is_available ? 'default' : 'destructive'}>
                     {table.is_available ? 'Available' : 'Occupied'}

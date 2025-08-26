@@ -17,6 +17,7 @@ import Perform from "./pages/Perform";
 import RoyalMicThursdays from "./pages/RoyalMicThursdays";
 import ThankYou from "./pages/ThankYou";
 import Admin from "./pages/Admin";
+import AdminTableLayout from "./pages/AdminTableLayout";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
@@ -74,6 +75,7 @@ const App = () => {
               <Route path="/royal-mic-thursdays" element={<RoyalMicThursdays />} />
               <Route path="/thank-you" element={<ThankYou />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/table-layout" element={<AdminTableLayout />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />

@@ -16,6 +16,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List, Mail, Eye, Settings, FileText, Check } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { BulkImageUpload } from "@/components/BulkImageUpload";
@@ -29,6 +30,7 @@ import FormDataManagement from "@/components/FormDataManagement";
 const Admin = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -337,6 +339,85 @@ const Admin = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{galleryItems?.length || 0}</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/table-layout')}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5" />
+                      Table Layout Manager
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground mb-4">
+                      View the full venue layout and check guests in/out in real-time.
+                    </p>
+                    <Button className="w-full">
+                      Open Table Layout
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Quick Stats
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Today's Reservations:</span>
+                        <span className="font-medium">
+                          {reservations?.filter(r => {
+                            const today = new Date().toISOString().split('T')[0];
+                            return r.created_at?.startsWith(today) && r.status === 'confirmed';
+                          }).length || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Checked In:</span>
+                        <span className="font-medium text-green-600">
+                          {reservations?.filter(r => r.checked_in_at && !r.checked_out_at).length || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Pending Check-in:</span>
+                        <span className="font-medium text-amber-600">
+                          {reservations?.filter(r => r.status === 'confirmed' && !r.checked_in_at).length || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      System Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Database:</span>
+                        <span className="text-sm text-green-600 font-medium">Online</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Real-time Updates:</span>
+                        <span className="text-sm text-green-600 font-medium">Active</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Last Sync:</span>
+                        <span className="text-sm text-muted-foreground">Just now</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>

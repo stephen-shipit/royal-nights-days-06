@@ -373,6 +373,10 @@ export type Database = {
       table_reservations: {
         Row: {
           birthday_package: boolean | null
+          checked_in_at: string | null
+          checked_in_by: string | null
+          checked_out_at: string | null
+          checked_out_by: string | null
           created_at: string
           event_id: string | null
           expires_at: string | null
@@ -394,6 +398,10 @@ export type Database = {
         }
         Insert: {
           birthday_package?: boolean | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          checked_out_at?: string | null
+          checked_out_by?: string | null
           created_at?: string
           event_id?: string | null
           expires_at?: string | null
@@ -415,6 +423,10 @@ export type Database = {
         }
         Update: {
           birthday_package?: boolean | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          checked_out_at?: string | null
+          checked_out_by?: string | null
           created_at?: string
           event_id?: string | null
           expires_at?: string | null
@@ -435,6 +447,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "table_reservations_checked_in_by_fkey"
+            columns: ["checked_in_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "table_reservations_checked_out_by_fkey"
+            columns: ["checked_out_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "table_reservations_event_id_fkey"
             columns: ["event_id"]

@@ -66,6 +66,17 @@ serve(async (req) => {
       console.error("Error fetching admin notification emails:", adminEmailsError);
     }
 
+    // Format screen display package text
+    const screenDisplayText = reservation.screen_display_image_url 
+      ? `
+        <h3 style="color: #d4af37; margin-top: 20px;">📺 Screen Display Package Included!</h3>
+        <p style="margin: 10px 0; line-height: 1.6;">Your picture will be displayed on our large screen during the event.</p>
+        <div style="margin: 15px 0;">
+          <img src="${reservation.screen_display_image_url}" alt="Screen Display Image" style="max-width: 300px; border-radius: 8px; border: 2px solid #d4af37;" />
+        </div>
+      `
+      : '';
+
     // Format the email content
     const birthdayPackageText = reservation.birthday_package 
       ? `
@@ -115,6 +126,8 @@ serve(async (req) => {
           </div>
           
           ${birthdayPackageText}
+          
+          ${screenDisplayText}
           
           <div style="background-color: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <p style="margin: 0; color: #2d5a3d;"><strong>Total Paid:</strong> $${(reservation.total_price / 100).toFixed(2)}</p>
@@ -177,6 +190,14 @@ serve(async (req) => {
               <p style="margin: 3px 0;"><strong>Time Slot:</strong> ${reservation.time_slot}</p>
               ${reservation.special_requests ? `<p style="margin: 3px 0;"><strong>Special Requests:</strong> ${reservation.special_requests}</p>` : ''}
               <p style="margin: 3px 0;"><strong>Birthday Package:</strong> ${reservation.birthday_package ? 'Yes' : 'No'}</p>
+              <p style="margin: 3px 0;"><strong>Screen Display Package:</strong> ${reservation.screen_display_image_url ? 'Yes' : 'No'}</p>
+              ${reservation.screen_display_image_url ? `
+                <div style="margin: 10px 0;">
+                  <p style="margin: 3px 0;"><strong>Screen Display Image:</strong></p>
+                  <img src="${reservation.screen_display_image_url}" alt="Screen Display Image" style="max-width: 200px; border-radius: 4px; border: 1px solid #ccc;" />
+                  <p style="margin: 3px 0; font-size: 12px; color: #666;"><a href="${reservation.screen_display_image_url}" target="_blank">View Full Size</a></p>
+                </div>
+              ` : ''}
             </div>
           </div>
           

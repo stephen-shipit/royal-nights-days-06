@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, MapPin, Music, Users, ArrowLeft, X, Info, Grid3x3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ImageUpload } from "@/components/ImageUpload";
 
 type Event = {
   id: string;
@@ -60,6 +61,7 @@ type ReservationForm = {
   special_requests: string;
   birthday_package: boolean;
   screen_display: boolean;
+  screen_display_image_url: string;
 };
 
 const EventDetails = () => {
@@ -78,7 +80,8 @@ const EventDetails = () => {
     guest_count: 1,
     special_requests: "",
     birthday_package: false,
-    screen_display: false
+    screen_display: false,
+    screen_display_image_url: ""
   });
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
@@ -228,6 +231,16 @@ const EventDetails = () => {
       return;
     }
 
+    // Validate screen display package image
+    if (reservationForm.screen_display && !reservationForm.screen_display_image_url) {
+      toast({
+        title: "Missing Image",
+        description: "Please upload an image for the screen display package",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessingPayment(true);
 
     try {
@@ -275,6 +288,7 @@ const EventDetails = () => {
           specialRequests: reservationForm.special_requests,
           birthdayPackage: reservationForm.birthday_package,
           screenDisplay: reservationForm.screen_display,
+          screenDisplayImageUrl: reservationForm.screen_display_image_url,
           tablePrice: tablePrice
         }
       });
@@ -836,17 +850,30 @@ const EventDetails = () => {
                     setReservationForm(prev => ({ ...prev, screen_display: checked as boolean }))
                   }
                 />
-                <div className="space-y-2">
-                  <Label 
-                    htmlFor="screen_display" 
-                    className="text-base font-medium cursor-pointer"
-                  >
-                    📺 Screen Display Package (+$50.00)
-                  </Label>
-                  <div className="text-sm text-muted-foreground">
-                    <p>• Your picture and name displayed on our large screen</p>
-                  </div>
-                </div>
+                 <div className="space-y-2">
+                   <Label 
+                     htmlFor="screen_display" 
+                     className="text-base font-medium cursor-pointer"
+                   >
+                     📺 Screen Display Package (+$50.00)
+                   </Label>
+                   <div className="text-sm text-muted-foreground">
+                     <p>• Your picture and name displayed on our large screen</p>
+                   </div>
+                   {reservationForm.screen_display && (
+                     <div className="mt-3">
+                       <Label className="text-sm font-medium">Upload Image for Display *</Label>
+                       <ImageUpload
+                         value={reservationForm.screen_display_image_url}
+                         onChange={(url) => setReservationForm(prev => ({ ...prev, screen_display_image_url: url }))}
+                         className="mt-2"
+                       />
+                       <p className="text-xs text-muted-foreground mt-2">
+                         This image will be displayed on our large screen during the event
+                       </p>
+                     </div>
+                   )}
+                 </div>
               </div>
             </div>
 
@@ -897,6 +924,7 @@ const EventDetails = () => {
                 !reservationForm.guest_name || 
                 !reservationForm.guest_email || 
                 !reservationForm.guest_phone ||
+                (reservationForm.screen_display && !reservationForm.screen_display_image_url) ||
                 isProcessingPayment
               }
             >

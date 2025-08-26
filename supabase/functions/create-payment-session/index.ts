@@ -17,6 +17,7 @@ interface PaymentRequest {
   specialRequests?: string;
   birthdayPackage: boolean;
   screenDisplay: boolean;
+  screenDisplayImageUrl?: string;
   tablePrice: number;
 }
 
@@ -37,6 +38,7 @@ serve(async (req) => {
       specialRequests,
       birthdayPackage,
       screenDisplay,
+      screenDisplayImageUrl,
       tablePrice
     }: PaymentRequest = await req.json();
 
@@ -167,6 +169,7 @@ serve(async (req) => {
         specialRequests: specialRequests || '',
         birthdayPackage: birthdayPackage.toString(),
         screenDisplay: screenDisplay.toString(),
+        screenDisplayImageUrl: screenDisplayImageUrl || '',
         tablePrice: tablePrice.toString(),
         eventTitle: event.title,
         eventDate: event.date,

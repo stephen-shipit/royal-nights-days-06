@@ -37,10 +37,11 @@ const PaymentSuccess = () => {
   const [loading, setLoading] = useState(true);
 
   const sessionId = searchParams.get("session_id");
-  const reservationId = searchParams.get("reservation_id");
+  const eventId = searchParams.get("event_id");
+  const tableId = searchParams.get("table_id");
 
   useEffect(() => {
-    if (sessionId && reservationId) {
+    if (sessionId) {
       verifyPaymentAndFetchDetails();
     } else {
       toast({
@@ -50,7 +51,7 @@ const PaymentSuccess = () => {
       });
       navigate("/events");
     }
-  }, [sessionId, reservationId]);
+  }, [sessionId]);
 
   const verifyPaymentAndFetchDetails = async () => {
     try {
@@ -85,7 +86,7 @@ const PaymentSuccess = () => {
         return;
       }
 
-      // Fetch reservation details
+      // Fetch reservation details using the returned reservation ID
       const { data: reservationData, error: reservationError } = await supabase
         .from("table_reservations")
         .select(`
@@ -99,7 +100,7 @@ const PaymentSuccess = () => {
             table_number
           )
         `)
-        .eq("id", reservationId)
+        .eq("id", paymentData.reservationId)
         .single();
 
       if (reservationError) {

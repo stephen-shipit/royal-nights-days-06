@@ -383,6 +383,7 @@ export type Database = {
           id: string
           payment_status: string | null
           reservation_type: string | null
+          screen_display_image_url: string | null
           special_requests: string | null
           status: string
           stripe_session_id: string | null
@@ -403,6 +404,7 @@ export type Database = {
           id?: string
           payment_status?: string | null
           reservation_type?: string | null
+          screen_display_image_url?: string | null
           special_requests?: string | null
           status?: string
           stripe_session_id?: string | null
@@ -423,6 +425,7 @@ export type Database = {
           id?: string
           payment_status?: string | null
           reservation_type?: string | null
+          screen_display_image_url?: string | null
           special_requests?: string | null
           status?: string
           stripe_session_id?: string | null

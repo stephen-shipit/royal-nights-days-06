@@ -1046,7 +1046,9 @@ const ReservationManagement = () => {
 
   // Format date for display (MM/DD/YYYY)
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Create date in local timezone to avoid UTC conversion issues
+    const [year, month, day] = dateString.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     return date.toLocaleDateString('en-US', {
       month: '2-digit',
       day: '2-digit',

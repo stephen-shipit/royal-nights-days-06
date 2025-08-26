@@ -92,7 +92,7 @@ export function CheckInModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <MapPin className="h-5 w-5" />
@@ -101,7 +101,7 @@ export function CheckInModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 pr-2">
           {/* Table Information */}
           <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2">

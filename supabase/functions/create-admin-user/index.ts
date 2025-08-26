@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,86 +22,122 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Creating admin user:', { email, role });
 
     // Create Supabase client with service role key for admin operations
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+      throw new Error('Missing required environment variables');
+    }
 
-    // First get user_id and temp_password from our function
-    const { data: userData, error: rpcError } = await supabase.rpc('create_admin_user', {
-      p_email: email,
-      p_role: role
+    // First get user_id and temp_password from our RPC function
+    const rpcResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/create_admin_user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseServiceRoleKey,
+        'Authorization': `Bearer ${supabaseServiceRoleKey}`,
+      },
+      body: JSON.stringify({
+        p_email: email,
+        p_role: role
+      })
     });
     
-    if (rpcError) {
+    if (!rpcResponse.ok) {
+      const rpcError = await rpcResponse.text();
       console.error('RPC error:', rpcError);
-      throw rpcError;
+      throw new Error(`RPC failed: ${rpcError}`);
     }
     
+    const userData = await rpcResponse.json();
     const { user_id, temp_password } = userData as { user_id: string; temp_password: string };
     console.log('RPC created user_id:', user_id);
     
     // Create the auth user with the temp password using auth admin API
-    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password: temp_password,
-      user_metadata: {
-        role,
-        has_temp_password: true
-      }
+    const authResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseServiceRoleKey,
+        'Authorization': `Bearer ${supabaseServiceRoleKey}`,
+      },
+      body: JSON.stringify({
+        email,
+        password: temp_password,
+        user_metadata: {
+          role,
+          has_temp_password: true
+        }
+      })
     });
     
-    if (authError) {
+    if (!authResponse.ok) {
+      const authError = await authResponse.text();
       console.error('Auth creation error:', authError);
+      
       // If auth creation fails, clean up the admin_users record
-      await supabase.from('admin_users').delete().eq('user_id', user_id);
-      throw authError;
+      await fetch(`${supabaseUrl}/rest/v1/admin_users?user_id=eq.${user_id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': supabaseServiceRoleKey,
+          'Authorization': `Bearer ${supabaseServiceRoleKey}`,
+        }
+      });
+      
+      throw new Error(`Auth user creation failed: ${authError}`);
     }
     
-    console.log('Auth user created:', authUser.user.id);
+    const authUser = await authResponse.json();
+    console.log('Auth user created:', authUser.id);
     
     // Update the admin_users record with the actual auth user_id
-    const { error: updateError } = await supabase
-      .from('admin_users')
-      .update({ user_id: authUser.user.id })
-      .eq('user_id', user_id);
+    const updateResponse = await fetch(`${supabaseUrl}/rest/v1/admin_users?user_id=eq.${user_id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseServiceRoleKey,
+        'Authorization': `Bearer ${supabaseServiceRoleKey}`,
+      },
+      body: JSON.stringify({
+        user_id: authUser.id
+      })
+    });
     
-    if (updateError) {
+    if (!updateResponse.ok) {
+      const updateError = await updateResponse.text();
       console.error('Update error:', updateError);
-      throw updateError;
+      throw new Error(`Failed to update admin_users record: ${updateError}`);
     }
     
     console.log('Successfully created admin user');
     
     // Send welcome email with temporary password
     try {
-      const { error: emailError } = await supabase.functions.invoke('send-admin-welcome-email', {
-        body: {
+      const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-admin-welcome-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseServiceRoleKey,
+          'Authorization': `Bearer ${supabaseServiceRoleKey}`,
+        },
+        body: JSON.stringify({
           email: email,
           tempPassword: temp_password,
           role: role
-        }
+        })
       });
       
-      if (emailError) {
-        console.error('Failed to send welcome email:', emailError);
-        // Don't throw here - user creation was successful
+      if (!emailResponse.ok) {
+        console.error('Failed to send welcome email:', await emailResponse.text());
       }
     } catch (error) {
       console.error('Error sending welcome email:', error);
-      // Don't throw here - user creation was successful
     }
     
     return new Response(
       JSON.stringify({ 
         success: true, 
-        user_id: authUser.user.id, 
+        user_id: authUser.id, 
         temp_password 
       }),
       {

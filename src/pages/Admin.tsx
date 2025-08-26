@@ -10,9 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
 import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List, Mail, Eye, Settings, FileText, Check } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { BulkImageUpload } from "@/components/BulkImageUpload";
@@ -774,6 +777,25 @@ const ReservationManagement = () => {
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [activeReservationTab, setActiveReservationTab] = useState('recent');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const form = useForm({
+    defaultValues: {
+      guest_name: '',
+      guest_email: '',
+      guest_phone: '',
+      guest_count: 2,
+      reservation_type: 'dining',
+      status: 'pending',
+      special_requests: '',
+      event_id: '',
+      table_id: '',
+      date: '',
+      time_slot: '3pm-9pm',
+      birthday_package: false,
+      screen_display_image_url: ''
+    }
+  });
 
   const { data: reservations, isLoading } = useQuery({
     queryKey: ["reservations"],
@@ -810,6 +832,47 @@ const ReservationManagement = () => {
         .order("date", { ascending: false });
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: venueTables } = useQuery({
+    queryKey: ["venue-tables"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("venue_tables")
+        .select("*")
+        .order("table_number", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const createReservationMutation = useMutation({
+    mutationFn: async (reservationData: any) => {
+      const { data, error } = await supabase
+        .from("table_reservations")
+        .insert([{
+          ...reservationData,
+          // Set expires_at for pending reservations (30 minutes from now)
+          expires_at: reservationData.status === 'pending' && reservationData.reservation_type === 'nightlife' 
+            ? new Date(Date.now() + 30 * 60 * 1000).toISOString()
+            : null,
+          total_price: reservationData.reservation_type === 'nightlife' && reservationData.table_id
+            ? (venueTables?.find(t => t.id === reservationData.table_id)?.reservation_price || 0)
+            : 0
+        }])
+        .select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Reservation created successfully!" });
+      setIsCreateModalOpen(false);
+      form.reset();
+      queryClient.invalidateQueries({ queryKey: ["reservations"] });
+    },
+    onError: (error) => {
+      toast({ title: "Error creating reservation", description: error.message, variant: "destructive" });
     },
   });
 
@@ -1065,6 +1128,285 @@ const ReservationManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Reservations Management</h2>
+        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Reservation
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create New Reservation</DialogTitle>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit((data) => createReservationMutation.mutate(data))} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="guest_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Guest Name *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter guest name" required />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="guest_email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email *</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" placeholder="Enter email" required />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="guest_phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter phone number" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="guest_count"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Guest Count *</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min="1" max="20" onChange={(e) => field.onChange(parseInt(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="reservation_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Reservation Type *</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select reservation type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="dining">Dining</SelectItem>
+                          <SelectItem value="nightlife">Nightlife</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {form.watch('reservation_type') === 'nightlife' && (
+                  <FormField
+                    control={form.control}
+                    name="event_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Event *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select event" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {events?.filter(event => new Date(event.date) >= new Date()).map((event) => (
+                              <SelectItem key={event.id} value={event.id}>
+                                {event.title} - {formatDate(event.date)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {form.watch('reservation_type') === 'dining' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Date *</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="date" required />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="time_slot"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Time Slot</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select time slot" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="3pm-9pm">3pm-9pm</SelectItem>
+                              <SelectItem value="6pm-11pm">6pm-11pm</SelectItem>
+                              <SelectItem value="8pm-1am">8pm-1am</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+
+                <FormField
+                  control={form.control}
+                  name="table_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Table *</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select table" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {venueTables?.map((table) => (
+                            <SelectItem key={table.id} value={table.id}>
+                              Table {table.table_number} (Max {table.max_guests} guests)
+                              {form.watch('reservation_type') === 'nightlife' && table.reservation_price > 0 && 
+                                ` - $${(table.reservation_price / 100).toFixed(2)}`
+                              }
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="confirmed">Confirmed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {form.watch('reservation_type') === 'nightlife' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <FormField
+                        control={form.control}
+                        name="birthday_package"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="mt-1"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Birthday Package</FormLabel>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="screen_display_image_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Screen Display Image URL</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter image URL for screen display" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+
+                <FormField
+                  control={form.control}
+                  name="special_requests"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Special Requests</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} placeholder="Enter any special requests or notes" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsCreateModalOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createReservationMutation.isPending}
+                  >
+                    {createReservationMutation.isPending ? "Creating..." : "Create Reservation"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters */}

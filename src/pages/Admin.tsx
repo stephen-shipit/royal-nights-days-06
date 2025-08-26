@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form";
 import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List, Mail, Eye, Settings, FileText, Check } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { BulkImageUpload } from "@/components/BulkImageUpload";
+import { TableLayoutSelector } from "@/components/TableLayoutSelector";
 import AdminHeader from "@/components/AdminHeader";
 import AdminFooter from "@/components/AdminFooter";
 import NotificationSettings from "@/components/NotificationSettings";
@@ -1285,33 +1286,21 @@ const ReservationManagement = () => {
                   </div>
                 )}
 
-                <FormField
-                  control={form.control}
-                  name="table_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Table *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select table" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {venueTables?.map((table) => (
-                            <SelectItem key={table.id} value={table.id}>
-                              Table {table.table_number} (Max {table.max_guests} guests)
-                              {form.watch('reservation_type') === 'nightlife' && table.reservation_price > 0 && 
-                                ` - $${(table.reservation_price / 100).toFixed(2)}`
-                              }
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
+                <div>
+                  <FormLabel>Table Selection *</FormLabel>
+                  <TableLayoutSelector
+                    tables={venueTables || []}
+                    selectedTableId={form.watch('table_id')}
+                    onTableSelect={(tableId) => form.setValue('table_id', tableId)}
+                    reservationType={form.watch('reservation_type') as 'dining' | 'nightlife'}
+                    className="mt-2"
+                  />
+                  {!form.watch('table_id') && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Please select a table from the layout above
+                    </p>
                   )}
-                />
+                </div>
 
                 <FormField
                   control={form.control}

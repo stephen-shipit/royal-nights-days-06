@@ -39,7 +39,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const adminEmails = notificationSettings?.map(setting => setting.email) || [];
 
-    const loginUrl = `${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '')}.lovable.app/admin`;
+    const loginUrl = "https://royalpalacedtx.com/admin";
 
     // Send welcome email to the new admin user
     const welcomeEmailResponse = await resend.emails.send({
@@ -121,10 +121,10 @@ const handler = async (req: Request): Promise<Response> => {
             <!-- Support section -->
             <div style="border-top: 1px solid #E5E7EB; padding-top: 25px; margin-top: 30px; text-align: center;">
               <p style="color: #6B7280; font-size: 14px; margin-bottom: 10px;">
-                Need help? Contact our technical support team
+                Need help? Contact our support team
               </p>
               <p style="color: #8B5CF6; font-size: 14px; margin: 0;">
-                📧 <strong>support@royalpalace.com</strong> | 📞 <strong>(555) 123-4567</strong>
+                📧 <strong>info@royalpalacedtx.com</strong>
               </p>
             </div>
           </div>

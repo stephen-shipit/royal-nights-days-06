@@ -200,12 +200,12 @@ export function AdminAuth({ onAuthSuccess }: AdminAuthProps) {
         </Card>
       </div>
 
-      <Dialog open={showPasswordChange} onOpenChange={setShowPasswordChange}>
-        <DialogContent>
+      <Dialog open={showPasswordChange} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>Set Your Password</DialogTitle>
+            <DialogTitle className="text-destructive">Password Change Required</DialogTitle>
             <DialogDescription>
-              You're using a temporary password. Please set a new secure password to continue.
+              You're using a temporary password and must set a new secure password before accessing the admin dashboard. This step cannot be skipped for security reasons.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handlePasswordChange} className="space-y-4">

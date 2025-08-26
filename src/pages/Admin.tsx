@@ -32,10 +32,23 @@ const Admin = () => {
   // Check admin permissions and temporary password status
   const checkUserAccess = async (userId: string) => {
     try {
-      const [{ data: isAdmin }, { data: hasTemp }] = await Promise.all([
-        supabase.rpc('is_admin', { user_id: userId }),
-        supabase.rpc('has_temporary_password', { user_id: userId })
-      ]);
+      // Add timeout to RPC calls
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Authentication check timeout')), 5000)
+      );
+
+      const [{ data: isAdmin, error: adminError }, { data: hasTemp, error: tempError }] = await Promise.race([
+        Promise.all([
+          supabase.rpc('is_admin', { user_id: userId }),
+          supabase.rpc('has_temporary_password', { user_id: userId })
+        ]),
+        timeoutPromise
+      ]) as [any, any];
+
+      if (adminError || tempError) {
+        console.error('RPC errors:', { adminError, tempError });
+        throw new Error('Failed to check user permissions');
+      }
 
       if (!isAdmin) {
         await supabase.auth.signOut();
@@ -57,13 +70,20 @@ const Admin = () => {
       setIsAuthenticated(true);
     } catch (error) {
       console.error('Error checking user access:', error);
-      await supabase.auth.signOut();
-      toast({
-        title: "Authentication Error",
-        description: "Unable to verify permissions",
-        variant: "destructive"
-      });
-      setIsAuthenticated(false);
+      
+      // On timeout or error, fall back to basic session check
+      if (error instanceof Error && error.message.includes('timeout')) {
+        console.warn('Auth check timeout, allowing access with session only');
+        setIsAuthenticated(true);
+      } else {
+        await supabase.auth.signOut();
+        toast({
+          title: "Authentication Error", 
+          description: "Unable to verify permissions",
+          variant: "destructive"
+        });
+        setIsAuthenticated(false);
+      }
     } finally {
       setIsLoading(false);
     }

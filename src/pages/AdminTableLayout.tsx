@@ -202,7 +202,7 @@ export default function AdminTableLayout() {
         .from("table_reservations")
         .select("*");
 
-      if (selectedEvent) {
+      if (selectedEvent && selectedEvent !== "all") {
         query = query.eq("event_id", selectedEvent);
       } else {
         // For dining reservations, find by date
@@ -370,7 +370,7 @@ export default function AdminTableLayout() {
                 <SelectValue placeholder="Select event" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Events</SelectItem>
+                <SelectItem value="all">All Events</SelectItem>
                 {events.map((event) => (
                   <SelectItem key={event.id} value={event.id}>
                     {event.title} ({event.date})

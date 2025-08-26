@@ -95,16 +95,12 @@ const TableNode = ({ data }: { data: any }) => {
     >
       <div className="text-center">
         <div className="font-bold text-lg">T{table.table_number}</div>
-        <div className="text-xs">{table.max_guests} seats</div>
         <div className="text-xs mt-1">{getStatusText()}</div>
         {reservation && (
           <>
             <div className="text-xs font-medium mt-1">{reservation.guest_name}</div>
             <div className="text-xs">Party of {reservation.guest_count}</div>
           </>
-        )}
-        {table.location && (
-          <div className="text-xs text-muted-foreground">{table.location}</div>
         )}
       </div>
     </div>

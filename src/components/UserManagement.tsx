@@ -82,14 +82,65 @@ const UserManagement = () => {
       return { previousUsers, tempUser };
     },
     onSuccess: async (data, variables, context) => {
-      // Force refetch to get the real data from server
-      await refetch();
+      // Poll for the newly created user with retry logic
+      const pollForNewUser = async (userId: string, maxAttempts: number = 10): Promise<boolean> => {
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          // Wait with exponential backoff (200ms, 400ms, 600ms, etc.)
+          const delay = Math.min(200 * attempt, 1000);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          
+          try {
+            const { data: users } = await supabase
+              .from("admin_users")
+              .select("*")
+              .eq("user_id", userId);
+              
+            if (users && users.length > 0) {
+              console.log(`User found on attempt ${attempt}`);
+              return true;
+            }
+            
+            console.log(`User not found on attempt ${attempt}, retrying...`);
+          } catch (error) {
+            console.error(`Error checking for user on attempt ${attempt}:`, error);
+          }
+        }
+        
+        console.warn(`User not found after ${maxAttempts} attempts`);
+        return false;
+      };
       
-      // Email sending is handled in the edge function now
-      toast({ 
-        title: "Admin user created successfully!", 
-        description: "User account created and welcome email sent with login credentials." 
-      });
+      try {
+        // Poll for the user to appear in the database
+        const userFound = await pollForNewUser(data.user_id);
+        
+        if (userFound) {
+          // User found, safe to refetch
+          await refetch();
+          
+          // Remove optimistic update now that we have real data
+          queryClient.removeQueries({ queryKey: ["admin-users"], exact: false });
+          
+          toast({ 
+            title: "Admin user created successfully!", 
+            description: "User account created and welcome email sent with login credentials." 
+          });
+        } else {
+          // User not found after polling, but keep optimistic update
+          console.warn("User creation succeeded but user not visible in queries yet");
+          toast({ 
+            title: "Admin user created!", 
+            description: "User account created successfully. It may take a moment to appear in the list." 
+          });
+        }
+      } catch (error) {
+        console.error("Error during user creation polling:", error);
+        // Keep optimistic update and show success anyway
+        toast({ 
+          title: "Admin user created!", 
+          description: "User account created successfully. Refreshing the page may be needed to see the new user." 
+        });
+      }
       
       setIsAddingUser(false);
     },

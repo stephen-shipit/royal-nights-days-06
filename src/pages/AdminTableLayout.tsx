@@ -231,33 +231,13 @@ export default function AdminTableLayout() {
       (table.location && table.location.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    // Simple grid-snap approach to add minimal spacing without destroying layout
-    const addMinimalSpacing = (tableData: any[]) => {
-      return tableData.map((table, index) => {
-        let x = table.position_x;
-        let y = table.position_y;
-        
-        // Add small random offset to prevent exact overlaps while preserving layout
-        const offsetX = (index % 3) * 15; // 0, 15, or 30px offset
-        const offsetY = Math.floor(index / 3) * 15; // Slight vertical offset per row
-        
-        return {
-          ...table,
-          adjustedX: x + offsetX,
-          adjustedY: y + offsetY
-        };
-      });
-    };
-
-    const spacedTables = addMinimalSpacing(filteredTables);
-
-    const newNodes: Node[] = spacedTables.map((table) => {
+    const newNodes: Node[] = filteredTables.map((table) => {
       const reservation = reservations.find(r => r.table_id === table.id);
       
       return {
         id: table.id,
         type: "table",
-        position: { x: table.adjustedX, y: table.adjustedY },
+        position: { x: table.position_x, y: table.position_y },
         data: {
           table,
           reservation,

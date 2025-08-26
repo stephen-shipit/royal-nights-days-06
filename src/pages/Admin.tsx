@@ -1172,7 +1172,7 @@ const ReservationManagement = () => {
         <Card className="p-4">
           <div className="text-sm text-muted-foreground">Total Revenue</div>
           <div className="text-2xl font-bold text-primary">
-            ${filteredReservations?.reduce((sum, r) => sum + (r.total_price || 0), 0).toLocaleString()}
+            ${(filteredReservations?.reduce((sum, r) => sum + (r.total_price || 0), 0) / 100).toFixed(2)}
           </div>
         </Card>
       </div>

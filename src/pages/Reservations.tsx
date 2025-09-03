@@ -224,19 +224,23 @@ const Reservations = () => {
       }
 
       // All reservations start as 'pending' status until manually confirmed by staff
+      const insertData = {
+        event_id: eventId, // null for dining, event ID for entertainment
+        table_id: tables[0].id,
+        guest_name: guestName,
+        guest_email: guestEmail,
+        guest_count: guestCount,
+        guest_phone: phoneNumber,
+        reservation_type: reservationType,
+        time_slot: reservationType === 'dining' ? '3pm-9pm' : '9pm-5am',
+        status: 'pending'
+      };
+      
+      console.log('Attempting to insert reservation with data:', insertData);
+      
       const { data: reservationData, error } = await supabase
         .from('table_reservations')
-        .insert({
-          event_id: eventId, // null for dining, event ID for entertainment
-          table_id: tables[0].id,
-          guest_name: guestName,
-          guest_email: guestEmail,
-          guest_count: guestCount,
-          guest_phone: phoneNumber,
-          reservation_type: reservationType,
-          time_slot: reservationType === 'dining' ? '3pm-9pm' : '9pm-5am',
-          status: 'pending'
-        })
+        .insert(insertData)
         .select('id')
         .single();
 

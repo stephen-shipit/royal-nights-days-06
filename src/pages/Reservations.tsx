@@ -37,6 +37,13 @@ const Reservations = () => {
     dining: "",
     social: ""
   });
+  const [validationStatus, setValidationStatus] = useState({
+    name: false,
+    email: false,
+    guests: false,
+    time: false,
+    phone: false
+  });
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -127,11 +134,32 @@ const Reservations = () => {
         console.log('MOBILE DEBUG: Using guests from FormData:', guestCount);
       }
       
-      // Mobile-safe time collection
+      // Mobile-safe time collection with DOM fallback
       let timeSlot = selectedTime;
       if (!timeSlot) {
         timeSlot = formData.get('time') as string;
         console.log('MOBILE DEBUG: Time from FormData:', timeSlot);
+      }
+      
+      // Additional DOM fallback for mobile Safari Select issues
+      if (!timeSlot && reservationType === 'dining') {
+        const timeSelectElement = document.querySelector('select[name="time"]') as HTMLSelectElement;
+        if (timeSelectElement) {
+          timeSlot = timeSelectElement.value;
+          console.log('MOBILE DEBUG: Time from DOM fallback:', timeSlot);
+        }
+      }
+      
+      // Guest count DOM fallback
+      if (!guestCount || isNaN(guestCount)) {
+        const guestSelectElement = document.querySelector('select[name="guests"]') as HTMLSelectElement;
+        if (guestSelectElement) {
+          const domGuestCount = parseInt(guestSelectElement.value || "1");
+          if (!isNaN(domGuestCount)) {
+            guestCount = domGuestCount;
+            console.log('MOBILE DEBUG: Guests from DOM fallback:', guestCount);
+          }
+        }
       }
       
       console.log('MOBILE DEBUG: Final form values:', { 
@@ -150,6 +178,7 @@ const Reservations = () => {
       if (!guestCount || isNaN(guestCount)) missingFields.push("Number of guests");
       if (!selectedDate) missingFields.push("Date");
       if (!phoneNumber?.trim()) missingFields.push("Phone number");
+      if (reservationType === 'dining' && !timeSlot) missingFields.push("Time slot");
       
       if (missingFields.length > 0) {
         const errorMessage = `Please complete the following fields: ${missingFields.join(', ')}`;
@@ -523,94 +552,146 @@ const Reservations = () => {
                       
                       <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="name">Full Name</Label>
-                            <Input 
-                              id="name" 
-                              name="name" 
-                              placeholder="Enter your name" 
-                              required 
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="email">Email</Label>
-                            <Input 
-                              id="email" 
-                              name="email" 
-                              type="email" 
-                              placeholder="Enter your email" 
-                              required 
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="phone">Phone Number</Label>
-                            <Input 
-                              id="phone" 
-                              type="tel" 
-                              placeholder="(XXX) XXX-XXXX"
-                              value={diningPhone}
-                              onChange={(e) => {
-                                const formatted = formatPhoneNumber(e.target.value);
-                                setDiningPhone(formatted);
-                                if (phoneErrors.dining) {
-                                  setPhoneErrors(prev => ({ ...prev, dining: "" }));
-                                }
-                              }}
-                              required 
-                            />
-                            {phoneErrors.dining && (
-                              <p className="text-sm text-destructive mt-1">{phoneErrors.dining}</p>
-                            )}
-                          </div>
-                          <div>
-                            <Label htmlFor="guests">Number of Guests</Label>
-                           <Select 
-                             value={selectedGuests} 
-                             onValueChange={(value) => {
-                               console.log('MOBILE DEBUG: Guests selected:', value);
-                               setSelectedGuests(value);
-                             }}
-                           >
-                             <SelectTrigger className="touch-manipulation h-12">
-                               <SelectValue placeholder="Select guest count" />
-                             </SelectTrigger>
-                             <SelectContent className="z-50 bg-popover">
-                               {Array.from({ length: 10 }, (_, i) => (
-                                 <SelectItem key={i + 1} value={String(i + 1)} className="touch-manipulation">
-                                   {i + 1} {i === 0 ? 'Guest' : 'Guests'}
-                                 </SelectItem>
-                               ))}
-                             </SelectContent>
-                           </Select>
-                          </div>
                            <div>
-                             <Label htmlFor="time">Preferred Time</Label>
-                             <Select 
-                               value={selectedTime} 
-                               onValueChange={(value) => {
-                                 console.log('MOBILE DEBUG: Time selected:', value);
-                                 setSelectedTime(value);
+                             <Label htmlFor="name" className="flex items-center gap-2">
+                               Full Name
+                               {validationStatus.name && <span className="text-green-500 text-xs">✓</span>}
+                             </Label>
+                             <Input 
+                               id="name" 
+                               name="name" 
+                               placeholder="Enter your name" 
+                               className="h-12"
+                               onChange={(e) => {
+                                 setValidationStatus(prev => ({ ...prev, name: !!e.target.value.trim() }));
                                }}
-                             >
-                               <SelectTrigger className="touch-manipulation h-12">
-                                 <SelectValue placeholder="Select time" />
-                               </SelectTrigger>
-                               <SelectContent className="z-50 bg-popover">
-                                 <SelectItem value="15:00" className="touch-manipulation">3:00 PM</SelectItem>
-                                 <SelectItem value="15:30" className="touch-manipulation">3:30 PM</SelectItem>
-                                 <SelectItem value="16:00" className="touch-manipulation">4:00 PM</SelectItem>
-                                 <SelectItem value="16:30" className="touch-manipulation">4:30 PM</SelectItem>
-                                 <SelectItem value="17:00" className="touch-manipulation">5:00 PM</SelectItem>
-                                 <SelectItem value="17:30" className="touch-manipulation">5:30 PM</SelectItem>
-                                 <SelectItem value="18:00" className="touch-manipulation">6:00 PM</SelectItem>
-                                 <SelectItem value="18:30" className="touch-manipulation">6:30 PM</SelectItem>
-                                 <SelectItem value="19:00" className="touch-manipulation">7:00 PM</SelectItem>
-                                 <SelectItem value="19:30" className="touch-manipulation">7:30 PM</SelectItem>
-                                 <SelectItem value="20:00" className="touch-manipulation">8:00 PM</SelectItem>
-                                 <SelectItem value="20:30" className="touch-manipulation">8:30 PM</SelectItem>
-                               </SelectContent>
-                             </Select>
+                               required 
+                             />
                            </div>
+                           <div>
+                             <Label htmlFor="email" className="flex items-center gap-2">
+                               Email
+                               {validationStatus.email && <span className="text-green-500 text-xs">✓</span>}
+                             </Label>
+                             <Input 
+                               id="email" 
+                               name="email" 
+                               type="email" 
+                               placeholder="Enter your email" 
+                               className="h-12"
+                               onChange={(e) => {
+                                 setValidationStatus(prev => ({ ...prev, email: !!e.target.value.trim() }));
+                               }}
+                               required 
+                             />
+                           </div>
+                           <div>
+                             <Label htmlFor="phone" className="flex items-center gap-2">
+                               Phone Number
+                               {validationStatus.phone && <span className="text-green-500 text-xs">✓</span>}
+                             </Label>
+                             <Input 
+                               id="phone" 
+                               type="tel" 
+                               placeholder="(XXX) XXX-XXXX"
+                               className="h-12"
+                               value={diningPhone}
+                               onChange={(e) => {
+                                 const formatted = formatPhoneNumber(e.target.value);
+                                 setDiningPhone(formatted);
+                                 setValidationStatus(prev => ({ ...prev, phone: validatePhoneNumber(formatted) }));
+                                 if (phoneErrors.dining) {
+                                   setPhoneErrors(prev => ({ ...prev, dining: "" }));
+                                 }
+                               }}
+                               required 
+                             />
+                             {phoneErrors.dining && (
+                               <p className="text-sm text-destructive mt-1">{phoneErrors.dining}</p>
+                             )}
+                           </div>
+                           <div>
+                             <Label htmlFor="guests" className="flex items-center gap-2">
+                               Number of Guests
+                               {validationStatus.guests && <span className="text-green-500 text-xs">✓</span>}
+                             </Label>
+                            <Select 
+                              value={selectedGuests} 
+                              onValueChange={(value) => {
+                                console.log('MOBILE DEBUG: Guests selected:', value);
+                                setSelectedGuests(value);
+                                setValidationStatus(prev => ({ ...prev, guests: !!value }));
+                              }}
+                            >
+                              <SelectTrigger className="touch-manipulation h-12">
+                                <SelectValue placeholder="Select guest count" />
+                              </SelectTrigger>
+                              <SelectContent className="z-50 bg-popover">
+                                {Array.from({ length: 10 }, (_, i) => (
+                                  <SelectItem key={i + 1} value={String(i + 1)} className="touch-manipulation">
+                                    {i + 1} {i === 0 ? 'Guest' : 'Guests'}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {/* Hidden inputs for mobile fallback */}
+                            <input type="hidden" name="guests" value={selectedGuests} />
+                            <select name="guests" style={{ display: 'none' }} value={selectedGuests}>
+                              {Array.from({ length: 10 }, (_, i) => (
+                                <option key={i + 1} value={String(i + 1)}>
+                                  {i + 1}
+                                </option>
+                              ))}
+                            </select>
+                           </div>
+                            <div>
+                              <Label htmlFor="time" className="flex items-center gap-2">
+                                Preferred Time
+                                {validationStatus.time && <span className="text-green-500 text-xs">✓</span>}
+                              </Label>
+                              <Select 
+                                value={selectedTime} 
+                                onValueChange={(value) => {
+                                  console.log('MOBILE DEBUG: Time selected:', value);
+                                  setSelectedTime(value);
+                                  setValidationStatus(prev => ({ ...prev, time: !!value }));
+                                }}
+                              >
+                                <SelectTrigger className="touch-manipulation h-12">
+                                  <SelectValue placeholder="Select time" />
+                                </SelectTrigger>
+                                <SelectContent className="z-50 bg-popover">
+                                  <SelectItem value="15:00" className="touch-manipulation">3:00 PM</SelectItem>
+                                  <SelectItem value="15:30" className="touch-manipulation">3:30 PM</SelectItem>
+                                  <SelectItem value="16:00" className="touch-manipulation">4:00 PM</SelectItem>
+                                  <SelectItem value="16:30" className="touch-manipulation">4:30 PM</SelectItem>
+                                  <SelectItem value="17:00" className="touch-manipulation">5:00 PM</SelectItem>
+                                  <SelectItem value="17:30" className="touch-manipulation">5:30 PM</SelectItem>
+                                  <SelectItem value="18:00" className="touch-manipulation">6:00 PM</SelectItem>
+                                  <SelectItem value="18:30" className="touch-manipulation">6:30 PM</SelectItem>
+                                  <SelectItem value="19:00" className="touch-manipulation">7:00 PM</SelectItem>
+                                  <SelectItem value="19:30" className="touch-manipulation">7:30 PM</SelectItem>
+                                  <SelectItem value="20:00" className="touch-manipulation">8:00 PM</SelectItem>
+                                  <SelectItem value="20:30" className="touch-manipulation">8:30 PM</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {/* Hidden inputs for mobile fallback */}
+                              <input type="hidden" name="time" value={selectedTime} />
+                              <select name="time" style={{ display: 'none' }} value={selectedTime}>
+                                <option value="15:00">3:00 PM</option>
+                                <option value="15:30">3:30 PM</option>
+                                <option value="16:00">4:00 PM</option>
+                                <option value="16:30">4:30 PM</option>
+                                <option value="17:00">5:00 PM</option>
+                                <option value="17:30">5:30 PM</option>
+                                <option value="18:00">6:00 PM</option>
+                                <option value="18:30">6:30 PM</option>
+                                <option value="19:00">7:00 PM</option>
+                                <option value="19:30">7:30 PM</option>
+                                <option value="20:00">8:00 PM</option>
+                                <option value="20:30">8:30 PM</option>
+                              </select>
+                            </div>
                         </div>
                         <div>
                           <Label>Select Date</Label>

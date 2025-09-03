@@ -11,7 +11,8 @@ const corsHeaders = {
 
 interface EmailRequest {
   reservationId: string;
-  sessionId: string;
+  sessionId?: string;
+  emailType?: string;
 }
 
 serve(async (req) => {
@@ -21,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const { reservationId, sessionId }: EmailRequest = await req.json();
+    const { reservationId, sessionId, emailType }: EmailRequest = await req.json();
 
     console.log("Sending confirmation email for reservation:", reservationId);
 
@@ -77,6 +78,10 @@ serve(async (req) => {
       `
       : '';
 
+    // Determine if this is a dining or nightlife reservation
+    const isDiningReservation = reservation.reservation_type === 'dining';
+    const hasEvent = reservation.events && reservation.events.title;
+    
     // Format the email content
     const birthdayPackageText = reservation.birthday_package 
       ? `
@@ -90,11 +95,32 @@ serve(async (req) => {
       `
       : '';
 
+    // Format date for dining reservations (use current date if no event)
+    const reservationDate = hasEvent ? 
+      new Date(reservation.events.date).toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      }) : 
+      new Date().toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+
+    // Email subject and title based on reservation type
+    const emailTitle = emailType === 'request_received' ? 'Reservation Request Received' : 'Reservation Confirmed!';
+    const emailSubject = hasEvent ? 
+      `${emailTitle} - ${reservation.events.title}` : 
+      `${emailTitle} - Dining Reservation`;
+
     // Guest confirmation email content
     const guestEmailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px;">
         <div style="background-color: #1a1a1a; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-          <h1 style="color: #d4af37; margin: 0; font-size: 28px;">Reservation Confirmed!</h1>
+          <h1 style="color: #d4af37; margin: 0; font-size: 28px;">${emailTitle}</h1>
         </div>
         
         <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px;">
@@ -103,24 +129,22 @@ serve(async (req) => {
           </p>
           
           <p style="color: #666; line-height: 1.6; margin-bottom: 25px;">
-            Thank you for your reservation! We're excited to have you join us for an unforgettable experience.
+            ${emailType === 'request_received' ? 
+              'Thank you for your reservation request! We have received your request and will review it shortly. You will receive a confirmation email once your reservation is approved.' :
+              'Thank you for your reservation! We\'re excited to have you join us for an unforgettable experience.'
+            }
           </p>
           
           <div style="background-color: #f8f8f8; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h2 style="color: #1a1a1a; margin-top: 0;">Reservation Details</h2>
             
             <div style="display: grid; gap: 10px;">
-              <p style="margin: 5px 0;"><strong>Event:</strong> ${reservation.events.title}</p>
-              <p style="margin: 5px 0;"><strong>Date:</strong> ${new Date(reservation.events.date).toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}</p>
-              <p style="margin: 5px 0;"><strong>Time:</strong> ${reservation.events.time}</p>
+              ${hasEvent ? `<p style="margin: 5px 0;"><strong>Event:</strong> ${reservation.events.title}</p>` : `<p style="margin: 5px 0;"><strong>Service:</strong> Dining Experience</p>`}
+              <p style="margin: 5px 0;"><strong>Date:</strong> ${reservationDate}</p>
+              ${hasEvent ? `<p style="margin: 5px 0;"><strong>Time:</strong> ${reservation.events.time}</p>` : `<p style="margin: 5px 0;"><strong>Time Slot:</strong> ${reservation.time_slot}</p>`}
               <p style="margin: 5px 0;"><strong>Table Number:</strong> ${reservation.venue_tables.table_number}</p>
               <p style="margin: 5px 0;"><strong>Guest Count:</strong> ${reservation.guest_count}</p>
-              <p style="margin: 5px 0;"><strong>Phone:</strong> ${reservation.guest_phone}</p>
+              <p style="margin: 5px 0;"><strong>Phone:</strong> ${reservation.guest_phone || 'Not provided'}</p>
               ${reservation.special_requests ? `<p style="margin: 5px 0;"><strong>Special Requests:</strong> ${reservation.special_requests}</p>` : ''}
             </div>
           </div>
@@ -129,9 +153,11 @@ serve(async (req) => {
           
           ${screenDisplayText}
           
+          ${reservation.total_price > 0 ? `
           <div style="background-color: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <p style="margin: 0; color: #2d5a3d;"><strong>Total Paid:</strong> $${(reservation.total_price / 100).toFixed(2)}</p>
           </div>
+          ` : ''}
           
           <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
             <p style="color: #666; font-size: 14px; line-height: 1.6;">
@@ -176,14 +202,9 @@ serve(async (req) => {
               <p style="margin: 3px 0;"><strong>Guest Name:</strong> ${reservation.guest_name}</p>
               <p style="margin: 3px 0;"><strong>Email:</strong> ${reservation.guest_email}</p>
               <p style="margin: 3px 0;"><strong>Phone:</strong> ${reservation.guest_phone}</p>
-              <p style="margin: 3px 0;"><strong>Event:</strong> ${reservation.events.title}</p>
-              <p style="margin: 3px 0;"><strong>Date:</strong> ${new Date(reservation.events.date).toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}</p>
-              <p style="margin: 3px 0;"><strong>Time:</strong> ${reservation.events.time}</p>
+              ${hasEvent ? `<p style="margin: 3px 0;"><strong>Event:</strong> ${reservation.events.title}</p>` : `<p style="margin: 3px 0;"><strong>Service:</strong> Dining Experience</p>`}
+              <p style="margin: 3px 0;"><strong>Date:</strong> ${reservationDate}</p>
+              ${hasEvent ? `<p style="margin: 3px 0;"><strong>Time:</strong> ${reservation.events.time}</p>` : `<p style="margin: 3px 0;"><strong>Time Slot:</strong> ${reservation.time_slot}</p>`}
               <p style="margin: 3px 0;"><strong>Table Number:</strong> ${reservation.venue_tables.table_number}</p>
               <p style="margin: 3px 0;"><strong>Guest Count:</strong> ${reservation.guest_count}</p>
               <p style="margin: 3px 0;"><strong>Reservation Type:</strong> ${reservation.reservation_type}</p>
@@ -223,7 +244,7 @@ serve(async (req) => {
       resend.emails.send({
         from: "Royal Palace Reservations <reservations@royalpalacedtx.email>",
         to: [reservation.guest_email],
-        subject: `Reservation Confirmed - ${reservation.events.title}`,
+        subject: emailSubject,
         html: guestEmailHtml,
       })
     );
@@ -237,7 +258,7 @@ serve(async (req) => {
         resend.emails.send({
           from: "Royal Palace Notifications <notifications@royalpalacedtx.email>",
           to: adminEmailAddresses,
-          subject: `New Reservation: ${reservation.guest_name} - ${reservation.events.title}`,
+          subject: `New Reservation: ${reservation.guest_name} - ${hasEvent ? reservation.events.title : 'Dining'}`,
           html: adminEmailHtml,
         })
       );

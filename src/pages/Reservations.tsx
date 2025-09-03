@@ -50,8 +50,8 @@ const Reservations = () => {
     try {
       let eventId = null;
       
-      // Only get event for entertainment/nightlife reservations
-      if (reservationType === 'entertainment') {
+      // Only get event for nightlife reservations
+      if (reservationType === 'nightlife') {
         const { data: eventData, error: eventError } = await supabase
           .from('events')
           .select('id')
@@ -59,7 +59,8 @@ const Reservations = () => {
           .single();
 
         if (eventError) {
-          throw new Error('No event found for selected date');
+          console.error('Event lookup error:', eventError);
+          throw new Error('No event found for selected date. Please check if there are any events scheduled for this date.');
         }
         eventId = eventData.id;
       }
@@ -127,9 +128,10 @@ const Reservations = () => {
       navigate('/thank-you');
     } catch (error) {
       console.error('Error submitting reservation:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: "Error",
-        description: "Failed to submit reservation. Please try again.",
+        description: `Failed to submit reservation: ${errorMessage}`,
         variant: "destructive"
       });
     }
@@ -405,33 +407,33 @@ const Reservations = () => {
                     <form onSubmit={handleReservation} className="space-y-6">
                       <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="night-name">Full Name</Label>
-                            <Input id="night-name" placeholder="Enter your name" required />
-                          </div>
-                          <div>
-                            <Label htmlFor="night-email">Email</Label>
-                            <Input id="night-email" type="email" placeholder="Enter your email" required />
-                          </div>
-                          <div>
-                            <Label htmlFor="night-phone">Phone Number</Label>
-                            <Input id="night-phone" type="tel" placeholder="Enter your phone" required />
-                          </div>
-                          <div>
-                            <Label htmlFor="party-size">Party Size</Label>
-                            <Select>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select party size" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Array.from({ length: 15 }, (_, i) => (
-                                  <SelectItem key={i + 1} value={String(i + 1)}>
-                                    {i + 1} {i === 0 ? 'Person' : 'People'}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
+                           <div>
+                             <Label htmlFor="night-name">Full Name</Label>
+                             <Input id="night-name" name="name" placeholder="Enter your name" required />
+                           </div>
+                           <div>
+                             <Label htmlFor="night-email">Email</Label>
+                             <Input id="night-email" name="email" type="email" placeholder="Enter your email" required />
+                           </div>
+                           <div>
+                             <Label htmlFor="night-phone">Phone Number</Label>
+                             <Input id="night-phone" name="phone" type="tel" placeholder="Enter your phone" required />
+                           </div>
+                           <div>
+                             <Label htmlFor="party-size">Party Size</Label>
+                             <Select name="guests">
+                               <SelectTrigger>
+                                 <SelectValue placeholder="Select party size" />
+                               </SelectTrigger>
+                               <SelectContent>
+                                 {Array.from({ length: 15 }, (_, i) => (
+                                   <SelectItem key={i + 1} value={String(i + 1)}>
+                                     {i + 1} {i === 0 ? 'Person' : 'People'}
+                                   </SelectItem>
+                                 ))}
+                               </SelectContent>
+                             </Select>
+                           </div>
                           <div>
                             <Label htmlFor="table-type">Table Preference</Label>
                             <Select>

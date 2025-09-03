@@ -151,6 +151,7 @@ const Reservations = () => {
           guest_name: guestName,
           guest_email: guestEmail,
           guest_count: guestCount,
+          guest_phone: phoneNumber,
           reservation_type: reservationType,
           time_slot: reservationType === 'dining' ? '3pm-9pm' : '9pm-5am',
           status: 'pending'
@@ -159,8 +160,21 @@ const Reservations = () => {
         .single();
 
       if (error) {
-        throw error;
+        console.error('Database insertion error:', error);
+        
+        // Handle specific RLS errors
+        if (error.message.includes('row-level security') || error.message.includes('policy')) {
+          throw new Error('Unable to create reservation. Please ensure all fields are completed and try again.');
+        }
+        
+        throw new Error(`Database error: ${error.message}`);
       }
+
+      if (!reservationData?.id) {
+        throw new Error('Reservation was not created properly');
+      }
+
+      console.log('Reservation created successfully:', reservationData);
 
       // For dinner reservations, send initial "request received" email notifications
       if (reservationType === 'dining' && reservationData?.id) {
@@ -190,7 +204,7 @@ const Reservations = () => {
           : "We'll contact you shortly to confirm your reservation.",
       });
       
-      // Navigate to thank you page
+      // Only navigate to thank you page on successful reservation
       navigate('/thank-you');
     } catch (error) {
       console.error('Error submitting reservation:', error);

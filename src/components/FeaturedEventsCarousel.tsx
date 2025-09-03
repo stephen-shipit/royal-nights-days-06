@@ -172,7 +172,16 @@ const FeaturedEventsCarousel = () => {
               <img
                 src={currentEvent.image_url || '/api/placeholder/400/600'}
                 alt={currentEvent.title}
-                className="w-full h-full object-cover rounded-2xl shadow-2xl border-4 border-white/20"
+                className="w-full h-full object-cover object-center rounded-2xl shadow-2xl border-4 border-white/20"
+                onLoad={(e) => {
+                  const img = e.currentTarget;
+                  // Smart positioning: if image is portrait (likely contains people), use object-top
+                  // If landscape or square, keep object-center
+                  if (img.naturalHeight > img.naturalWidth * 1.2) {
+                    img.classList.remove('object-center');
+                    img.classList.add('object-top');
+                  }
+                }}
               />
             </div>
           </CardContent>

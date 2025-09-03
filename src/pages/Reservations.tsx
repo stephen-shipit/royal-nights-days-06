@@ -123,15 +123,18 @@ const Reservations = () => {
       const guestName = formData.get('name') as string;
       const guestEmail = formData.get('email') as string;
       
-      // For mobile, prioritize state values over FormData
+      // For mobile, prioritize state values over FormData with proper parsing
       let guestCount;
       if (selectedGuests && selectedGuests !== "") {
-        guestCount = parseInt(selectedGuests);
-        console.log('MOBILE DEBUG: Using guests from state:', guestCount);
+        // Extract number from strings like "7 Guests" or just "7"
+        const guestMatch = selectedGuests.match(/(\d+)/);
+        guestCount = guestMatch ? parseInt(guestMatch[1]) : NaN;
+        console.log('MOBILE DEBUG: Using guests from state:', selectedGuests, '-> parsed:', guestCount);
       } else {
         const formGuests = formData.get('guests') as string;
-        guestCount = parseInt(formGuests || "1");
-        console.log('MOBILE DEBUG: Using guests from FormData:', guestCount);
+        const formMatch = formGuests?.match(/(\d+)/);
+        guestCount = formMatch ? parseInt(formMatch[1]) : 1;
+        console.log('MOBILE DEBUG: Using guests from FormData:', formGuests, '-> parsed:', guestCount);
       }
       
       // Mobile-safe time collection with DOM fallback
@@ -150,14 +153,15 @@ const Reservations = () => {
         }
       }
       
-      // Guest count DOM fallback
+      // Guest count DOM fallback with better parsing
       if (!guestCount || isNaN(guestCount)) {
         const guestSelectElement = document.querySelector('select[name="guests"]') as HTMLSelectElement;
-        if (guestSelectElement) {
-          const domGuestCount = parseInt(guestSelectElement.value || "1");
+        if (guestSelectElement && guestSelectElement.value) {
+          const domMatch = guestSelectElement.value.match(/(\d+)/);
+          const domGuestCount = domMatch ? parseInt(domMatch[1]) : NaN;
           if (!isNaN(domGuestCount)) {
             guestCount = domGuestCount;
-            console.log('MOBILE DEBUG: Guests from DOM fallback:', guestCount);
+            console.log('MOBILE DEBUG: Guests from DOM fallback:', guestSelectElement.value, '-> parsed:', guestCount);
           }
         }
       }
@@ -615,25 +619,30 @@ const Reservations = () => {
                                Number of Guests
                                {validationStatus.guests && <span className="text-green-500 text-xs">✓</span>}
                              </Label>
-                            <Select 
-                              value={selectedGuests} 
-                              onValueChange={(value) => {
-                                console.log('MOBILE DEBUG: Guests selected:', value);
-                                setSelectedGuests(value);
-                                setValidationStatus(prev => ({ ...prev, guests: !!value }));
-                              }}
-                            >
-                              <SelectTrigger className="touch-manipulation h-12">
-                                <SelectValue placeholder="Select guest count" />
-                              </SelectTrigger>
-                              <SelectContent className="z-50 bg-popover">
-                                {Array.from({ length: 10 }, (_, i) => (
-                                  <SelectItem key={i + 1} value={String(i + 1)} className="touch-manipulation">
-                                    {i + 1} {i === 0 ? 'Guest' : 'Guests'}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                             <Select 
+                               value={selectedGuests} 
+                               onValueChange={(value) => {
+                                 console.log('MOBILE DEBUG: Guests selected:', value);
+                                 setSelectedGuests(value);
+                                 setValidationStatus(prev => ({ ...prev, guests: !!value }));
+                               }}
+                             >
+                               <SelectTrigger className="touch-manipulation h-12">
+                                 <SelectValue placeholder="Select guest count" />
+                               </SelectTrigger>
+                               <SelectContent className="z-50 bg-background border border-border shadow-lg">
+                                 {Array.from({ length: 10 }, (_, i) => (
+                                   <SelectItem key={i + 1} value={String(i + 1)} className="touch-manipulation">
+                                     {i + 1} {i === 0 ? 'Guest' : 'Guests'}
+                                   </SelectItem>
+                                 ))}
+                               </SelectContent>
+                             </Select>
+                             {selectedGuests && (
+                               <div className="text-xs text-green-600 mt-1">
+                                 ✓ {selectedGuests} Guest{selectedGuests !== '1' ? 's' : ''} selected
+                               </div>
+                             )}
                             {/* Hidden inputs for mobile fallback */}
                             <input type="hidden" name="guests" value={selectedGuests} />
                             <select name="guests" style={{ display: 'none' }} value={selectedGuests}>
@@ -649,32 +658,48 @@ const Reservations = () => {
                                 Preferred Time
                                 {validationStatus.time && <span className="text-green-500 text-xs">✓</span>}
                               </Label>
-                              <Select 
-                                value={selectedTime} 
-                                onValueChange={(value) => {
-                                  console.log('MOBILE DEBUG: Time selected:', value);
-                                  setSelectedTime(value);
-                                  setValidationStatus(prev => ({ ...prev, time: !!value }));
-                                }}
-                              >
-                                <SelectTrigger className="touch-manipulation h-12">
-                                  <SelectValue placeholder="Select time" />
-                                </SelectTrigger>
-                                <SelectContent className="z-50 bg-popover">
-                                  <SelectItem value="15:00" className="touch-manipulation">3:00 PM</SelectItem>
-                                  <SelectItem value="15:30" className="touch-manipulation">3:30 PM</SelectItem>
-                                  <SelectItem value="16:00" className="touch-manipulation">4:00 PM</SelectItem>
-                                  <SelectItem value="16:30" className="touch-manipulation">4:30 PM</SelectItem>
-                                  <SelectItem value="17:00" className="touch-manipulation">5:00 PM</SelectItem>
-                                  <SelectItem value="17:30" className="touch-manipulation">5:30 PM</SelectItem>
-                                  <SelectItem value="18:00" className="touch-manipulation">6:00 PM</SelectItem>
-                                  <SelectItem value="18:30" className="touch-manipulation">6:30 PM</SelectItem>
-                                  <SelectItem value="19:00" className="touch-manipulation">7:00 PM</SelectItem>
-                                  <SelectItem value="19:30" className="touch-manipulation">7:30 PM</SelectItem>
-                                  <SelectItem value="20:00" className="touch-manipulation">8:00 PM</SelectItem>
-                                  <SelectItem value="20:30" className="touch-manipulation">8:30 PM</SelectItem>
-                                </SelectContent>
-                              </Select>
+                               <Select 
+                                 value={selectedTime} 
+                                 onValueChange={(value) => {
+                                   console.log('MOBILE DEBUG: Time selected:', value);
+                                   setSelectedTime(value);
+                                   setValidationStatus(prev => ({ ...prev, time: !!value }));
+                                 }}
+                               >
+                                 <SelectTrigger className="touch-manipulation h-12">
+                                   <SelectValue placeholder="Select time" />
+                                 </SelectTrigger>
+                                 <SelectContent className="z-50 bg-background border border-border shadow-lg">
+                                   <SelectItem value="15:00" className="touch-manipulation">3:00 PM</SelectItem>
+                                   <SelectItem value="15:30" className="touch-manipulation">3:30 PM</SelectItem>
+                                   <SelectItem value="16:00" className="touch-manipulation">4:00 PM</SelectItem>
+                                   <SelectItem value="16:30" className="touch-manipulation">4:30 PM</SelectItem>
+                                   <SelectItem value="17:00" className="touch-manipulation">5:00 PM</SelectItem>
+                                   <SelectItem value="17:30" className="touch-manipulation">5:30 PM</SelectItem>
+                                   <SelectItem value="18:00" className="touch-manipulation">6:00 PM</SelectItem>
+                                   <SelectItem value="18:30" className="touch-manipulation">6:30 PM</SelectItem>
+                                   <SelectItem value="19:00" className="touch-manipulation">7:00 PM</SelectItem>
+                                   <SelectItem value="19:30" className="touch-manipulation">7:30 PM</SelectItem>
+                                   <SelectItem value="20:00" className="touch-manipulation">8:00 PM</SelectItem>
+                                   <SelectItem value="20:30" className="touch-manipulation">8:30 PM</SelectItem>
+                                 </SelectContent>
+                               </Select>
+                               {selectedTime && (
+                                 <div className="text-xs text-green-600 mt-1">
+                                   ✓ {selectedTime === '15:00' ? '3:00 PM' : 
+                                      selectedTime === '15:30' ? '3:30 PM' : 
+                                      selectedTime === '16:00' ? '4:00 PM' : 
+                                      selectedTime === '16:30' ? '4:30 PM' : 
+                                      selectedTime === '17:00' ? '5:00 PM' : 
+                                      selectedTime === '17:30' ? '5:30 PM' : 
+                                      selectedTime === '18:00' ? '6:00 PM' : 
+                                      selectedTime === '18:30' ? '6:30 PM' : 
+                                      selectedTime === '19:00' ? '7:00 PM' : 
+                                      selectedTime === '19:30' ? '7:30 PM' : 
+                                      selectedTime === '20:00' ? '8:00 PM' : 
+                                      selectedTime === '20:30' ? '8:30 PM' : selectedTime} selected
+                                 </div>
+                               )}
                               {/* Hidden inputs for mobile fallback */}
                               <input type="hidden" name="time" value={selectedTime} />
                               <select name="time" style={{ display: 'none' }} value={selectedTime}>

@@ -358,7 +358,7 @@ const Reservations = () => {
             >
               <CardContent className="p-6 text-center">
                 <Music className="w-12 h-12 mx-auto mb-4 text-primary" />
-                <h3 className="text-lg font-semibold mb-2">Entertainment</h3>
+                <h3 className="text-lg font-semibold mb-2">Social</h3>
                 <p className="text-muted-foreground text-sm">
                   Book a table for our Social experience (9PM - 5AM)
                 </p>

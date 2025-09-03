@@ -57,7 +57,13 @@ const Reservations = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    console.log('Reservation form submitted');
+    console.log('=== MOBILE DEBUG: Reservation form submitted ===');
+    console.log('User agent:', navigator.userAgent);
+    console.log('Selected service:', selectedService);
+    console.log('Reservation type:', reservationType);
+    console.log('Selected date:', selectedDate);
+    console.log('Selected guests state:', selectedGuests);
+    console.log('Selected time state:', selectedTime);
     
     try {
       // Get phone number based on reservation type
@@ -75,8 +81,12 @@ const Reservations = () => {
         phoneFieldType = "social";
       }
       
+      console.log('MOBILE DEBUG: Phone number collected:', phoneNumber);
+      console.log('MOBILE DEBUG: Phone field type:', phoneFieldType);
+      
       // Validate phone number
       if (!validatePhoneNumber(phoneNumber)) {
+        console.log('MOBILE DEBUG: Phone validation failed');
         setPhoneErrors(prev => ({
           ...prev,
           [phoneFieldType]: "Please enter a valid phone number in format (XXX) XXX-XXXX"
@@ -95,24 +105,62 @@ const Reservations = () => {
         [phoneFieldType]: ""
       }));
       
+      // Mobile-specific form data collection
       const formData = new FormData(e.target as HTMLFormElement);
+      console.log('MOBILE DEBUG: FormData entries:');
+      for (const [key, value] of formData.entries()) {
+        console.log(`  ${key}: ${value}`);
+      }
+      
+      // Get form values with mobile-safe fallbacks
       const guestName = formData.get('name') as string;
       const guestEmail = formData.get('email') as string;
       
-      // Get guests from state or formdata with fallback
-      let guestCount = parseInt(selectedGuests || formData.get('guests') as string || "1");
+      // For mobile, prioritize state values over FormData
+      let guestCount;
+      if (selectedGuests && selectedGuests !== "") {
+        guestCount = parseInt(selectedGuests);
+        console.log('MOBILE DEBUG: Using guests from state:', guestCount);
+      } else {
+        const formGuests = formData.get('guests') as string;
+        guestCount = parseInt(formGuests || "1");
+        console.log('MOBILE DEBUG: Using guests from FormData:', guestCount);
+      }
       
-      // Validate required fields
-      if (!guestName || !guestEmail || !guestCount || !selectedDate) {
+      // Mobile-safe time collection
+      let timeSlot = selectedTime;
+      if (!timeSlot) {
+        timeSlot = formData.get('time') as string;
+        console.log('MOBILE DEBUG: Time from FormData:', timeSlot);
+      }
+      
+      console.log('MOBILE DEBUG: Final form values:', { 
+        guestName, 
+        guestEmail, 
+        guestCount, 
+        phoneNumber, 
+        selectedDate,
+        timeSlot 
+      });
+      
+      // Enhanced mobile validation with specific error messages
+      const missingFields = [];
+      if (!guestName?.trim()) missingFields.push("Name");
+      if (!guestEmail?.trim()) missingFields.push("Email");
+      if (!guestCount || isNaN(guestCount)) missingFields.push("Number of guests");
+      if (!selectedDate) missingFields.push("Date");
+      if (!phoneNumber?.trim()) missingFields.push("Phone number");
+      
+      if (missingFields.length > 0) {
+        const errorMessage = `Please complete the following fields: ${missingFields.join(', ')}`;
+        console.log('MOBILE DEBUG: Missing fields:', missingFields);
         toast({
           title: "Missing Information",
-          description: "Please fill in all required fields",
+          description: errorMessage,
           variant: "destructive"
         });
         return;
       }
-      
-      console.log('Form data:', { guestName, guestEmail, guestCount, phoneNumber, selectedDate });
     
       let eventId = null;
       
@@ -406,13 +454,22 @@ const Reservations = () => {
                       <div className="space-y-4">
                         <div>
                           <Label>Preferred Date</Label>
-                          <Calendar
-                            mode="single"
-                            selected={selectedDate}
-                            onSelect={setSelectedDate}
-                            className="rounded-md border touch-manipulation"
-                            disabled={(date) => date < new Date()}
-                          />
+                           <Calendar
+                             mode="single"
+                             selected={selectedDate}
+                             onSelect={(date) => {
+                               console.log('MOBILE DEBUG: Calendar date selected:', date);
+                               setSelectedDate(date);
+                             }}
+                             className="rounded-md border touch-manipulation w-full"
+                             disabled={(date) => date < new Date()}
+                             modifiers={{
+                               today: new Date()
+                             }}
+                             modifiersStyles={{
+                               today: { backgroundColor: 'hsl(var(--primary))', color: 'white' }
+                             }}
+                           />
                         </div>
                         <div>
                           <Label htmlFor="event-details">Event Details & Requirements</Label>
@@ -507,51 +564,72 @@ const Reservations = () => {
                           </div>
                           <div>
                             <Label htmlFor="guests">Number of Guests</Label>
-                            <Select value={selectedGuests} onValueChange={setSelectedGuests}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select guest count" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Array.from({ length: 10 }, (_, i) => (
-                                  <SelectItem key={i + 1} value={String(i + 1)}>
-                                    {i + 1} {i === 0 ? 'Guest' : 'Guests'}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                           <Select 
+                             value={selectedGuests} 
+                             onValueChange={(value) => {
+                               console.log('MOBILE DEBUG: Guests selected:', value);
+                               setSelectedGuests(value);
+                             }}
+                           >
+                             <SelectTrigger className="touch-manipulation h-12">
+                               <SelectValue placeholder="Select guest count" />
+                             </SelectTrigger>
+                             <SelectContent className="z-50 bg-popover">
+                               {Array.from({ length: 10 }, (_, i) => (
+                                 <SelectItem key={i + 1} value={String(i + 1)} className="touch-manipulation">
+                                   {i + 1} {i === 0 ? 'Guest' : 'Guests'}
+                                 </SelectItem>
+                               ))}
+                             </SelectContent>
+                           </Select>
                           </div>
-                          <div>
-                            <Label htmlFor="time">Preferred Time</Label>
-                            <Select value={selectedTime} onValueChange={setSelectedTime}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select time" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="15:00">3:00 PM</SelectItem>
-                                <SelectItem value="15:30">3:30 PM</SelectItem>
-                                <SelectItem value="16:00">4:00 PM</SelectItem>
-                                <SelectItem value="16:30">4:30 PM</SelectItem>
-                                <SelectItem value="17:00">5:00 PM</SelectItem>
-                                <SelectItem value="17:30">5:30 PM</SelectItem>
-                                <SelectItem value="18:00">6:00 PM</SelectItem>
-                                <SelectItem value="18:30">6:30 PM</SelectItem>
-                                <SelectItem value="19:00">7:00 PM</SelectItem>
-                                <SelectItem value="19:30">7:30 PM</SelectItem>
-                                <SelectItem value="20:00">8:00 PM</SelectItem>
-                                <SelectItem value="20:30">8:30 PM</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
+                           <div>
+                             <Label htmlFor="time">Preferred Time</Label>
+                             <Select 
+                               value={selectedTime} 
+                               onValueChange={(value) => {
+                                 console.log('MOBILE DEBUG: Time selected:', value);
+                                 setSelectedTime(value);
+                               }}
+                             >
+                               <SelectTrigger className="touch-manipulation h-12">
+                                 <SelectValue placeholder="Select time" />
+                               </SelectTrigger>
+                               <SelectContent className="z-50 bg-popover">
+                                 <SelectItem value="15:00" className="touch-manipulation">3:00 PM</SelectItem>
+                                 <SelectItem value="15:30" className="touch-manipulation">3:30 PM</SelectItem>
+                                 <SelectItem value="16:00" className="touch-manipulation">4:00 PM</SelectItem>
+                                 <SelectItem value="16:30" className="touch-manipulation">4:30 PM</SelectItem>
+                                 <SelectItem value="17:00" className="touch-manipulation">5:00 PM</SelectItem>
+                                 <SelectItem value="17:30" className="touch-manipulation">5:30 PM</SelectItem>
+                                 <SelectItem value="18:00" className="touch-manipulation">6:00 PM</SelectItem>
+                                 <SelectItem value="18:30" className="touch-manipulation">6:30 PM</SelectItem>
+                                 <SelectItem value="19:00" className="touch-manipulation">7:00 PM</SelectItem>
+                                 <SelectItem value="19:30" className="touch-manipulation">7:30 PM</SelectItem>
+                                 <SelectItem value="20:00" className="touch-manipulation">8:00 PM</SelectItem>
+                                 <SelectItem value="20:30" className="touch-manipulation">8:30 PM</SelectItem>
+                               </SelectContent>
+                             </Select>
+                           </div>
                         </div>
                         <div>
                           <Label>Select Date</Label>
-                          <Calendar
-                            mode="single"
-                            selected={selectedDate}
-                            onSelect={setSelectedDate}
-                            className="rounded-md border touch-manipulation"
-                            disabled={(date) => date < new Date()}
-                          />
+                           <Calendar
+                             mode="single"
+                             selected={selectedDate}
+                             onSelect={(date) => {
+                               console.log('MOBILE DEBUG: Dining calendar date selected:', date);
+                               setSelectedDate(date);
+                             }}
+                             className="rounded-md border touch-manipulation w-full"
+                             disabled={(date) => date < new Date()}
+                             modifiers={{
+                               today: new Date()
+                             }}
+                             modifiersStyles={{
+                               today: { backgroundColor: 'hsl(var(--primary))', color: 'white' }
+                             }}
+                           />
                         </div>
                       </div>
                       <Button type="submit" className="w-full" variant="luxury" disabled={isSubmitting}>
@@ -625,13 +703,19 @@ const Reservations = () => {
                            </div>
                            <div>
                              <Label htmlFor="party-size">Party Size</Label>
-                             <Select value={selectedGuests} onValueChange={setSelectedGuests}>
-                               <SelectTrigger>
+                             <Select 
+                               value={selectedGuests} 
+                               onValueChange={(value) => {
+                                 console.log('MOBILE DEBUG: Party size selected:', value);
+                                 setSelectedGuests(value);
+                               }}
+                             >
+                               <SelectTrigger className="touch-manipulation h-12">
                                  <SelectValue placeholder="Select party size" />
                                </SelectTrigger>
-                               <SelectContent>
+                               <SelectContent className="z-50 bg-popover">
                                  {Array.from({ length: 15 }, (_, i) => (
-                                   <SelectItem key={i + 1} value={String(i + 1)}>
+                                   <SelectItem key={i + 1} value={String(i + 1)} className="touch-manipulation">
                                      {i + 1} {i === 0 ? 'Person' : 'People'}
                                    </SelectItem>
                                  ))}
@@ -640,27 +724,42 @@ const Reservations = () => {
                            </div>
                           <div>
                             <Label htmlFor="table-type">Table Preference</Label>
-                            <Select value={selectedTableType} onValueChange={setSelectedTableType}>
-                              <SelectTrigger>
+                            <Select 
+                              value={selectedTableType} 
+                              onValueChange={(value) => {
+                                console.log('MOBILE DEBUG: Table type selected:', value);
+                                setSelectedTableType(value);
+                              }}
+                            >
+                              <SelectTrigger className="touch-manipulation h-12">
                                 <SelectValue placeholder="Select table type" />
                               </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="regular">Regular Table</SelectItem>
-                                <SelectItem value="vip">VIP Section</SelectItem>
-                                <SelectItem value="booth">Premium Booth</SelectItem>
+                              <SelectContent className="z-50 bg-popover">
+                                <SelectItem value="regular" className="touch-manipulation">Regular Table</SelectItem>
+                                <SelectItem value="vip" className="touch-manipulation">VIP Section</SelectItem>
+                                <SelectItem value="booth" className="touch-manipulation">Premium Booth</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                         </div>
                         <div>
                           <Label>Select Date</Label>
-                          <Calendar
-                            mode="single"
-                            selected={selectedDate}
-                            onSelect={setSelectedDate}
-                            className="rounded-md border touch-manipulation"
-                            disabled={(date) => date < new Date()}
-                          />
+                           <Calendar
+                             mode="single"
+                             selected={selectedDate}
+                             onSelect={(date) => {
+                               console.log('MOBILE DEBUG: Nightlife calendar date selected:', date);
+                               setSelectedDate(date);
+                             }}
+                             className="rounded-md border touch-manipulation w-full"
+                             disabled={(date) => date < new Date()}
+                             modifiers={{
+                               today: new Date()
+                             }}
+                             modifiersStyles={{
+                               today: { backgroundColor: 'hsl(var(--primary))', color: 'white' }
+                             }}
+                           />
                         </div>
                       </div>
                       <Button type="submit" className="w-full" variant="royal" disabled={isSubmitting}>

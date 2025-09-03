@@ -317,14 +317,14 @@ const Reservations = () => {
                 }
               }} className="mb-8">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="dining">Restaurant (3PM - 9PM)</TabsTrigger>
+                  <TabsTrigger value="dining">Dinner (3PM - 9PM)</TabsTrigger>
                   <TabsTrigger value="nightlife">Nightlife (9PM - 5AM)</TabsTrigger>
                 </TabsList>
 
               <TabsContent value="dining">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Restaurant Reservation</CardTitle>
+                    <CardTitle>Restaurant Dinner Reservation</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleReservation} className="space-y-6">

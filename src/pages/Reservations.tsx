@@ -16,12 +16,21 @@ import { toast } from "@/hooks/use-toast";
 import { Utensils, Music, Users } from "lucide-react";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatPhoneNumber, validatePhoneNumber } from "@/lib/utils";
 
 const Reservations = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [reservationType, setReservationType] = useState("dining");
   const [showSelectionModal, setShowSelectionModal] = useState(true);
   const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [privateEventPhone, setPrivateEventPhone] = useState("");
+  const [diningPhone, setDiningPhone] = useState("");
+  const [socialPhone, setSocialPhone] = useState("");
+  const [phoneErrors, setPhoneErrors] = useState({
+    privateEvent: "",
+    dining: "",
+    social: ""
+  });
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -41,6 +50,41 @@ const Reservations = () => {
   const handleReservation = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Reservation form submitted');
+    
+    // Get phone number based on reservation type
+    let phoneNumber = "";
+    let phoneFieldType = "";
+    
+    if (selectedService === "private") {
+      phoneNumber = privateEventPhone;
+      phoneFieldType = "privateEvent";
+    } else if (reservationType === "dining") {
+      phoneNumber = diningPhone;
+      phoneFieldType = "dining";
+    } else if (reservationType === "nightlife") {
+      phoneNumber = socialPhone;
+      phoneFieldType = "social";
+    }
+    
+    // Validate phone number
+    if (!validatePhoneNumber(phoneNumber)) {
+      setPhoneErrors(prev => ({
+        ...prev,
+        [phoneFieldType]: "Please enter a valid phone number in format (XXX) XXX-XXXX"
+      }));
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter a valid phone number in format (XXX) XXX-XXXX",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Clear phone error if validation passes
+    setPhoneErrors(prev => ({
+      ...prev,
+      [phoneFieldType]: ""
+    }));
     
     const formData = new FormData(e.target as HTMLFormElement);
     const guestName = formData.get('name') as string;
@@ -246,7 +290,24 @@ const Reservations = () => {
                         </div>
                         <div>
                           <Label htmlFor="event-phone">Phone Number</Label>
-                          <Input id="event-phone" type="tel" placeholder="Enter your phone" required />
+                          <Input 
+                            id="event-phone" 
+                            name="phone"
+                            type="tel" 
+                            placeholder="(XXX) XXX-XXXX" 
+                            value={privateEventPhone}
+                            onChange={(e) => {
+                              const formatted = formatPhoneNumber(e.target.value);
+                              setPrivateEventPhone(formatted);
+                              if (phoneErrors.privateEvent) {
+                                setPhoneErrors(prev => ({ ...prev, privateEvent: "" }));
+                              }
+                            }}
+                            required 
+                          />
+                          {phoneErrors.privateEvent && (
+                            <p className="text-sm text-destructive mt-1">{phoneErrors.privateEvent}</p>
+                          )}
                         </div>
                         <div>
                           <Label htmlFor="event-type">Event Type</Label>
@@ -340,7 +401,24 @@ const Reservations = () => {
                           </div>
                           <div>
                             <Label htmlFor="phone">Phone Number</Label>
-                            <Input id="phone" name="phone" type="tel" placeholder="Enter your phone" required />
+                            <Input 
+                              id="phone" 
+                              name="phone" 
+                              type="tel" 
+                              placeholder="(XXX) XXX-XXXX"
+                              value={diningPhone}
+                              onChange={(e) => {
+                                const formatted = formatPhoneNumber(e.target.value);
+                                setDiningPhone(formatted);
+                                if (phoneErrors.dining) {
+                                  setPhoneErrors(prev => ({ ...prev, dining: "" }));
+                                }
+                              }}
+                              required 
+                            />
+                            {phoneErrors.dining && (
+                              <p className="text-sm text-destructive mt-1">{phoneErrors.dining}</p>
+                            )}
                           </div>
                           <div>
                             <Label htmlFor="guests">Number of Guests</Label>
@@ -417,7 +495,24 @@ const Reservations = () => {
                            </div>
                            <div>
                              <Label htmlFor="night-phone">Phone Number</Label>
-                             <Input id="night-phone" name="phone" type="tel" placeholder="Enter your phone" required />
+                             <Input 
+                               id="night-phone" 
+                               name="phone" 
+                               type="tel" 
+                               placeholder="(XXX) XXX-XXXX"
+                               value={socialPhone}
+                               onChange={(e) => {
+                                 const formatted = formatPhoneNumber(e.target.value);
+                                 setSocialPhone(formatted);
+                                 if (phoneErrors.social) {
+                                   setPhoneErrors(prev => ({ ...prev, social: "" }));
+                                 }
+                               }}
+                               required 
+                             />
+                             {phoneErrors.social && (
+                               <p className="text-sm text-destructive mt-1">{phoneErrors.social}</p>
+                             )}
                            </div>
                            <div>
                              <Label htmlFor="party-size">Party Size</Label>

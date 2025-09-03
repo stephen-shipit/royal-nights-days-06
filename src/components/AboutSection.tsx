@@ -9,9 +9,7 @@ const AboutSection = () => {
               <h2 className="text-5xl md:text-6xl font-bold text-primary mb-6">
                 A FUSION OF
               </h2>
-              <h3 className="text-3xl md:text-4xl luxury-text font-bold mb-8">
-                MEDITERRANEAN & AMERICAN FLAVORS
-              </h3>
+              <h3 className="text-3xl md:text-4xl luxury-text font-bold mb-8">MEDITERRANEAN &amp; AFRICAN FLAVORS</h3>
             </div>
             
             <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">

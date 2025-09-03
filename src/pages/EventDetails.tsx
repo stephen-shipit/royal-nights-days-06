@@ -36,6 +36,7 @@ type Event = {
   block_table_reservations?: boolean;
   external_reservation_url?: string;
   block_message?: string;
+  tickets_url?: string;
 };
 
 type VenueTable = {
@@ -438,6 +439,20 @@ const EventDetails = () => {
                           </p>
                         </div>
                       </div>
+                      
+                      {/* Ticket Purchase Section - Mobile */}
+                      {event.tickets_url && (
+                        <div className="border-t border-border pt-4 mt-4">
+                          <Button 
+                            variant="luxury" 
+                            size="lg"
+                            className="w-full"
+                            onClick={() => window.open(event.tickets_url, '_blank')}
+                          >
+                            🎫 Buy Event Tickets
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -626,6 +641,20 @@ const EventDetails = () => {
                       </p>
                     </div>
                   </div>
+                  
+                  {/* Ticket Purchase Section - Desktop */}
+                  {event.tickets_url && (
+                    <div className="border-t border-border pt-4 mt-4">
+                      <Button 
+                        variant="luxury" 
+                        size="lg"
+                        className="w-full"
+                        onClick={() => window.open(event.tickets_url, '_blank')}
+                      >
+                        🎫 Buy Event Tickets
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

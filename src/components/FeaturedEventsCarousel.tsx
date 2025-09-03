@@ -43,7 +43,14 @@ const FeaturedEventsCarousel = () => {
       if (error) {
         console.error('Error fetching featured events:', error);
       } else {
-        setFeaturedEvents(data || []);
+        // Filter out past events - only show today's events and future events
+        const today = new Date().toISOString().split('T')[0];
+        const currentAndFutureEvents = (data || []).filter(event => {
+          const eventDate = parseLocalDate(event.date);
+          const todayDate = parseLocalDate(today);
+          return eventDate >= todayDate;
+        });
+        setFeaturedEvents(currentAndFutureEvents);
       }
     } catch (error) {
       console.error('Error fetching featured events:', error);

@@ -75,6 +75,11 @@ const Events = () => {
   };
 
   const filteredEvents = events.filter(event => {
+    // Filter out past events - only show today's events and future events
+    const eventDate = parseLocalDate(event.date);
+    const todayDate = parseLocalDate(today);
+    const isNotPast = eventDate >= todayDate;
+    
     const matchesCategory = selectedCategory === "All" || event.category === selectedCategory;
     const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -90,19 +95,11 @@ const Events = () => {
       matchesPrice = event.price_range === "expensive";
     }
     
-    return matchesCategory && matchesSearch && matchesPrice;
+    return isNotPast && matchesCategory && matchesSearch && matchesPrice;
   }).sort((a, b) => {
-    // Sort upcoming events first, then by date
+    // Sort by date (ascending)
     const aDate = parseLocalDate(a.date);
     const bDate = parseLocalDate(b.date);
-    const todayDate = parseLocalDate(today);
-    
-    const aIsUpcoming = aDate >= todayDate;
-    const bIsUpcoming = bDate >= todayDate;
-    
-    if (aIsUpcoming && !bIsUpcoming) return -1;
-    if (!aIsUpcoming && bIsUpcoming) return 1;
-    
     return aDate.getTime() - bDate.getTime();
   });
 

@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Utensils, Music, Users } from "lucide-react";
+import { Utensils, Music, Users, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPhoneNumber, validatePhoneNumber } from "@/lib/utils";
@@ -26,6 +26,12 @@ const Reservations = () => {
   const [privateEventPhone, setPrivateEventPhone] = useState("");
   const [diningPhone, setDiningPhone] = useState("");
   const [socialPhone, setSocialPhone] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedGuests, setSelectedGuests] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
+  const [selectedEventType, setSelectedEventType] = useState("");
+  const [selectedBudget, setSelectedBudget] = useState("");
+  const [selectedTableType, setSelectedTableType] = useState("");
   const [phoneErrors, setPhoneErrors] = useState({
     privateEvent: "",
     dining: "",
@@ -49,49 +55,65 @@ const Reservations = () => {
 
   const handleReservation = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    
     console.log('Reservation form submitted');
     
-    // Get phone number based on reservation type
-    let phoneNumber = "";
-    let phoneFieldType = "";
-    
-    if (selectedService === "private") {
-      phoneNumber = privateEventPhone;
-      phoneFieldType = "privateEvent";
-    } else if (reservationType === "dining") {
-      phoneNumber = diningPhone;
-      phoneFieldType = "dining";
-    } else if (reservationType === "nightlife") {
-      phoneNumber = socialPhone;
-      phoneFieldType = "social";
-    }
-    
-    // Validate phone number
-    if (!validatePhoneNumber(phoneNumber)) {
+    try {
+      // Get phone number based on reservation type
+      let phoneNumber = "";
+      let phoneFieldType = "";
+      
+      if (selectedService === "private") {
+        phoneNumber = privateEventPhone;
+        phoneFieldType = "privateEvent";
+      } else if (reservationType === "dining") {
+        phoneNumber = diningPhone;
+        phoneFieldType = "dining";
+      } else if (reservationType === "nightlife") {
+        phoneNumber = socialPhone;
+        phoneFieldType = "social";
+      }
+      
+      // Validate phone number
+      if (!validatePhoneNumber(phoneNumber)) {
+        setPhoneErrors(prev => ({
+          ...prev,
+          [phoneFieldType]: "Please enter a valid phone number in format (XXX) XXX-XXXX"
+        }));
+        toast({
+          title: "Invalid Phone Number",
+          description: "Please enter a valid phone number in format (XXX) XXX-XXXX",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Clear phone error if validation passes
       setPhoneErrors(prev => ({
         ...prev,
-        [phoneFieldType]: "Please enter a valid phone number in format (XXX) XXX-XXXX"
+        [phoneFieldType]: ""
       }));
-      toast({
-        title: "Invalid Phone Number",
-        description: "Please enter a valid phone number in format (XXX) XXX-XXXX",
-        variant: "destructive"
-      });
-      return;
-    }
+      
+      const formData = new FormData(e.target as HTMLFormElement);
+      const guestName = formData.get('name') as string;
+      const guestEmail = formData.get('email') as string;
+      
+      // Get guests from state or formdata with fallback
+      let guestCount = parseInt(selectedGuests || formData.get('guests') as string || "1");
+      
+      // Validate required fields
+      if (!guestName || !guestEmail || !guestCount || !selectedDate) {
+        toast({
+          title: "Missing Information",
+          description: "Please fill in all required fields",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log('Form data:', { guestName, guestEmail, guestCount, phoneNumber, selectedDate });
     
-    // Clear phone error if validation passes
-    setPhoneErrors(prev => ({
-      ...prev,
-      [phoneFieldType]: ""
-    }));
-    
-    const formData = new FormData(e.target as HTMLFormElement);
-    const guestName = formData.get('name') as string;
-    const guestEmail = formData.get('email') as string;
-    const guestCount = parseInt(formData.get('guests') as string);
-    
-    try {
       let eventId = null;
       
       // Only get event for nightlife reservations
@@ -178,6 +200,8 @@ const Reservations = () => {
         description: `Failed to submit reservation: ${errorMessage}`,
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -278,21 +302,37 @@ const Reservations = () => {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleReservation} className="space-y-6">
+                    {/* Hidden inputs for controlled values */}
+                    <input type="hidden" name="phone" value={privateEventPhone} />
+                    <input type="hidden" name="event_type" value={selectedEventType} />
+                    <input type="hidden" name="budget" value={selectedBudget} />
+                    <input type="hidden" name="selected_date" value={selectedDate?.toISOString().split('T')[0] || ''} />
+                    
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="space-y-4">
                         <div>
                           <Label htmlFor="event-name">Full Name</Label>
-                          <Input id="event-name" placeholder="Enter your name" required />
+                          <Input 
+                            id="event-name" 
+                            name="name" 
+                            placeholder="Enter your name" 
+                            required 
+                          />
                         </div>
                         <div>
                           <Label htmlFor="event-email">Email</Label>
-                          <Input id="event-email" type="email" placeholder="Enter your email" required />
+                          <Input 
+                            id="event-email" 
+                            name="email" 
+                            type="email" 
+                            placeholder="Enter your email" 
+                            required 
+                          />
                         </div>
                         <div>
                           <Label htmlFor="event-phone">Phone Number</Label>
                           <Input 
                             id="event-phone" 
-                            name="phone"
                             type="tel" 
                             placeholder="(XXX) XXX-XXXX" 
                             value={privateEventPhone}
@@ -311,7 +351,7 @@ const Reservations = () => {
                         </div>
                         <div>
                           <Label htmlFor="event-type">Event Type</Label>
-                          <Select>
+                          <Select value={selectedEventType} onValueChange={setSelectedEventType}>
                             <SelectTrigger>
                               <SelectValue placeholder="Select event type" />
                             </SelectTrigger>
@@ -326,11 +366,17 @@ const Reservations = () => {
                         </div>
                         <div>
                           <Label htmlFor="guest-count">Expected Guest Count</Label>
-                          <Input id="guest-count" type="number" placeholder="Number of guests" required />
+                          <Input 
+                            id="guest-count" 
+                            name="guest_count" 
+                            type="number" 
+                            placeholder="Number of guests" 
+                            required 
+                          />
                         </div>
                         <div>
                           <Label htmlFor="budget">Estimated Budget</Label>
-                          <Select>
+                          <Select value={selectedBudget} onValueChange={setSelectedBudget}>
                             <SelectTrigger>
                               <SelectValue placeholder="Select budget range" />
                             </SelectTrigger>
@@ -350,21 +396,30 @@ const Reservations = () => {
                             mode="single"
                             selected={selectedDate}
                             onSelect={setSelectedDate}
-                            className="rounded-md border"
+                            className="rounded-md border touch-manipulation"
+                            disabled={(date) => date < new Date()}
                           />
                         </div>
                         <div>
                           <Label htmlFor="event-details">Event Details & Requirements</Label>
                           <textarea
                             id="event-details"
+                            name="event_details"
                             placeholder="Please describe your event, any special requirements, catering needs, etc."
-                            className="w-full h-32 p-3 border rounded-md resize-none"
+                            className="w-full h-32 p-3 border rounded-md resize-none touch-manipulation"
                           />
                         </div>
                       </div>
                     </div>
-                    <Button type="submit" className="w-full">
-                      Submit Private Event Inquiry
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        "Submit Private Event Inquiry"
+                      )}
                     </Button>
                   </form>
                 </CardContent>
@@ -389,21 +444,37 @@ const Reservations = () => {
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleReservation} className="space-y-6">
+                      {/* Hidden inputs for controlled values */}
+                      <input type="hidden" name="phone" value={diningPhone} />
+                      <input type="hidden" name="guests" value={selectedGuests} />
+                      <input type="hidden" name="preferred_time" value={selectedTime} />
+                      <input type="hidden" name="selected_date" value={selectedDate?.toISOString().split('T')[0] || ''} />
+                      
                       <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                           <div>
                             <Label htmlFor="name">Full Name</Label>
-                            <Input id="name" name="name" placeholder="Enter your name" required />
+                            <Input 
+                              id="name" 
+                              name="name" 
+                              placeholder="Enter your name" 
+                              required 
+                            />
                           </div>
                           <div>
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" name="email" type="email" placeholder="Enter your email" required />
+                            <Input 
+                              id="email" 
+                              name="email" 
+                              type="email" 
+                              placeholder="Enter your email" 
+                              required 
+                            />
                           </div>
                           <div>
                             <Label htmlFor="phone">Phone Number</Label>
                             <Input 
                               id="phone" 
-                              name="phone" 
                               type="tel" 
                               placeholder="(XXX) XXX-XXXX"
                               value={diningPhone}
@@ -422,7 +493,7 @@ const Reservations = () => {
                           </div>
                           <div>
                             <Label htmlFor="guests">Number of Guests</Label>
-                            <Select name="guests">
+                            <Select value={selectedGuests} onValueChange={setSelectedGuests}>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select guest count" />
                               </SelectTrigger>
@@ -437,7 +508,7 @@ const Reservations = () => {
                           </div>
                           <div>
                             <Label htmlFor="time">Preferred Time</Label>
-                            <Select>
+                            <Select value={selectedTime} onValueChange={setSelectedTime}>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select time" />
                               </SelectTrigger>
@@ -464,12 +535,20 @@ const Reservations = () => {
                             mode="single"
                             selected={selectedDate}
                             onSelect={setSelectedDate}
-                            className="rounded-md border"
+                            className="rounded-md border touch-manipulation"
+                            disabled={(date) => date < new Date()}
                           />
                         </div>
                       </div>
-                      <Button type="submit" className="w-full" variant="luxury">
-                        Reserve Table
+                      <Button type="submit" className="w-full" variant="luxury" disabled={isSubmitting}>
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Reserving...
+                          </>
+                        ) : (
+                          "Reserve Table"
+                        )}
                       </Button>
                     </form>
                   </CardContent>
@@ -483,21 +562,37 @@ const Reservations = () => {
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleReservation} className="space-y-6">
+                      {/* Hidden inputs for controlled values */}
+                      <input type="hidden" name="phone" value={socialPhone} />
+                      <input type="hidden" name="guests" value={selectedGuests} />
+                      <input type="hidden" name="table_type" value={selectedTableType} />
+                      <input type="hidden" name="selected_date" value={selectedDate?.toISOString().split('T')[0] || ''} />
+                      
                       <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                            <div>
                              <Label htmlFor="night-name">Full Name</Label>
-                             <Input id="night-name" name="name" placeholder="Enter your name" required />
+                             <Input 
+                               id="night-name" 
+                               name="name" 
+                               placeholder="Enter your name" 
+                               required 
+                             />
                            </div>
                            <div>
                              <Label htmlFor="night-email">Email</Label>
-                             <Input id="night-email" name="email" type="email" placeholder="Enter your email" required />
+                             <Input 
+                               id="night-email" 
+                               name="email" 
+                               type="email" 
+                               placeholder="Enter your email" 
+                               required 
+                             />
                            </div>
                            <div>
                              <Label htmlFor="night-phone">Phone Number</Label>
                              <Input 
                                id="night-phone" 
-                               name="phone" 
                                type="tel" 
                                placeholder="(XXX) XXX-XXXX"
                                value={socialPhone}
@@ -516,7 +611,7 @@ const Reservations = () => {
                            </div>
                            <div>
                              <Label htmlFor="party-size">Party Size</Label>
-                             <Select name="guests">
+                             <Select value={selectedGuests} onValueChange={setSelectedGuests}>
                                <SelectTrigger>
                                  <SelectValue placeholder="Select party size" />
                                </SelectTrigger>
@@ -531,7 +626,7 @@ const Reservations = () => {
                            </div>
                           <div>
                             <Label htmlFor="table-type">Table Preference</Label>
-                            <Select>
+                            <Select value={selectedTableType} onValueChange={setSelectedTableType}>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select table type" />
                               </SelectTrigger>
@@ -549,12 +644,20 @@ const Reservations = () => {
                             mode="single"
                             selected={selectedDate}
                             onSelect={setSelectedDate}
-                            className="rounded-md border"
+                            className="rounded-md border touch-manipulation"
+                            disabled={(date) => date < new Date()}
                           />
                         </div>
                       </div>
-                      <Button type="submit" className="w-full" variant="royal">
-                        Reserve Night Table
+                      <Button type="submit" className="w-full" variant="royal" disabled={isSubmitting}>
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Reserving...
+                          </>
+                        ) : (
+                          "Reserve Night Table"
+                        )}
                       </Button>
                     </form>
                   </CardContent>

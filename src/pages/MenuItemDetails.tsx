@@ -11,16 +11,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, ChefHat, Clock, Users } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type MenuItem = Database["public"]["Tables"]["menu_items"]["Row"];
 
 const MenuItemDetails = () => {
   const { menuItemId } = useParams<{ menuItemId: string }>();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [item, setItem] = useState<MenuItem | null>(null);
   const [relatedItems, setRelatedItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const fetchMenuItem = async () => {
@@ -68,65 +71,95 @@ const MenuItemDetails = () => {
     fetchMenuItem();
   }, [menuItemId]);
 
-  // SEO optimization
+  // Mobile-safe SEO optimization
   useEffect(() => {
-    if (item) {
-      // Update page title
-      document.title = `${item.name} - Royal Palace Lounge Menu`;
+    if (!item) return;
 
-      // Update meta description
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription) {
-        metaDescription.setAttribute('content', 
-          `${item.description} Available at Royal Palace Lounge. ${item.ingredients.join(', ')}. Price: ${item.price}`
-        );
+    try {
+      // Update page title safely
+      if (typeof document !== 'undefined' && document.title) {
+        document.title = `${item.name} - Royal Palace Lounge Menu`;
       }
 
-      // Add structured data
-      const structuredData = {
-        "@context": "https://schema.org",
-        "@type": "MenuItem",
-        "name": item.name,
-        "description": item.description,
-        "offers": {
-          "@type": "Offer",
-          "price": item.price.replace(/[^0-9.]/g, ''),
-          "priceCurrency": "USD"
-        },
-        "nutrition": {
-          "@type": "NutritionInformation",
-          "ingredients": item.ingredients
-        },
-        "menuAddOn": item.dietary,
-        "image": item.image_url,
-        "servedBy": {
-          "@type": "Restaurant",
-          "name": "Royal Palace Lounge"
+      // Update meta description safely
+      if (typeof document !== 'undefined') {
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) {
+          const safeIngredients = Array.isArray(item.ingredients) ? item.ingredients.join(', ') : '';
+          metaDescription.setAttribute('content', 
+            `${item.description} Available at Royal Palace Lounge. ${safeIngredients}. Price: ${item.price}`
+          );
         }
-      };
+      }
 
-      const script = document.createElement('script');
-      script.type = 'application/ld+json';
-      script.id = 'menu-item-structured-data';
-      script.text = JSON.stringify(structuredData);
-      document.head.appendChild(script);
+      // Add structured data with mobile-safe guards
+      if (typeof document !== 'undefined' && !isMobile) {
+        // Skip structured data on mobile to prevent crashes
+        const existingScript = document.getElementById('menu-item-structured-data');
+        if (!existingScript) {
+          try {
+            const structuredData = {
+              "@context": "https://schema.org",
+              "@type": "MenuItem",
+              "name": item.name,
+              "description": item.description,
+              "offers": {
+                "@type": "Offer",
+                "price": item.price.replace(/[^0-9.]/g, ''),
+                "priceCurrency": "USD"
+              },
+              "nutrition": {
+                "@type": "NutritionInformation",
+                "ingredients": Array.isArray(item.ingredients) ? item.ingredients : []
+              },
+              "menuAddOn": Array.isArray(item.dietary) ? item.dietary : [],
+              "image": item.image_url,
+              "servedBy": {
+                "@type": "Restaurant",
+                "name": "Royal Palace Lounge"
+              }
+            };
+
+            const script = document.createElement('script');
+            script.type = 'application/ld+json';
+            script.id = 'menu-item-structured-data';
+            script.text = JSON.stringify(structuredData);
+            
+            if (document.head) {
+              document.head.appendChild(script);
+            }
+          } catch (structuredDataError) {
+            console.warn('Failed to add structured data:', structuredDataError);
+          }
+        }
+      }
+    } catch (seoError) {
+      console.warn('SEO optimization failed:', seoError);
     }
 
-    // Cleanup function
+    // Cleanup function with mobile-safe guards
     return () => {
-      document.title = "Royal Palace Lounge";
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription) {
-        metaDescription.setAttribute('content', 
-          "Experience luxury dining and entertainment at Royal Palace Lounge. Premium events, exquisite cuisine, and unforgettable experiences."
-        );
-      }
-      const script = document.getElementById('menu-item-structured-data');
-      if (script) {
-        script.remove();
+      try {
+        if (typeof document !== 'undefined') {
+          document.title = "Royal Palace Lounge";
+          
+          const metaDescription = document.querySelector('meta[name="description"]');
+          if (metaDescription) {
+            metaDescription.setAttribute('content', 
+              "Experience luxury dining and entertainment at Royal Palace Lounge. Premium events, exquisite cuisine, and unforgettable experiences."
+            );
+          }
+          
+          const script = document.getElementById('menu-item-structured-data');
+          if (script && script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+        }
+      } catch (cleanupError) {
+        console.warn('Cleanup failed:', cleanupError);
       }
     };
-  }, [item]);
+  }, [item, isMobile]);
 
   if (loading) {
     return (
@@ -202,14 +235,14 @@ const MenuItemDetails = () => {
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             {/* Image */}
             <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-              {item.image_url ? (
+              {item.image_url && !imageErrors[item.id] ? (
                 <img 
                   src={item.image_url} 
                   alt={item.name}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    target.src = '/api/placeholder/600/600';
+                  loading={isMobile ? "lazy" : "eager"}
+                  onError={() => {
+                    setImageErrors(prev => ({ ...prev, [item.id]: true }));
                   }}
                 />
               ) : (
@@ -268,14 +301,14 @@ const MenuItemDetails = () => {
                   >
                     <Card className="hover:shadow-lg transition-shadow">
                       <div className="aspect-video bg-muted overflow-hidden">
-                        {relatedItem.image_url ? (
+                        {relatedItem.image_url && !imageErrors[relatedItem.id] ? (
                           <img 
                             src={relatedItem.image_url} 
                             alt={relatedItem.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              const target = e.currentTarget;
-                              target.src = '/api/placeholder/300/200';
+                            className={`w-full h-full object-cover ${!isMobile ? 'group-hover:scale-105 transition-transform duration-300' : ''}`}
+                            loading="lazy"
+                            onError={() => {
+                              setImageErrors(prev => ({ ...prev, [relatedItem.id]: true }));
                             }}
                           />
                         ) : (

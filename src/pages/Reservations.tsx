@@ -60,6 +60,15 @@ const Reservations = () => {
     }
   }, [searchParams, setSearchParams]);
 
+  // Helper function to check if a date is Monday or Tuesday (closed days)
+  const isRestaurantClosed = (date: Date): boolean => {
+    const dayOfWeek = date.getDay();
+    return dayOfWeek === 1 || dayOfWeek === 2; // Monday = 1, Tuesday = 2
+  };
+
+  // Check if restaurant is closed today
+  const isClosedToday = isRestaurantClosed(new Date());
+
   // Helper function to convert 24-hour time to 12-hour format
   const convertTo12Hour = (time24: string): string => {
     if (!time24) return '';
@@ -402,6 +411,16 @@ const Reservations = () => {
               <p className="text-lg text-muted-foreground">
                 Book your table for an unforgettable dining or nightlife experience
               </p>
+              {isClosedToday && (
+                <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <p className="text-destructive font-medium">
+                    We're currently closed on Mondays and Tuesdays.
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Please visit us Wednesday through Sunday or make a reservation for future dates.
+                  </p>
+                </div>
+              )}
             </div>
 
             {selectedService && selectedService === "private" ? (
@@ -410,7 +429,17 @@ const Reservations = () => {
                   <CardTitle>Private Event Inquiry</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleReservation} className="space-y-6">
+                  {isClosedToday ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">
+                        Private event inquiries are not available while we're closed. Please visit us Wednesday through Sunday.
+                      </p>
+                      <Button onClick={openServiceModal} className="mt-4">
+                        Choose Another Service
+                      </Button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleReservation} className="space-y-6">
                     {/* Hidden inputs for controlled values */}
                     <input type="hidden" name="phone" value={privateEventPhone} />
                     <input type="hidden" name="event_type" value={selectedEventType} />
@@ -501,22 +530,28 @@ const Reservations = () => {
                       <div className="space-y-4">
                         <div>
                           <Label>Preferred Date</Label>
-                           <Calendar
-                             mode="single"
-                             selected={selectedDate}
-                             onSelect={(date) => {
-                               console.log('MOBILE DEBUG: Calendar date selected:', date);
-                               setSelectedDate(date);
-                             }}
-                             className="rounded-md border touch-manipulation w-full"
-                             disabled={(date) => date < new Date()}
-                             modifiers={{
-                               today: new Date()
-                             }}
-                             modifiersStyles={{
-                               today: { backgroundColor: 'hsl(var(--primary))', color: 'white' }
-                             }}
-                           />
+                            <Calendar
+                              mode="single"
+                              selected={selectedDate}
+                              onSelect={(date) => {
+                                console.log('MOBILE DEBUG: Calendar date selected:', date);
+                                setSelectedDate(date);
+                              }}
+                              className="rounded-md border touch-manipulation w-full"
+                              disabled={(date) => {
+                                // Block past dates
+                                if (date < new Date()) return true;
+                                // Block Mondays (1) and Tuesdays (2) - we're closed
+                                const dayOfWeek = date.getDay();
+                                return dayOfWeek === 1 || dayOfWeek === 2;
+                              }}
+                              modifiers={{
+                                today: new Date()
+                              }}
+                              modifiersStyles={{
+                                today: { backgroundColor: 'hsl(var(--primary))', color: 'white' }
+                              }}
+                            />
                         </div>
                         <div>
                           <Label htmlFor="event-details">Event Details & Requirements</Label>
@@ -540,6 +575,7 @@ const Reservations = () => {
                       )}
                     </Button>
                   </form>
+                  )}
                 </CardContent>
               </Card>
             ) : selectedService ? (
@@ -561,7 +597,17 @@ const Reservations = () => {
                     <CardTitle>Restaurant Dinner Reservation</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form onSubmit={handleReservation} className="space-y-6">
+                    {isClosedToday ? (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">
+                          Dinner reservations are not available while we're closed. Please visit us Wednesday through Sunday.
+                        </p>
+                        <Button onClick={openServiceModal} className="mt-4">
+                          Choose Another Service
+                        </Button>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleReservation} className="space-y-6">
                       {/* Hidden inputs for controlled values */}
                       <input type="hidden" name="phone" value={diningPhone} />
                       <input type="hidden" name="guests" value={selectedGuests} />
@@ -767,19 +813,30 @@ const Reservations = () => {
                         ) : (
                           "Reserve Table"
                         )}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                       </Button>
+                     </form>
+                     )}
+                   </CardContent>
+                 </Card>
+               </TabsContent>
 
-              <TabsContent value="nightlife">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Social Hours Reservation</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleReservation} className="space-y-6">
+               <TabsContent value="nightlife">
+                 <Card>
+                   <CardHeader>
+                     <CardTitle>Social Hours Reservation</CardTitle>
+                   </CardHeader>
+                   <CardContent>
+                     {isClosedToday ? (
+                       <div className="text-center py-8">
+                         <p className="text-muted-foreground">
+                           Social hours reservations are not available while we're closed. Please visit us Wednesday through Sunday.
+                         </p>
+                         <Button onClick={openServiceModal} className="mt-4">
+                           Choose Another Service
+                         </Button>
+                       </div>
+                     ) : (
+                       <form onSubmit={handleReservation} className="space-y-6">
                       {/* Hidden inputs for controlled values */}
                       <input type="hidden" name="phone" value={socialPhone} />
                       <input type="hidden" name="guests" value={selectedGuests} />
@@ -870,22 +927,28 @@ const Reservations = () => {
                         </div>
                         <div>
                           <Label>Select Date</Label>
-                           <Calendar
-                             mode="single"
-                             selected={selectedDate}
-                             onSelect={(date) => {
-                               console.log('MOBILE DEBUG: Nightlife calendar date selected:', date);
-                               setSelectedDate(date);
-                             }}
-                             className="rounded-md border touch-manipulation w-full"
-                             disabled={(date) => date < new Date()}
-                             modifiers={{
-                               today: new Date()
-                             }}
-                             modifiersStyles={{
-                               today: { backgroundColor: 'hsl(var(--primary))', color: 'white' }
-                             }}
-                           />
+                            <Calendar
+                              mode="single"
+                              selected={selectedDate}
+                              onSelect={(date) => {
+                                console.log('MOBILE DEBUG: Nightlife calendar date selected:', date);
+                                setSelectedDate(date);
+                              }}
+                              className="rounded-md border touch-manipulation w-full"
+                              disabled={(date) => {
+                                // Block past dates
+                                if (date < new Date()) return true;
+                                // Block Mondays (1) and Tuesdays (2) - we're closed
+                                const dayOfWeek = date.getDay();
+                                return dayOfWeek === 1 || dayOfWeek === 2;
+                              }}
+                              modifiers={{
+                                today: new Date()
+                              }}
+                              modifiersStyles={{
+                                today: { backgroundColor: 'hsl(var(--primary))', color: 'white' }
+                              }}
+                            />
                         </div>
                       </div>
                       <Button type="submit" className="w-full" variant="royal" disabled={isSubmitting}>
@@ -897,11 +960,12 @@ const Reservations = () => {
                         ) : (
                           "Reserve Night Table"
                         )}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                       </Button>
+                     </form>
+                     )}
+                   </CardContent>
+                 </Card>
+               </TabsContent>
             </Tabs>
             ) : null}
           </div>

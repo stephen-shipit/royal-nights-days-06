@@ -60,6 +60,16 @@ const Reservations = () => {
     }
   }, [searchParams, setSearchParams]);
 
+  // Helper function to convert 24-hour time to 12-hour format
+  const convertTo12Hour = (time24: string): string => {
+    if (!time24) return '';
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours, 10);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${hour12}:${minutes} ${period}`;
+  };
+
   const handleReservation = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -232,7 +242,7 @@ const Reservations = () => {
         guest_count: guestCount,
         guest_phone: phoneNumber,
         reservation_type: reservationType,
-        time_slot: reservationType === 'dining' ? '3pm-9pm' : '9pm-5am',
+        time_slot: reservationType === 'dining' ? convertTo12Hour(timeSlot) : '9pm-5am',
         status: 'pending'
       };
       
@@ -723,23 +733,29 @@ const Reservations = () => {
                             </div>
                         </div>
                         <div>
-                          <Label>Select Date</Label>
-                           <Calendar
-                             mode="single"
-                             selected={selectedDate}
-                             onSelect={(date) => {
-                               console.log('MOBILE DEBUG: Dining calendar date selected:', date);
-                               setSelectedDate(date);
-                             }}
-                             className="rounded-md border touch-manipulation w-full"
-                             disabled={(date) => date < new Date()}
-                             modifiers={{
-                               today: new Date()
-                             }}
-                             modifiersStyles={{
-                               today: { backgroundColor: 'hsl(var(--primary))', color: 'white' }
-                             }}
-                           />
+                           <Label>Select Date</Label>
+                            <Calendar
+                              mode="single"
+                              selected={selectedDate}
+                              onSelect={(date) => {
+                                console.log('MOBILE DEBUG: Dining calendar date selected:', date);
+                                setSelectedDate(date);
+                              }}
+                              className="rounded-md border touch-manipulation w-full"
+                              disabled={(date) => {
+                                // Block past dates
+                                if (date < new Date()) return true;
+                                // Block Mondays (1) and Tuesdays (2) - we're closed
+                                const dayOfWeek = date.getDay();
+                                return dayOfWeek === 1 || dayOfWeek === 2;
+                              }}
+                              modifiers={{
+                                today: new Date()
+                              }}
+                              modifiersStyles={{
+                                today: { backgroundColor: 'hsl(var(--primary))', color: 'white' }
+                              }}
+                            />
                         </div>
                       </div>
                       <Button type="submit" className="w-full" variant="luxury" disabled={isSubmitting}>

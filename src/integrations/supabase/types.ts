@@ -367,6 +367,151 @@ export type Database = {
         }
         Relationships: []
       }
+      membership_levels: {
+        Row: {
+          created_at: string
+          description: string
+          duration_months: number
+          id: string
+          max_daily_scans: number
+          multi_user_enabled: boolean
+          name: string
+          perks: Json
+          price: number
+          sort_order: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          duration_months?: number
+          id?: string
+          max_daily_scans?: number
+          multi_user_enabled?: boolean
+          name: string
+          perks?: Json
+          price?: number
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          duration_months?: number
+          id?: string
+          max_daily_scans?: number
+          multi_user_enabled?: boolean
+          name?: string
+          perks?: Json
+          price?: number
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      membership_scan_logs: {
+        Row: {
+          created_at: string
+          event_name: string | null
+          id: string
+          membership_id: string
+          scan_status: string
+          scanned_at: string
+          scanned_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_name?: string | null
+          id?: string
+          membership_id: string
+          scan_status: string
+          scanned_at?: string
+          scanned_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_name?: string | null
+          id?: string
+          membership_id?: string
+          scan_status?: string
+          scanned_at?: string
+          scanned_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_scan_logs_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "memberships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memberships: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          expiration_date: string
+          full_name: string
+          id: string
+          last_scan_reset_date: string
+          membership_level_id: string
+          payment_status: string
+          phone: string | null
+          purchase_date: string
+          qr_code_token: string
+          remaining_daily_scans: number
+          stripe_session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email: string
+          expiration_date: string
+          full_name: string
+          id?: string
+          last_scan_reset_date?: string
+          membership_level_id: string
+          payment_status?: string
+          phone?: string | null
+          purchase_date?: string
+          qr_code_token: string
+          remaining_daily_scans?: number
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          expiration_date?: string
+          full_name?: string
+          id?: string
+          last_scan_reset_date?: string
+          membership_level_id?: string
+          payment_status?: string
+          phone?: string | null
+          purchase_date?: string
+          qr_code_token?: string
+          remaining_daily_scans?: number
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memberships_membership_level_id_fkey"
+            columns: ["membership_level_id"]
+            isOneToOne: false
+            referencedRelation: "membership_levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_items: {
         Row: {
           category: string
@@ -645,9 +790,18 @@ export type Database = {
       }
       mark_password_changed: { Args: { user_id: string }; Returns: undefined }
       reset_admin_password: { Args: { p_user_id: string }; Returns: string }
+      reset_membership_daily_scans: { Args: never; Returns: undefined }
       update_admin_user_role: {
         Args: { p_role: string; p_user_id: string }
         Returns: undefined
+      }
+      validate_membership_scan: {
+        Args: {
+          p_event_name?: string
+          p_qr_token: string
+          p_scanned_by?: string
+        }
+        Returns: Json
       }
     }
     Enums: {

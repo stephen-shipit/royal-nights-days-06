@@ -137,7 +137,7 @@ const VIPMemberships = () => {
                     <Button 
                       className="w-full" 
                       size="lg"
-                      onClick={() => navigate(`/vip/membership/${level.id}`)}
+                      onClick={() => navigate(`/vip-memberships/${level.id}`)}
                     >
                       View Details
                     </Button>

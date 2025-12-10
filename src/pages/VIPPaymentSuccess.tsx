@@ -71,7 +71,7 @@ const VIPPaymentSuccess = () => {
             <Crown className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <h1 className="text-xl font-bold mb-2">Something Went Wrong</h1>
             <p className="text-muted-foreground mb-6">{error}</p>
-            <Button onClick={() => navigate("/vip")}>Back to Memberships</Button>
+            <Button onClick={() => navigate("/vip-memberships")}>Back to Memberships</Button>
           </CardContent>
         </Card>
       </div>

@@ -131,7 +131,7 @@ const VIPPurchase = () => {
         <div className="container mx-auto px-4 py-24 text-center">
           <Crown className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
           <h1 className="text-2xl font-bold mb-4">Membership Not Found</h1>
-          <Button onClick={() => navigate("/vip")}>View All Memberships</Button>
+          <Button onClick={() => navigate("/vip-memberships")}>View All Memberships</Button>
         </div>
         <Footer />
       </div>
@@ -152,7 +152,7 @@ const VIPPurchase = () => {
           <Button 
             variant="ghost" 
             className="mb-8"
-            onClick={() => navigate(`/vip/membership/${levelId}`)}
+            onClick={() => navigate(`/vip-memberships/${levelId}`)}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Details

@@ -36,6 +36,9 @@ const Header = () => {
             <Link to="/events" className="text-primary-foreground hover:text-secondary transition-colors duration-300">
               Events
             </Link>
+            <Link to="/vip-memberships" className="text-primary-foreground hover:text-secondary transition-colors duration-300">
+              VIP
+            </Link>
           </nav>
 
           {/* CTA Buttons */}

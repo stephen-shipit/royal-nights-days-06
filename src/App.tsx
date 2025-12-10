@@ -7,6 +7,9 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import Index from "./pages/Index";
 import Reservations from "./pages/Reservations";
+import Careers from "./pages/Careers";
+import CareerDetail from "./pages/CareerDetail";
+import CareerThankYou from "./pages/CareerThankYou";
 import Menu from "./pages/Menu";
 import MenuItemDetails from "./pages/MenuItemDetails";
 import Gallery from "./pages/Gallery";
@@ -74,6 +77,9 @@ const App = () => {
               <Route path="/perform" element={<Perform />} />
               <Route path="/royal-mic-thursdays" element={<RoyalMicThursdays />} />
               <Route path="/thank-you" element={<ThankYou />} />
+              <Route path="/careers" element={<Careers />} />
+              <Route path="/careers/thank-you" element={<CareerThankYou />} />
+              <Route path="/careers/:jobId" element={<CareerDetail />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/admin/table-layout" element={<AdminTableLayout />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />

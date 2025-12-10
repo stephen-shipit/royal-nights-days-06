@@ -21,7 +21,7 @@ export type Database = {
           created_at: string
           details: Json | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
         }
         Insert: {
@@ -30,7 +30,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
         }
         Update: {
@@ -39,7 +39,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
         }
         Relationships: []
@@ -527,38 +527,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_expired_reservations: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_expired_reservations: { Args: never; Returns: undefined }
       create_admin_user: {
         Args: { p_email: string; p_role?: string }
         Returns: Json
       }
-      delete_admin_user: {
-        Args: { p_user_id: string }
-        Returns: undefined
-      }
-      has_temporary_password: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      delete_admin_user: { Args: { p_user_id: string }; Returns: undefined }
+      has_temporary_password: { Args: { user_id: string }; Returns: boolean }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
       is_table_available: {
         Args: { p_event_id: string; p_table_id: string }
         Returns: boolean
       }
-      mark_password_changed: {
-        Args: { user_id: string }
-        Returns: undefined
-      }
-      reset_admin_password: {
-        Args: { p_user_id: string }
-        Returns: string
-      }
+      mark_password_changed: { Args: { user_id: string }; Returns: undefined }
+      reset_admin_password: { Args: { p_user_id: string }; Returns: string }
       update_admin_user_role: {
         Args: { p_role: string; p_user_id: string }
         Returns: undefined

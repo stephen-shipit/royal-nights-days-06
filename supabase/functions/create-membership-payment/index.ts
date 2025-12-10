@@ -101,8 +101,8 @@ serve(async (req) => {
       mode: "payment",
       allow_promotion_codes: true,
       billing_address_collection: "required",
-      success_url: `${req.headers.get("origin")}/vip/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/vip/membership/${membershipLevelId}`,
+      success_url: `${req.headers.get("origin")}/vip-payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get("origin")}/vip-memberships/${membershipLevelId}`,
       metadata: {
         membershipLevelId,
         fullName,

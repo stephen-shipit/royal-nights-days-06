@@ -53,7 +53,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           membership,
-          cardUrl: `/vip/card/${membership.qr_code_token}` 
+          cardUrl: `/vip-card/${membership.qr_code_token}` 
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -78,7 +78,7 @@ serve(async (req) => {
     try {
       const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
       const origin = req.headers.get("origin") || "https://royalpalacedtx.com";
-      const cardUrl = `${origin}/vip/card/${membership.qr_code_token}`;
+      const cardUrl = `${origin}/vip-card/${membership.qr_code_token}`;
 
       await resend.emails.send({
         from: "Royal Palace DTX <noreply@royalpalacedtx.com>",
@@ -123,7 +123,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         membership,
-        cardUrl: `/vip/card/${membership.qr_code_token}` 
+        cardUrl: `/vip-card/${membership.qr_code_token}` 
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

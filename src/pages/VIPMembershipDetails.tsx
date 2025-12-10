@@ -76,7 +76,7 @@ const VIPMembershipDetails = () => {
           <Crown className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
           <h1 className="text-2xl font-bold mb-4">Membership Not Found</h1>
           <p className="text-muted-foreground mb-8">This membership level doesn't exist or is no longer available.</p>
-          <Button onClick={() => navigate("/vip")}>View All Memberships</Button>
+          <Button onClick={() => navigate("/vip-memberships")}>View All Memberships</Button>
         </div>
         <Footer />
       </div>
@@ -97,7 +97,7 @@ const VIPMembershipDetails = () => {
           <Button 
             variant="ghost" 
             className="mb-8"
-            onClick={() => navigate("/vip")}
+            onClick={() => navigate("/vip-memberships")}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Memberships
@@ -189,7 +189,7 @@ const VIPMembershipDetails = () => {
                   <Button 
                     className="w-full" 
                     size="lg"
-                    onClick={() => navigate(`/vip/purchase/${level.id}`)}
+                    onClick={() => navigate(`/vip-purchase/${level.id}`)}
                   >
                     <Crown className="h-5 w-5 mr-2" />
                     Purchase Membership - {formatPrice(level.price)}

@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List, Mail, Eye, Settings, FileText, Check } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Calendar, Image, Utensils, MapPin, Layers, Grid, List, Mail, Eye, Settings, FileText, Check, Briefcase } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { BulkImageUpload } from "@/components/BulkImageUpload";
 import { CreateReservationTableSelector } from "@/components/CreateReservationTableSelector";
@@ -26,6 +26,7 @@ import AdminFooter from "@/components/AdminFooter";
 import NotificationSettings from "@/components/NotificationSettings";
 import UserManagement from "@/components/UserManagement";
 import FormDataManagement from "@/components/FormDataManagement";
+import AdminJobsManagement from "@/components/AdminJobsManagement";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -250,7 +251,7 @@ const Admin = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-10">
+            <TabsList className="grid w-full grid-cols-11">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Overview
@@ -282,6 +283,10 @@ const Admin = () => {
               <TabsTrigger value="forms" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Form Data
+              </TabsTrigger>
+              <TabsTrigger value="jobs" className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4" />
+                Jobs
               </TabsTrigger>
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
@@ -493,6 +498,10 @@ const Admin = () => {
 
             <TabsContent value="forms">
               <FormDataManagement />
+            </TabsContent>
+
+            <TabsContent value="jobs">
+              <AdminJobsManagement />
             </TabsContent>
 
             <TabsContent value="users">

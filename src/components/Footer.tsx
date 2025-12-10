@@ -53,6 +53,11 @@ const Footer = () => {
                   Reservations
                 </Link>
               </li>
+              <li>
+                <Link to="/careers" className="text-primary-foreground/80 hover:text-secondary transition-colors">
+                  Careers & Gigs
+                </Link>
+              </li>
             </ul>
           </div>
 

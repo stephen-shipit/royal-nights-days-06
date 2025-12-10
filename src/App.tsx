@@ -27,6 +27,12 @@ import CookiePolicy from "./pages/CookiePolicy";
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
+import VIPMemberships from "./pages/VIPMemberships";
+import VIPMembershipDetails from "./pages/VIPMembershipDetails";
+import VIPPurchase from "./pages/VIPPurchase";
+import VIPCard from "./pages/VIPCard";
+import VIPPaymentSuccess from "./pages/VIPPaymentSuccess";
+import VIPScanner from "./pages/VIPScanner";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -87,6 +93,12 @@ const App = () => {
               <Route path="/cookie-policy" element={<CookiePolicy />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+              <Route path="/vip-memberships" element={<VIPMemberships />} />
+              <Route path="/vip-memberships/:levelId" element={<VIPMembershipDetails />} />
+              <Route path="/vip-purchase/:levelId" element={<VIPPurchase />} />
+              <Route path="/vip-card/:token" element={<VIPCard />} />
+              <Route path="/vip-payment-success" element={<VIPPaymentSuccess />} />
+              <Route path="/vip-scanner" element={<VIPScanner />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

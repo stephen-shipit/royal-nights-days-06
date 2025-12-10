@@ -263,6 +263,110 @@ export type Database = {
         }
         Relationships: []
       }
+      job_applications: {
+        Row: {
+          availability: string
+          city_state: string
+          cover_letter_url: string | null
+          created_at: string
+          email: string
+          experience_summary: string
+          full_name: string
+          id: string
+          job_id: string
+          late_night_ok: boolean
+          phone: string
+          resume_url: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["application_status"]
+          updated_at: string
+        }
+        Insert: {
+          availability: string
+          city_state: string
+          cover_letter_url?: string | null
+          created_at?: string
+          email: string
+          experience_summary: string
+          full_name: string
+          id?: string
+          job_id: string
+          late_night_ok?: boolean
+          phone: string
+          resume_url?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Update: {
+          availability?: string
+          city_state?: string
+          cover_letter_url?: string | null
+          created_at?: string
+          email?: string
+          experience_summary?: string
+          full_name?: string
+          id?: string
+          job_id?: string
+          late_night_ok?: boolean
+          phone?: string
+          resume_url?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          compensation: string | null
+          created_at: string
+          employment_type: Database["public"]["Enums"]["employment_type"]
+          full_description: string
+          id: string
+          location: string
+          requirements: string
+          short_description: string
+          status: Database["public"]["Enums"]["job_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          compensation?: string | null
+          created_at?: string
+          employment_type?: Database["public"]["Enums"]["employment_type"]
+          full_description: string
+          id?: string
+          location?: string
+          requirements: string
+          short_description: string
+          status?: Database["public"]["Enums"]["job_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          compensation?: string | null
+          created_at?: string
+          employment_type?: Database["public"]["Enums"]["employment_type"]
+          full_description?: string
+          id?: string
+          location?: string
+          requirements?: string
+          short_description?: string
+          status?: Database["public"]["Enums"]["job_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           category: string
@@ -547,7 +651,14 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      application_status:
+        | "new"
+        | "reviewing"
+        | "interview"
+        | "rejected"
+        | "hired"
+      employment_type: "full-time" | "part-time" | "gig" | "contractor"
+      job_status: "active" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -674,6 +785,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      application_status: [
+        "new",
+        "reviewing",
+        "interview",
+        "rejected",
+        "hired",
+      ],
+      employment_type: ["full-time", "part-time", "gig", "contractor"],
+      job_status: ["active", "archived"],
+    },
   },
 } as const

@@ -22,8 +22,11 @@ interface MembershipLevel {
   card_image_url: string | null;
 }
 
+type BillingCycle = "monthly" | "yearly";
+
 const VIPMemberships = () => {
   const navigate = useNavigate();
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("yearly");
 
   const { data: levels, isLoading } = useQuery({
     queryKey: ["public-membership-levels"],
@@ -38,6 +41,14 @@ const VIPMemberships = () => {
     },
   });
 
+  // Filter levels based on billing cycle
+  const filteredLevels = levels?.filter((level) => {
+    if (billingCycle === "monthly") {
+      return level.duration_months >= 1 && level.duration_months <= 3;
+    }
+    return level.duration_months === 12 || level.duration_months === 0;
+  });
+
   const formatPrice = (cents: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -48,8 +59,10 @@ const VIPMemberships = () => {
 
   const getDurationText = (months: number) => {
     if (months === 0) return "Lifetime";
-    if (months === 1) return "Monthly";
-    if (months === 12) return "Yearly";
+    if (months === 1) return "1 Month";
+    if (months === 2) return "2 Months";
+    if (months === 3) return "3 Months";
+    if (months === 12) return "Year";
     return `${months} Months`;
   };
 
@@ -78,16 +91,44 @@ const VIPMemberships = () => {
           </div>
         </section>
 
+        {/* Billing Toggle */}
+        <section className="py-8 container mx-auto px-4">
+          <div className="flex justify-center">
+            <div className="inline-flex items-center bg-muted rounded-full p-1">
+              <button
+                onClick={() => setBillingCycle("monthly")}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  billingCycle === "monthly"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Monthly (1-3 Months)
+              </button>
+              <button
+                onClick={() => setBillingCycle("yearly")}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  billingCycle === "yearly"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Yearly (Best Value)
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* Membership Cards */}
-        <section className="py-16 container mx-auto px-4">
+        <section className="pb-16 container mx-auto px-4">
           {isLoading ? (
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
               <p className="mt-4 text-muted-foreground">Loading memberships...</p>
             </div>
-          ) : levels && levels.length > 0 ? (
+          ) : filteredLevels && filteredLevels.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {levels.map((level, index) => (
+              {filteredLevels.map((level, index) => (
                 <Card 
                   key={level.id} 
                   className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${

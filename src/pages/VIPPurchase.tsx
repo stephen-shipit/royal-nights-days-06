@@ -8,10 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Crown, ArrowLeft, Loader2 } from "lucide-react";
+import { Crown, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
 import { formatPhoneNumber, validatePhoneNumber } from "@/lib/utils";
+import { z } from "zod";
 
 interface MembershipLevel {
   id: string;
@@ -35,11 +36,16 @@ const VIPPurchase = () => {
   const selectedDuration: DurationOption = [1, 2, 3, 12].includes(durationParam) ? durationParam : 12;
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
   
   const [form, setForm] = useState({
     fullName: "",
     email: "",
     phone: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const { data: level, isLoading } = useQuery({
@@ -92,11 +98,55 @@ const VIPPurchase = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError("");
     
     if (!form.fullName.trim() || !form.email.trim()) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate email
+    const emailSchema = z.string().trim().email({ message: "Invalid email address" });
+    const emailResult = emailSchema.safeParse(form.email);
+    if (!emailResult.success) {
+      toast({
+        title: "Invalid Email",
+        description: emailResult.error.errors[0].message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate password
+    if (!form.password) {
+      setPasswordError("Password is required");
+      toast({
+        title: "Password Required",
+        description: "Please create a password for your account.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (form.password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setPasswordError("Passwords do not match");
+      toast({
+        title: "Passwords Don't Match",
+        description: "Please make sure your passwords match.",
         variant: "destructive",
       });
       return;
@@ -120,6 +170,7 @@ const VIPPurchase = () => {
           fullName: form.fullName.trim(),
           email: form.email.trim().toLowerCase(),
           phone: form.phone || null,
+          password: form.password,
           durationMonths: selectedDuration,
           calculatedPrice: currentPrice,
         },
@@ -235,6 +286,66 @@ const VIPPurchase = () => {
                       onChange={handlePhoneChange}
                       placeholder="(555) 555-5555"
                     />
+                  </div>
+
+                  <div className="border-t pt-6">
+                    <h4 className="font-medium mb-4">Create Your Account Password</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="password">Password *</Label>
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            value={form.password}
+                            onChange={(e) => {
+                              setForm({ ...form, password: e.target.value });
+                              setPasswordError("");
+                            }}
+                            placeholder="Create a password"
+                            required
+                            minLength={6}
+                          />
+                          <button
+                            type="button"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          At least 6 characters
+                        </p>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                        <div className="relative">
+                          <Input
+                            id="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={form.confirmPassword}
+                            onChange={(e) => {
+                              setForm({ ...form, confirmPassword: e.target.value });
+                              setPasswordError("");
+                            }}
+                            placeholder="Confirm your password"
+                            required
+                          />
+                          <button
+                            type="button"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        {passwordError && (
+                          <p className="text-sm text-destructive mt-1">{passwordError}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="bg-muted rounded-lg p-4">

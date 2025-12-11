@@ -59,8 +59,10 @@ serve(async (req) => {
       );
     }
 
-    // Generate temporary password
-    const tempPassword = 'Royal' + Math.floor(Math.random() * 900000 + 100000);
+    // Get password from Stripe metadata (user-provided) or generate fallback
+    const encodedPassword = session.metadata?.userPassword;
+    const userPassword = encodedPassword ? atob(encodedPassword) : ('Royal' + Math.floor(Math.random() * 900000 + 100000));
+    const isUserProvidedPassword = !!encodedPassword;
     
     // Create or get auth user
     let userId: string | null = null;
@@ -75,15 +77,17 @@ serve(async (req) => {
         userId = existingUser.id;
         console.log("User already exists:", userId);
         
-        // Update password for existing user
-        await supabase.auth.admin.updateUserById(userId, {
-          password: tempPassword,
-        });
+        // Only update password if user provided one
+        if (isUserProvidedPassword) {
+          await supabase.auth.admin.updateUserById(userId, {
+            password: userPassword,
+          });
+        }
       } else {
-        // Create new auth user
+        // Create new auth user with user's chosen password
         const { data: authData, error: authError } = await supabase.auth.admin.createUser({
           email: membership.email.toLowerCase(),
-          password: tempPassword,
+          password: userPassword,
           email_confirm: true,
         });
         
@@ -127,6 +131,20 @@ serve(async (req) => {
       const cardUrl = `${origin}/vip-card/${membership.qr_code_token}`;
       const loginUrl = `${origin}/vip-login`;
 
+      // Build credentials section - only show password if it was system-generated
+      const credentialsSection = isUserProvidedPassword 
+        ? `<div style="background: #2a2a2a; border: 1px solid #D4AF37; border-radius: 8px; padding: 20px; margin: 25px 0;">
+            <h3 style="color: #D4AF37; margin-top: 0; text-align: center;">Your VIP Account</h3>
+            <p style="margin: 10px 0; color: #ccc;"><strong style="color: #fff;">Email:</strong> ${membership.email}</p>
+            <p style="color: #999; font-size: 12px; margin-top: 15px; text-align: center;">Use the password you created during registration to sign in.</p>
+          </div>`
+        : `<div style="background: #2a2a2a; border: 1px solid #D4AF37; border-radius: 8px; padding: 20px; margin: 25px 0;">
+            <h3 style="color: #D4AF37; margin-top: 0; text-align: center;">Your VIP Login Credentials</h3>
+            <p style="margin: 10px 0; color: #ccc;"><strong style="color: #fff;">Email:</strong> ${membership.email}</p>
+            <p style="margin: 10px 0; color: #ccc;"><strong style="color: #fff;">Temporary Password:</strong> <code style="background: #333; padding: 4px 8px; border-radius: 4px; color: #D4AF37;">${userPassword}</code></p>
+            <p style="color: #999; font-size: 12px; margin-top: 15px; text-align: center;">We recommend changing your password after logging in.</p>
+          </div>`;
+
       await resend.emails.send({
         from: "Royal Palace DTX <noreply@royalpalacedtx.com>",
         to: [membership.email],
@@ -147,12 +165,7 @@ serve(async (req) => {
                 <p style="margin: 5px 0; color: #ccc;"><strong style="color: #D4AF37;">Valid Until:</strong> ${new Date(membership.expiration_date).toLocaleDateString()}</p>
               </div>
               
-              <div style="background: #2a2a2a; border: 1px solid #D4AF37; border-radius: 8px; padding: 20px; margin: 25px 0;">
-                <h3 style="color: #D4AF37; margin-top: 0; text-align: center;">Your VIP Login Credentials</h3>
-                <p style="margin: 10px 0; color: #ccc;"><strong style="color: #fff;">Email:</strong> ${membership.email}</p>
-                <p style="margin: 10px 0; color: #ccc;"><strong style="color: #fff;">Temporary Password:</strong> <code style="background: #333; padding: 4px 8px; border-radius: 4px; color: #D4AF37;">${tempPassword}</code></p>
-                <p style="color: #999; font-size: 12px; margin-top: 15px; text-align: center;">We recommend changing your password after logging in.</p>
-              </div>
+              ${credentialsSection}
               
               <div style="text-align: center; margin-top: 30px;">
                 <a href="${cardUrl}" style="display: inline-block; background: #D4AF37; color: #000; padding: 15px 30px; text-decoration: none; font-weight: bold; border-radius: 5px; margin-right: 10px;">
@@ -173,11 +186,12 @@ serve(async (req) => {
           </div>
         `,
       });
-      console.log("Welcome email with credentials sent to:", membership.email);
+      console.log("Welcome email sent to:", membership.email);
     } catch (emailError) {
       console.error("Failed to send email:", emailError);
       // Don't fail the whole request if email fails
     }
+
 
     return new Response(
       JSON.stringify({ 

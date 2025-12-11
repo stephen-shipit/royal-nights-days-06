@@ -13,8 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Eye, Download, Crown, QrCode, Users, RefreshCw, History, CreditCard, Upload, X, Image, BarChart3 } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Download, Crown, QrCode, Users, RefreshCw, History, CreditCard, Upload, X, Image, BarChart3, Package } from "lucide-react";
 import VIPAnalyticsDashboard from "./VIPAnalyticsDashboard";
+import AdminPhysicalCardManagement from "./AdminPhysicalCardManagement";
 import { format } from "date-fns";
 
 interface MembershipLevel {
@@ -528,6 +529,10 @@ const AdminVIPManagement = () => {
               <BarChart3 className="h-4 w-4" />
               Analytics
             </TabsTrigger>
+            <TabsTrigger value="physical-cards" className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              Physical Cards
+            </TabsTrigger>
           </TabsList>
 
           {activeTab === "levels" && (
@@ -1024,6 +1029,11 @@ const AdminVIPManagement = () => {
             levels={levels} 
             isLoading={levelsLoading || membershipsLoading} 
           />
+        </TabsContent>
+
+        {/* Physical Cards Tab */}
+        <TabsContent value="physical-cards">
+          <AdminPhysicalCardManagement />
         </TabsContent>
       </Tabs>
 

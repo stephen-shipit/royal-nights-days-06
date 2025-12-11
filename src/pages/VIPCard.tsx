@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Crown, Download, Calendar, Users, Clock, Key, Eye, EyeOff, Check, LogOut } from "lucide-react";
+import { Crown, Download, Calendar, Users, Clock, Key, Eye, EyeOff, Check, LogOut, RefreshCw } from "lucide-react";
+import { differenceInDays } from "date-fns";
 import { format } from "date-fns";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
@@ -51,6 +52,8 @@ const VIPCard = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isRenewing, setIsRenewing] = useState(false);
+  const [selectedRenewalDuration, setSelectedRenewalDuration] = useState(12);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -124,6 +127,33 @@ const VIPCard = () => {
       toast.error("Failed to change password");
     } finally {
       setIsChangingPassword(false);
+    }
+  };
+
+  const handleRenewal = async () => {
+    if (!membership) return;
+    
+    setIsRenewing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("renew-membership-payment", {
+        body: {
+          membershipId: membership.id,
+          durationMonths: selectedRenewalDuration,
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No payment URL returned");
+      }
+    } catch (err: any) {
+      console.error("Renewal error:", err);
+      toast.error(err.message || "Failed to start renewal");
+    } finally {
+      setIsRenewing(false);
     }
   };
 
@@ -243,6 +273,8 @@ const VIPCard = () => {
   const isExpired = new Date(membership.expiration_date) < new Date();
   const isPending = membership.payment_status === "pending";
   const isInactive = !membership.active;
+  const daysUntilExpiry = differenceInDays(new Date(membership.expiration_date), new Date());
+  const showRenewal = daysUntilExpiry <= 30 || isExpired;
 
   return (
     <>
@@ -318,6 +350,56 @@ const VIPCard = () => {
             <Download className="h-4 w-4 mr-2" />
             Download Card Image
           </Button>
+
+          {/* Renewal Section */}
+          {showRenewal && membership.payment_status === "completed" && (
+            <Card className="border-secondary/30 bg-gradient-to-br from-gray-900/50 to-gray-800/50">
+              <CardContent className="p-4 space-y-4">
+                <div className="text-center">
+                  <RefreshCw className="h-6 w-6 mx-auto mb-2 text-secondary" />
+                  <h3 className="font-semibold text-foreground">
+                    {isExpired ? "Your Membership Has Expired" : `Expiring in ${daysUntilExpiry} days`}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {isExpired ? "Renew now to continue enjoying VIP benefits" : "Renew early to keep your benefits"}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-4 gap-2">
+                  {[1, 2, 3, 12].map((months) => (
+                    <button
+                      key={months}
+                      onClick={() => setSelectedRenewalDuration(months)}
+                      className={`p-2 rounded-lg border text-center transition-all ${
+                        selectedRenewalDuration === months
+                          ? "border-secondary bg-secondary/20 text-secondary"
+                          : "border-border bg-card hover:border-secondary/50"
+                      }`}
+                    >
+                      <span className="text-sm font-medium">
+                        {months === 12 ? "1 Year" : `${months}mo`}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <Button 
+                  className="w-full"
+                  onClick={handleRenewal}
+                  disabled={isRenewing}
+                >
+                  {isRenewing ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Renew Membership
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Change Password Section - Only for logged in users */}
           {isLoggedIn && (

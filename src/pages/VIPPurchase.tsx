@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -21,10 +21,16 @@ interface MembershipLevel {
   duration_months: number;
 }
 
+type DurationOption = 1 | 2 | 3 | 12;
+
 const VIPPurchase = () => {
   const { levelId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const durationParam = parseInt(searchParams.get("duration") || "12") as DurationOption;
+  const selectedDuration: DurationOption = [1, 2, 3, 12].includes(durationParam) ? durationParam : 12;
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [form, setForm] = useState({
@@ -48,12 +54,31 @@ const VIPPurchase = () => {
     enabled: !!levelId,
   });
 
+  // Calculate price based on selected duration
+  const calculatePrice = (yearlyPrice: number, months: DurationOption) => {
+    const monthlyRate = yearlyPrice / 12;
+    if (months === 12) return yearlyPrice;
+    if (months === 3) return Math.round(monthlyRate * 3 * 1.1);
+    if (months === 2) return Math.round(monthlyRate * 2 * 1.15);
+    return Math.round(monthlyRate * 1.2);
+  };
+
+  const currentPrice = level ? calculatePrice(level.price, selectedDuration) : 0;
+
   const formatPrice = (cents: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
     }).format(cents / 100);
+  };
+
+  const getDurationText = (months: number) => {
+    if (months === 1) return "1 Month";
+    if (months === 2) return "2 Months";
+    if (months === 3) return "3 Months";
+    if (months === 12) return "1 Year";
+    return `${months} Months`;
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,6 +116,8 @@ const VIPPurchase = () => {
           fullName: form.fullName.trim(),
           email: form.email.trim().toLowerCase(),
           phone: form.phone || null,
+          durationMonths: selectedDuration,
+          calculatedPrice: currentPrice,
         },
       });
 
@@ -163,7 +190,8 @@ const VIPPurchase = () => {
               <CardHeader className="text-center">
                 <Crown className="h-10 w-10 mx-auto mb-2 text-secondary" />
                 <CardTitle className="text-2xl">{level.name} Membership</CardTitle>
-                <p className="text-3xl font-bold mt-2">{formatPrice(level.price)}</p>
+                <p className="text-sm text-muted-foreground">{getDurationText(selectedDuration)}</p>
+                <p className="text-3xl font-bold mt-2">{formatPrice(currentPrice)}</p>
               </CardHeader>
               
               <CardContent>
@@ -227,7 +255,7 @@ const VIPPurchase = () => {
                       </>
                     ) : (
                       <>
-                        Proceed to Payment - {formatPrice(level.price)}
+                        Proceed to Payment - {formatPrice(currentPrice)}
                       </>
                     )}
                   </Button>

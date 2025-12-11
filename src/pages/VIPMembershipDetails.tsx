@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -22,9 +22,16 @@ interface MembershipLevel {
   card_image_url: string | null;
 }
 
+type DurationOption = 1 | 2 | 3 | 12;
+
 const VIPMembershipDetails = () => {
   const { levelId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const durationParam = parseInt(searchParams.get("duration") || "12") as DurationOption;
+  const [selectedDuration, setSelectedDuration] = useState<DurationOption>(
+    [1, 2, 3, 12].includes(durationParam) ? durationParam : 12
+  );
 
   const { data: level, isLoading } = useQuery({
     queryKey: ["membership-level", levelId],
@@ -41,6 +48,15 @@ const VIPMembershipDetails = () => {
     enabled: !!levelId,
   });
 
+  // Calculate price based on selected duration
+  const calculatePrice = (yearlyPrice: number, months: DurationOption) => {
+    const monthlyRate = yearlyPrice / 12;
+    if (months === 12) return yearlyPrice;
+    if (months === 3) return Math.round(monthlyRate * 3 * 1.1);
+    if (months === 2) return Math.round(monthlyRate * 2 * 1.15);
+    return Math.round(monthlyRate * 1.2);
+  };
+
   const formatPrice = (cents: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -52,9 +68,20 @@ const VIPMembershipDetails = () => {
   const getDurationText = (months: number) => {
     if (months === 0) return "Lifetime Access";
     if (months === 1) return "1 Month";
+    if (months === 2) return "2 Months";
+    if (months === 3) return "3 Months";
     if (months === 12) return "1 Year";
     return `${months} Months`;
   };
+
+  const durationOptions: { value: DurationOption; label: string }[] = [
+    { value: 1, label: "1 Month" },
+    { value: 2, label: "2 Months" },
+    { value: 3, label: "3 Months" },
+    { value: 12, label: "1 Year" },
+  ];
+
+  const currentPrice = level ? calculatePrice(level.price, selectedDuration) : 0;
 
   if (isLoading) {
     return (
@@ -126,13 +153,34 @@ const VIPMembershipDetails = () => {
               {/* Header with Pricing */}
               <div className="bg-primary text-primary-foreground p-8 text-center">
                 <Crown className="h-12 w-12 mx-auto mb-4 text-secondary" />
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">{level.name}</h1>
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  <span className="text-5xl font-bold">{formatPrice(level.price)}</span>
+                <h1 className="text-3xl md:text-4xl font-bold mb-4">{level.name}</h1>
+                
+                {/* Duration Selector */}
+                <div className="flex justify-center gap-2 mb-6">
+                  {durationOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setSelectedDuration(option.value)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                        selectedDuration === option.value
+                          ? "bg-secondary text-secondary-foreground"
+                          : "bg-primary-foreground/10 text-primary-foreground/70 hover:bg-primary-foreground/20"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-5xl font-bold">{formatPrice(currentPrice)}</span>
                   <span className="text-primary-foreground/70 text-lg">
-                    / {getDurationText(level.duration_months)}
+                    / {getDurationText(selectedDuration)}
                   </span>
                 </div>
+                {selectedDuration === 12 && (
+                  <p className="text-sm text-secondary mt-2">Best value - Save up to 20%</p>
+                )}
               </div>
               
               <CardContent className="p-8 space-y-8">
@@ -146,7 +194,7 @@ const VIPMembershipDetails = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-muted rounded-lg p-4 text-center">
                     <Clock className="h-6 w-6 mx-auto mb-2 text-secondary" />
-                    <p className="font-medium">{getDurationText(level.duration_months)}</p>
+                    <p className="font-medium">{getDurationText(selectedDuration)}</p>
                     <p className="text-sm text-muted-foreground">Duration</p>
                   </div>
                   <div className="bg-muted rounded-lg p-4 text-center">
@@ -208,10 +256,10 @@ const VIPMembershipDetails = () => {
                   <Button 
                     className="w-full" 
                     size="lg"
-                    onClick={() => navigate(`/vip-purchase/${level.id}`)}
+                    onClick={() => navigate(`/vip-purchase/${level.id}?duration=${selectedDuration}`)}
                   >
                     <Crown className="h-5 w-5 mr-2" />
-                    Purchase Membership - {formatPrice(level.price)}
+                    Purchase Membership - {formatPrice(currentPrice)}
                   </Button>
                 </div>
               </CardContent>

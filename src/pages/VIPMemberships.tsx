@@ -22,11 +22,11 @@ interface MembershipLevel {
   card_image_url: string | null;
 }
 
-type BillingCycle = "monthly" | "yearly";
+type DurationOption = 1 | 2 | 3 | 12;
 
 const VIPMemberships = () => {
   const navigate = useNavigate();
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>("yearly");
+  const [selectedDuration, setSelectedDuration] = useState<DurationOption>(12);
 
   const { data: levels, isLoading } = useQuery({
     queryKey: ["public-membership-levels"],
@@ -35,19 +35,21 @@ const VIPMemberships = () => {
         .from("membership_levels")
         .select("*")
         .eq("status", "active")
+        .eq("duration_months", 12) // Get yearly as base prices
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return data as MembershipLevel[];
     },
   });
 
-  // Filter levels based on billing cycle
-  const filteredLevels = levels?.filter((level) => {
-    if (billingCycle === "monthly") {
-      return level.duration_months >= 1 && level.duration_months <= 3;
-    }
-    return level.duration_months === 12 || level.duration_months === 0;
-  });
+  // Calculate price based on selected duration (proportional to yearly with premiums for shorter terms)
+  const calculatePrice = (yearlyPrice: number, months: DurationOption) => {
+    const monthlyRate = yearlyPrice / 12;
+    if (months === 12) return yearlyPrice;
+    if (months === 3) return Math.round(monthlyRate * 3 * 1.1); // 10% premium
+    if (months === 2) return Math.round(monthlyRate * 2 * 1.15); // 15% premium
+    return Math.round(monthlyRate * 1.2); // 20% premium for 1 month
+  };
 
   const formatPrice = (cents: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -58,13 +60,19 @@ const VIPMemberships = () => {
   };
 
   const getDurationText = (months: number) => {
-    if (months === 0) return "Lifetime";
     if (months === 1) return "1 Month";
     if (months === 2) return "2 Months";
     if (months === 3) return "3 Months";
     if (months === 12) return "Year";
     return `${months} Months`;
   };
+
+  const durationOptions: { value: DurationOption; label: string; badge?: string }[] = [
+    { value: 1, label: "1 Month" },
+    { value: 2, label: "2 Months" },
+    { value: 3, label: "3 Months" },
+    { value: 12, label: "1 Year", badge: "Best Value" },
+  ];
 
   return (
     <>
@@ -91,30 +99,28 @@ const VIPMemberships = () => {
           </div>
         </section>
 
-        {/* Billing Toggle */}
+        {/* Duration Toggle */}
         <section className="py-8 container mx-auto px-4">
           <div className="flex justify-center">
-            <div className="inline-flex items-center bg-muted rounded-full p-1">
-              <button
-                onClick={() => setBillingCycle("monthly")}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                  billingCycle === "monthly"
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Monthly (1-3 Months)
-              </button>
-              <button
-                onClick={() => setBillingCycle("yearly")}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                  billingCycle === "yearly"
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Yearly (Best Value)
-              </button>
+            <div className="inline-flex items-center bg-muted rounded-full p-1 gap-1">
+              {durationOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setSelectedDuration(option.value)}
+                  className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    selectedDuration === option.value
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {option.label}
+                  {option.badge && selectedDuration === option.value && (
+                    <span className="absolute -top-2 -right-2 bg-secondary text-secondary-foreground text-[10px] px-1.5 py-0.5 rounded-full">
+                      {option.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
           </div>
         </section>
@@ -126,17 +132,17 @@ const VIPMemberships = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
               <p className="mt-4 text-muted-foreground">Loading memberships...</p>
             </div>
-          ) : filteredLevels && filteredLevels.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {filteredLevels.map((level, index) => (
+          ) : levels && levels.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+              {levels.map((level, index) => (
                 <Card 
                   key={level.id} 
                   className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
-                    index === 1 ? "border-secondary border-2 scale-105" : ""
+                    index === 1 ? "border-secondary border-2" : ""
                   }`}
                 >
                   {index === 1 && (
-                    <div className="absolute top-0 right-0 bg-secondary text-secondary-foreground px-4 py-1 text-sm font-semibold z-10">
+                    <div className="absolute top-0 right-0 bg-secondary text-secondary-foreground px-3 py-1 text-xs font-semibold z-10">
                       Most Popular
                     </div>
                   )}
@@ -165,11 +171,14 @@ const VIPMemberships = () => {
                     </div>
                     <CardTitle className="text-2xl">{level.name}</CardTitle>
                     <div className="mt-4">
-                      <span className="text-4xl font-bold">{formatPrice(level.price)}</span>
+                      <span className="text-4xl font-bold">{formatPrice(calculatePrice(level.price, selectedDuration))}</span>
                       <span className="text-muted-foreground ml-2">
-                        / {getDurationText(level.duration_months)}
+                        / {getDurationText(selectedDuration)}
                       </span>
                     </div>
+                    {selectedDuration === 12 && (
+                      <p className="text-xs text-secondary mt-1">Save up to 20% vs monthly</p>
+                    )}
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <p className="text-muted-foreground text-center">{level.description}</p>
@@ -198,7 +207,7 @@ const VIPMemberships = () => {
                     <Button 
                       className="w-full" 
                       size="lg"
-                      onClick={() => navigate(`/vip-memberships/${level.id}`)}
+                      onClick={() => navigate(`/vip-memberships/${level.id}?duration=${selectedDuration}`)}
                     >
                       View Details
                     </Button>

@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Check, Star } from "lucide-react";
+import { Crown, Check, Star, CreditCard } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 
 interface MembershipLevel {
@@ -19,6 +19,7 @@ interface MembershipLevel {
   duration_months: number;
   multi_user_enabled: boolean;
   max_daily_scans: number;
+  card_image_url: string | null;
 }
 
 const VIPMemberships = () => {
@@ -94,10 +95,29 @@ const VIPMemberships = () => {
                   }`}
                 >
                   {index === 1 && (
-                    <div className="absolute top-0 right-0 bg-secondary text-secondary-foreground px-4 py-1 text-sm font-semibold">
+                    <div className="absolute top-0 right-0 bg-secondary text-secondary-foreground px-4 py-1 text-sm font-semibold z-10">
                       Most Popular
                     </div>
                   )}
+                  
+                  {/* Card Image Preview */}
+                  {level.card_image_url ? (
+                    <div className="relative w-full aspect-[1.6/1] overflow-hidden bg-gradient-to-br from-primary to-primary/80">
+                      <img 
+                        src={level.card_image_url} 
+                        alt={`${level.name} VIP Card`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="relative w-full aspect-[1.6/1] bg-gradient-to-br from-primary via-primary/90 to-secondary/30 flex items-center justify-center">
+                      <div className="text-center">
+                        <CreditCard className="h-12 w-12 text-primary-foreground/60 mx-auto mb-2" />
+                        <p className="text-primary-foreground/60 text-sm font-medium">{level.name} Card</p>
+                      </div>
+                    </div>
+                  )}
+                  
                   <CardHeader className="text-center pb-2">
                     <div className="flex justify-center mb-2">
                       <Star className="h-8 w-8 text-secondary" />

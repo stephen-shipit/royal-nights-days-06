@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Eye, Download, Crown, QrCode, Users, RefreshCw, History, CreditCard } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Download, Crown, QrCode, Users, RefreshCw, History, CreditCard, Upload, X, Image } from "lucide-react";
 import { format } from "date-fns";
 
 interface MembershipLevel {
@@ -28,6 +28,7 @@ interface MembershipLevel {
   status: string;
   sort_order: number;
   created_at: string;
+  card_image_url: string | null;
 }
 
 interface Membership {
@@ -78,7 +79,9 @@ const AdminVIPManagement = () => {
     max_daily_scans: 1,
     status: "active",
     sort_order: 0,
+    card_image_url: "" as string | null,
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Fetch membership levels
   const { data: levels, isLoading: levelsLoading } = useQuery({
@@ -120,6 +123,43 @@ const AdminVIPManagement = () => {
     },
   });
 
+  // Upload card image
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `vip-card-${Date.now()}.${fileExt}`;
+      const filePath = `vip-cards/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('admin-uploads')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('admin-uploads')
+        .getPublicUrl(filePath);
+
+      setLevelForm({ ...levelForm, card_image_url: publicUrl });
+      toast({
+        title: "Image Uploaded",
+        description: "Card image uploaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   // Create/Update level mutation
   const levelMutation = useMutation({
     mutationFn: async (data: typeof levelForm & { id?: string }) => {
@@ -133,6 +173,7 @@ const AdminVIPManagement = () => {
         max_daily_scans: data.max_daily_scans,
         status: data.status,
         sort_order: data.sort_order,
+        card_image_url: data.card_image_url || null,
       };
 
       if (data.id) {
@@ -242,6 +283,7 @@ const AdminVIPManagement = () => {
       max_daily_scans: 1,
       status: "active",
       sort_order: 0,
+      card_image_url: null,
     });
     setEditingLevel(null);
   };
@@ -258,6 +300,7 @@ const AdminVIPManagement = () => {
       max_daily_scans: level.max_daily_scans,
       status: level.status,
       sort_order: level.sort_order,
+      card_image_url: level.card_image_url,
     });
     setLevelDialogOpen(true);
   };
@@ -424,6 +467,52 @@ const AdminVIPManagement = () => {
                       rows={3}
                       required
                     />
+                  </div>
+
+                  {/* Card Image Upload */}
+                  <div className="space-y-2">
+                    <Label>Card Image</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Upload an image to display as the VIP card preview (recommended: 800x500px)
+                    </p>
+                    {levelForm.card_image_url ? (
+                      <div className="relative w-full max-w-xs aspect-[1.6/1] rounded-lg overflow-hidden border">
+                        <img 
+                          src={levelForm.card_image_url} 
+                          alt="Card preview" 
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-8 w-8"
+                          onClick={() => setLevelForm({ ...levelForm, card_image_url: null })}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-4">
+                        <label className="cursor-pointer">
+                          <div className="flex items-center gap-2 px-4 py-2 border rounded-md hover:bg-muted transition-colors">
+                            {uploadingImage ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                            ) : (
+                              <Upload className="h-4 w-4" />
+                            )}
+                            <span>{uploadingImage ? "Uploading..." : "Upload Image"}</span>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageUpload}
+                            disabled={uploadingImage}
+                          />
+                        </label>
+                      </div>
+                    )}
                   </div>
 
                   <div>

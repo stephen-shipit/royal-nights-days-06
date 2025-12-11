@@ -369,6 +369,7 @@ export type Database = {
       }
       membership_levels: {
         Row: {
+          card_image_url: string | null
           created_at: string
           description: string
           duration_months: number
@@ -383,6 +384,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          card_image_url?: string | null
           created_at?: string
           description?: string
           duration_months?: number
@@ -397,6 +399,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          card_image_url?: string | null
           created_at?: string
           description?: string
           duration_months?: number

@@ -66,10 +66,21 @@ const AdminVIPManagement = () => {
   const [activeTab, setActiveTab] = useState("levels");
   const [levelDialogOpen, setLevelDialogOpen] = useState(false);
   const [memberDialogOpen, setMemberDialogOpen] = useState(false);
+  const [editMemberDialogOpen, setEditMemberDialogOpen] = useState(false);
   const [editingLevel, setEditingLevel] = useState<MembershipLevel | null>(null);
   const [selectedMember, setSelectedMember] = useState<Membership | null>(null);
   const [filterLevelId, setFilterLevelId] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  
+  // Edit member form state
+  const [editMemberForm, setEditMemberForm] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    expiration_date: "",
+    active: true,
+    membership_level_id: "",
+  });
 
   // Form state for levels
   const [levelForm, setLevelForm] = useState({
@@ -247,9 +258,62 @@ const AdminVIPManagement = () => {
         description: "The membership has been updated.",
       });
     },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update membership.",
+        variant: "destructive",
+      });
+    },
   });
 
-  // Reset scan limits mutation
+  // Delete membership mutation
+  const deleteMembershipMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("memberships").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-memberships"] });
+      setMemberDialogOpen(false);
+      setSelectedMember(null);
+      toast({
+        title: "Membership Deleted",
+        description: "The membership has been deleted.",
+      });
+    },
+  });
+
+  // Extend membership mutation
+  const extendMembershipMutation = useMutation({
+    mutationFn: async ({ id, months }: { id: string; months: number }) => {
+      const membership = memberships?.find(m => m.id === id);
+      if (!membership) throw new Error("Membership not found");
+      
+      const currentExpiration = new Date(membership.expiration_date);
+      const now = new Date();
+      const startDate = currentExpiration > now ? currentExpiration : now;
+      const newExpiration = new Date(startDate);
+      newExpiration.setMonth(newExpiration.getMonth() + months);
+      
+      const { error } = await supabase
+        .from("memberships")
+        .update({ 
+          expiration_date: newExpiration.toISOString(),
+          active: true,
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-memberships"] });
+      toast({
+        title: "Membership Extended",
+        description: "The membership has been extended.",
+      });
+    },
+  });
+
   const resetScansMutation = useMutation({
     mutationFn: async (membershipId?: string) => {
       if (membershipId) {
@@ -338,6 +402,37 @@ const AdminVIPManagement = () => {
   const removePerk = (index: number) => {
     const newPerks = levelForm.perks.filter((_, i) => i !== index);
     setLevelForm({ ...levelForm, perks: newPerks.length > 0 ? newPerks : [""] });
+  };
+
+  const openEditMember = (member: Membership) => {
+    setSelectedMember(member);
+    setEditMemberForm({
+      full_name: member.full_name,
+      email: member.email,
+      phone: member.phone || "",
+      expiration_date: member.expiration_date.split('T')[0],
+      active: member.active,
+      membership_level_id: member.membership_level_id,
+    });
+    setEditMemberDialogOpen(true);
+  };
+
+  const handleEditMemberSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedMember) return;
+    
+    updateMembershipMutation.mutate({
+      id: selectedMember.id,
+      updates: {
+        full_name: editMemberForm.full_name,
+        email: editMemberForm.email,
+        phone: editMemberForm.phone || null,
+        expiration_date: new Date(editMemberForm.expiration_date).toISOString(),
+        active: editMemberForm.active,
+        membership_level_id: editMemberForm.membership_level_id,
+      },
+    });
+    setEditMemberDialogOpen(false);
   };
 
   const filteredMemberships = memberships?.filter((m) => {
@@ -960,20 +1055,153 @@ const AdminVIPManagement = () => {
                 <Label className="text-muted-foreground">QR Token</Label>
                 <p className="font-mono text-sm break-all">{selectedMember.qr_code_token}</p>
               </div>
-              <div className="flex gap-2">
+              
+              {/* Quick Extend Options */}
+              <div>
+                <Label className="text-muted-foreground mb-2 block">Quick Extend</Label>
+                <div className="flex gap-2">
+                  {[1, 3, 6, 12].map((months) => (
+                    <Button
+                      key={months}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (confirm(`Extend membership by ${months} month(s)?`)) {
+                          extendMembershipMutation.mutate({ id: selectedMember.id, months });
+                        }
+                      }}
+                    >
+                      +{months}mo
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2 border-t">
                 <Button
-                  className="flex-1"
                   variant="outline"
                   onClick={() => {
-                    window.open(`/vip/card/${selectedMember.qr_code_token}`, '_blank');
+                    window.open(`/vip-card/${selectedMember.qr_code_token}`, '_blank');
                   }}
                 >
                   <QrCode className="h-4 w-4 mr-2" />
                   View Card
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setMemberDialogOpen(false);
+                    openEditMember(selectedMember);
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    if (confirm("Are you sure you want to delete this membership? This cannot be undone.")) {
+                      deleteMembershipMutation.mutate(selectedMember.id);
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Member Dialog */}
+      <Dialog open={editMemberDialogOpen} onOpenChange={setEditMemberDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Membership</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditMemberSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-name">Full Name</Label>
+                <Input
+                  id="edit-name"
+                  value={editMemberForm.full_name}
+                  onChange={(e) => setEditMemberForm({ ...editMemberForm, full_name: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editMemberForm.email}
+                  onChange={(e) => setEditMemberForm({ ...editMemberForm, email: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-phone">Phone</Label>
+                <Input
+                  id="edit-phone"
+                  value={editMemberForm.phone}
+                  onChange={(e) => setEditMemberForm({ ...editMemberForm, phone: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-level">Membership Level</Label>
+                <Select 
+                  value={editMemberForm.membership_level_id} 
+                  onValueChange={(value) => setEditMemberForm({ ...editMemberForm, membership_level_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {levels?.map((level) => (
+                      <SelectItem key={level.id} value={level.id}>
+                        {level.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-expiration">Expiration Date</Label>
+                <Input
+                  id="edit-expiration"
+                  type="date"
+                  value={editMemberForm.expiration_date}
+                  onChange={(e) => setEditMemberForm({ ...editMemberForm, expiration_date: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-6">
+                <Switch
+                  id="edit-active"
+                  checked={editMemberForm.active}
+                  onCheckedChange={(checked) => setEditMemberForm({ ...editMemberForm, active: checked })}
+                />
+                <Label htmlFor="edit-active">Active</Label>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setEditMemberDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                Save Changes
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

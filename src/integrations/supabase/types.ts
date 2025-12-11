@@ -479,6 +479,7 @@ export type Database = {
           remaining_daily_scans: number
           stripe_session_id: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           active?: boolean
@@ -496,6 +497,7 @@ export type Database = {
           remaining_daily_scans?: number
           stripe_session_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           active?: boolean
@@ -513,6 +515,7 @@ export type Database = {
           remaining_daily_scans?: number
           stripe_session_id?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {

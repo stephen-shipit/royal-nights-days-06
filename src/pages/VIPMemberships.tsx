@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Check, Star, CreditCard } from "lucide-react";
+import { Crown, Check, Star, CreditCard, LogIn } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 
 interface MembershipLevel {
@@ -95,10 +95,18 @@ const VIPMemberships = () => {
             <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
               VIP Membership
             </h1>
-            <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
+            <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto mb-6">
               Experience the royal treatment with exclusive benefits, priority access, 
               and unforgettable moments at Royal Palace DTX.
             </p>
+            <Button 
+              variant="outline" 
+              className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+              onClick={() => navigate("/vip-login")}
+            >
+              <LogIn className="mr-2 h-4 w-4" />
+              Already a Member? Sign In
+            </Button>
           </div>
         </section>
 

@@ -465,6 +465,7 @@ export type Database = {
       memberships: {
         Row: {
           active: boolean
+          amount_paid: number | null
           created_at: string
           email: string
           expiration_date: string
@@ -483,6 +484,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          amount_paid?: number | null
           created_at?: string
           email: string
           expiration_date: string
@@ -501,6 +503,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          amount_paid?: number | null
           created_at?: string
           email?: string
           expiration_date?: string

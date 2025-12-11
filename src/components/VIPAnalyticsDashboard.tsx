@@ -36,6 +36,7 @@ interface Membership {
   active: boolean;
   payment_status: string;
   created_at: string;
+  amount_paid?: number;
   membership_levels?: MembershipLevel;
 }
 
@@ -67,12 +68,11 @@ const VIPAnalyticsDashboard = ({ memberships, levels, isLoading }: VIPAnalyticsD
     );
     const pendingPayments = memberships.filter((m) => m.payment_status === "pending");
 
-    // Calculate total revenue (completed payments only)
+    // Calculate total revenue (completed payments only) - use amount_paid for accuracy
     const totalRevenue = memberships
       .filter((m) => m.payment_status === "completed")
       .reduce((sum, m) => {
-        const level = levels.find((l) => l.id === m.membership_level_id);
-        return sum + (level?.price || 0);
+        return sum + (m.amount_paid || 0);
       }, 0);
 
     // Expiring soon (within 30 days)
@@ -88,7 +88,7 @@ const VIPAnalyticsDashboard = ({ memberships, levels, isLoading }: VIPAnalyticsD
       count: activeMemberships.filter((m) => m.membership_level_id === level.id).length,
       revenue: memberships
         .filter((m) => m.membership_level_id === level.id && m.payment_status === "completed")
-        .length * level.price,
+        .reduce((sum, m) => sum + (m.amount_paid || 0), 0),
     }));
 
     // Monthly signups (last 6 months)
@@ -106,8 +106,7 @@ const VIPAnalyticsDashboard = ({ memberships, levels, isLoading }: VIPAnalyticsD
         return createdDate >= monthStart && createdDate <= monthEnd && m.payment_status === "completed";
       });
       const revenue = signups.reduce((sum, m) => {
-        const level = levels.find((l) => l.id === m.membership_level_id);
-        return sum + (level?.price || 0);
+        return sum + (m.amount_paid || 0);
       }, 0);
 
       return {

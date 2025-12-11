@@ -34,6 +34,7 @@ import VIPCard from "./pages/VIPCard";
 import VIPPaymentSuccess from "./pages/VIPPaymentSuccess";
 import VIPScanner from "./pages/VIPScanner";
 import VIPMemberLogin from "./pages/VIPMemberLogin";
+import VIPRenewalSuccess from "./pages/VIPRenewalSuccess";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -101,6 +102,7 @@ const App = () => {
               <Route path="/vip-payment-success" element={<VIPPaymentSuccess />} />
               <Route path="/vip-scanner" element={<VIPScanner />} />
               <Route path="/vip-login" element={<VIPMemberLogin />} />
+              <Route path="/vip-renewal-success" element={<VIPRenewalSuccess />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

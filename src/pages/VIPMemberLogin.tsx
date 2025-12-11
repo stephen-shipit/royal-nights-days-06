@@ -84,7 +84,7 @@ const VIPMemberLogin = () => {
 
         if (membership) {
           toast.success("Welcome back!");
-          navigate(`/vip-card?token=${membership.qr_code_token}`);
+          navigate(`/vip-card/${membership.qr_code_token}`);
         } else {
           // Check if there's an unlinked membership with this email
           const { data: unlinkedMembership } = await supabase
@@ -102,7 +102,7 @@ const VIPMemberLogin = () => {
               .eq("id", unlinkedMembership.id);
 
             toast.success("Membership linked to your account!");
-            navigate(`/vip-card?token=${unlinkedMembership.qr_code_token}`);
+            navigate(`/vip-card/${unlinkedMembership.qr_code_token}`);
           } else {
             toast.info("No membership found. Purchase a VIP membership to get started.");
             navigate("/vip-memberships");

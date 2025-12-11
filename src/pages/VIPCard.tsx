@@ -56,6 +56,7 @@ const VIPCard = () => {
   const queryClient = useQueryClient();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -69,14 +70,18 @@ const VIPCard = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      console.log("VIP Card auth check - Session:", !!session, "User ID:", session?.user?.id);
       setIsLoggedIn(!!session);
       setCurrentUserId(session?.user?.id ?? null);
+      setAuthChecked(true);
     };
     checkAuth();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("VIP Card auth state change - Event:", event, "Session:", !!session);
       setIsLoggedIn(!!session);
       setCurrentUserId(session?.user?.id ?? null);
+      setAuthChecked(true);
     });
 
     return () => subscription.unsubscribe();

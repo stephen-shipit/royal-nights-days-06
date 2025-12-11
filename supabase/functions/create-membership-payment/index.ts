@@ -12,6 +12,7 @@ interface PaymentRequest {
   fullName: string;
   email: string;
   phone: string | null;
+  password?: string;
   durationMonths?: number;
   calculatedPrice?: number;
 }
@@ -34,7 +35,7 @@ serve(async (req) => {
   }
 
   try {
-    const { membershipLevelId, fullName, email, phone, durationMonths, calculatedPrice }: PaymentRequest = await req.json();
+    const { membershipLevelId, fullName, email, phone, password, durationMonths, calculatedPrice }: PaymentRequest = await req.json();
 
     console.log("Creating membership payment for:", email, "duration:", durationMonths);
 
@@ -117,6 +118,7 @@ serve(async (req) => {
         qrToken,
         expirationDate: expirationDate.toISOString(),
         maxDailyScans: level.max_daily_scans.toString(),
+        userPassword: password ? btoa(password) : "", // Base64 encode password for transport
       },
     });
 

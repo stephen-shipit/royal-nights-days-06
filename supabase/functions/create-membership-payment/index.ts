@@ -12,6 +12,8 @@ interface PaymentRequest {
   fullName: string;
   email: string;
   phone: string | null;
+  durationMonths?: number;
+  calculatedPrice?: number;
 }
 
 // Generate a secure random token
@@ -32,9 +34,9 @@ serve(async (req) => {
   }
 
   try {
-    const { membershipLevelId, fullName, email, phone }: PaymentRequest = await req.json();
+    const { membershipLevelId, fullName, email, phone, durationMonths, calculatedPrice }: PaymentRequest = await req.json();
 
-    console.log("Creating membership payment for:", email);
+    console.log("Creating membership payment for:", email, "duration:", durationMonths);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -55,15 +57,18 @@ serve(async (req) => {
       throw new Error("Membership level not found or inactive");
     }
 
-    // Calculate expiration date
+    // Use provided duration or default to level's duration
+    const effectiveDuration = durationMonths || level.duration_months;
+    const effectivePrice = calculatedPrice || level.price;
+
+    // Calculate expiration date based on effective duration
     let expirationDate: Date;
-    if (level.duration_months === 0) {
-      // Lifetime - set to 100 years from now
+    if (effectiveDuration === 0) {
       expirationDate = new Date();
       expirationDate.setFullYear(expirationDate.getFullYear() + 100);
     } else {
       expirationDate = new Date();
-      expirationDate.setMonth(expirationDate.getMonth() + level.duration_months);
+      expirationDate.setMonth(expirationDate.getMonth() + effectiveDuration);
     }
 
     // Generate unique QR token
@@ -82,6 +87,7 @@ serve(async (req) => {
     }
 
     // Create Stripe checkout session
+    const durationText = effectiveDuration === 0 ? 'Lifetime' : effectiveDuration === 1 ? '1 month' : `${effectiveDuration} month`;
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : email,
@@ -91,9 +97,9 @@ serve(async (req) => {
             currency: "usd",
             product_data: {
               name: `${level.name} VIP Membership`,
-              description: `${level.duration_months === 0 ? 'Lifetime' : level.duration_months + ' month'} VIP membership at Royal Palace DTX`,
+              description: `${durationText} VIP membership at Royal Palace DTX`,
             },
-            unit_amount: level.price,
+            unit_amount: effectivePrice,
           },
           quantity: 1,
         },

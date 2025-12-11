@@ -37,6 +37,7 @@ serve(async (req) => {
 
     const membershipId = session.metadata?.membershipId;
     const newExpirationDate = session.metadata?.newExpirationDate;
+    const amountPaid = parseInt(session.metadata?.amountPaid || "0", 10);
 
     if (!membershipId || !newExpirationDate) {
       throw new Error("Invalid renewal session metadata");
@@ -54,13 +55,15 @@ serve(async (req) => {
       throw new Error("Membership record not found");
     }
 
-    // Update membership with new expiration date and reactivate if needed
+    // Update membership with new expiration date, add renewal amount, and reactivate if needed
+    const currentAmountPaid = membership.amount_paid || 0;
     const { error: updateError } = await supabase
       .from("memberships")
       .update({
         expiration_date: newExpirationDate,
         active: true,
         remaining_daily_scans: membership.membership_levels?.max_daily_scans || 1,
+        amount_paid: currentAmountPaid + amountPaid,
       })
       .eq("id", membershipId);
 

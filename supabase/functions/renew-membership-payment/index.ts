@@ -107,6 +107,7 @@ serve(async (req) => {
         renewalType: "true",
         durationMonths: durationMonths.toString(),
         newExpirationDate: newExpirationDate.toISOString(),
+        amountPaid: calculatedPrice.toString(),
       },
     });
 

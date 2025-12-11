@@ -120,7 +120,7 @@ serve(async (req) => {
       },
     });
 
-    // Create pending membership record
+    // Create pending membership record with amount_paid
     const { error: insertError } = await supabase.from("memberships").insert({
       membership_level_id: membershipLevelId,
       full_name: fullName,
@@ -132,6 +132,7 @@ serve(async (req) => {
       active: false, // Will be activated after payment
       payment_status: "pending",
       stripe_session_id: session.id,
+      amount_paid: effectivePrice, // Track the actual amount paid
     });
 
     if (insertError) {

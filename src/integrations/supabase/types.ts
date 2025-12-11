@@ -378,6 +378,9 @@ export type Database = {
           multi_user_enabled: boolean
           name: string
           perks: Json
+          premium_1_month: number
+          premium_2_months: number
+          premium_3_months: number
           price: number
           sort_order: number
           status: string
@@ -393,6 +396,9 @@ export type Database = {
           multi_user_enabled?: boolean
           name: string
           perks?: Json
+          premium_1_month?: number
+          premium_2_months?: number
+          premium_3_months?: number
           price?: number
           sort_order?: number
           status?: string
@@ -408,6 +414,9 @@ export type Database = {
           multi_user_enabled?: boolean
           name?: string
           perks?: Json
+          premium_1_month?: number
+          premium_2_months?: number
+          premium_3_months?: number
           price?: number
           sort_order?: number
           status?: string

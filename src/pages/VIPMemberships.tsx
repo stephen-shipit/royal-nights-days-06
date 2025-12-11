@@ -20,6 +20,9 @@ interface MembershipLevel {
   multi_user_enabled: boolean;
   max_daily_scans: number;
   card_image_url: string | null;
+  premium_1_month: number;
+  premium_2_months: number;
+  premium_3_months: number;
 }
 
 type DurationOption = 1 | 2 | 3 | 12;
@@ -42,13 +45,13 @@ const VIPMemberships = () => {
     },
   });
 
-  // Calculate price based on selected duration (proportional to yearly with premiums for shorter terms)
-  const calculatePrice = (yearlyPrice: number, months: DurationOption) => {
-    const monthlyRate = yearlyPrice / 12;
-    if (months === 12) return yearlyPrice;
-    if (months === 3) return Math.round(monthlyRate * 3 * 1.1); // 10% premium
-    if (months === 2) return Math.round(monthlyRate * 2 * 1.15); // 15% premium
-    return Math.round(monthlyRate * 1.2); // 20% premium for 1 month
+  // Calculate price based on selected duration using premiums from database
+  const calculatePrice = (level: MembershipLevel, months: DurationOption) => {
+    const monthlyRate = level.price / 12;
+    if (months === 12) return level.price;
+    if (months === 3) return Math.round(monthlyRate * 3 * (1 + level.premium_3_months / 100));
+    if (months === 2) return Math.round(monthlyRate * 2 * (1 + level.premium_2_months / 100));
+    return Math.round(monthlyRate * (1 + level.premium_1_month / 100));
   };
 
   const formatPrice = (cents: number) => {
@@ -171,13 +174,13 @@ const VIPMemberships = () => {
                     </div>
                     <CardTitle className="text-2xl">{level.name}</CardTitle>
                     <div className="mt-4">
-                      <span className="text-4xl font-bold">{formatPrice(calculatePrice(level.price, selectedDuration))}</span>
+                      <span className="text-4xl font-bold">{formatPrice(calculatePrice(level, selectedDuration))}</span>
                       <span className="text-muted-foreground ml-2">
                         / {getDurationText(selectedDuration)}
                       </span>
                     </div>
                     {selectedDuration === 12 && (
-                      <p className="text-xs text-secondary mt-1">Save up to 20% vs monthly</p>
+                      <p className="text-xs text-secondary mt-1">Save up to {level.premium_1_month}% vs monthly</p>
                     )}
                   </CardHeader>
                   <CardContent className="space-y-6">

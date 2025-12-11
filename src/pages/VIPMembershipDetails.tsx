@@ -20,6 +20,9 @@ interface MembershipLevel {
   multi_user_enabled: boolean;
   max_daily_scans: number;
   card_image_url: string | null;
+  premium_1_month: number;
+  premium_2_months: number;
+  premium_3_months: number;
 }
 
 type DurationOption = 1 | 2 | 3 | 12;
@@ -48,14 +51,17 @@ const VIPMembershipDetails = () => {
     enabled: !!levelId,
   });
 
-  // Calculate price based on selected duration
-  const calculatePrice = (yearlyPrice: number, months: DurationOption) => {
-    const monthlyRate = yearlyPrice / 12;
-    if (months === 12) return yearlyPrice;
-    if (months === 3) return Math.round(monthlyRate * 3 * 1.1);
-    if (months === 2) return Math.round(monthlyRate * 2 * 1.15);
-    return Math.round(monthlyRate * 1.2);
+  // Calculate price based on selected duration using premiums from database
+  const calculatePrice = (months: DurationOption) => {
+    if (!level) return 0;
+    const monthlyRate = level.price / 12;
+    if (months === 12) return level.price;
+    if (months === 3) return Math.round(monthlyRate * 3 * (1 + level.premium_3_months / 100));
+    if (months === 2) return Math.round(monthlyRate * 2 * (1 + level.premium_2_months / 100));
+    return Math.round(monthlyRate * (1 + level.premium_1_month / 100));
   };
+
+  const currentPrice = level ? calculatePrice(selectedDuration) : 0;
 
   const formatPrice = (cents: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -80,8 +86,6 @@ const VIPMembershipDetails = () => {
     { value: 3, label: "3 Months" },
     { value: 12, label: "1 Year" },
   ];
-
-  const currentPrice = level ? calculatePrice(level.price, selectedDuration) : 0;
 
   if (isLoading) {
     return (

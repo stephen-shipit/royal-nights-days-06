@@ -32,6 +32,9 @@ const VIPMemberLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({ email: "", password: "", confirmPassword: "" });
@@ -108,6 +111,39 @@ const VIPMemberLogin = () => {
       }
     } catch (err) {
       console.error("Login error:", err);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+
+    const emailValidation = z.string().trim().email({ message: "Invalid email address" }).safeParse(forgotEmail);
+    if (!emailValidation.success) {
+      setErrors({ forgotEmail: emailValidation.error.errors[0].message });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const redirectUrl = `${window.location.origin}/vip-login`;
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+        redirectTo: redirectUrl,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      setResetEmailSent(true);
+      toast.success("Password reset email sent! Check your inbox.");
+    } catch (err) {
+      console.error("Reset password error:", err);
       toast.error("An unexpected error occurred");
     } finally {
       setIsLoading(false);
@@ -207,6 +243,82 @@ const VIPMemberLogin = () => {
 
           {/* Auth Card */}
           <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
+            {showForgotPassword ? (
+              <div className="space-y-4">
+                <div className="text-center mb-4">
+                  <h2 className="text-xl font-semibold text-foreground">Reset Password</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Enter your email to receive a password reset link
+                  </p>
+                </div>
+
+                {resetEmailSent ? (
+                  <div className="text-center space-y-4">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500/10 mb-2">
+                      <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <p className="text-foreground">Check your email!</p>
+                    <p className="text-sm text-muted-foreground">
+                      We've sent a password reset link to <strong>{forgotEmail}</strong>
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setResetEmailSent(false);
+                        setForgotEmail("");
+                      }}
+                    >
+                      Back to Sign In
+                    </Button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleForgotPassword} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="forgot-email">Email</Label>
+                      <Input
+                        id="forgot-email"
+                        type="email"
+                        placeholder="your@email.com"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        disabled={isLoading}
+                        className={errors.forgotEmail ? "border-destructive" : ""}
+                      />
+                      {errors.forgotEmail && (
+                        <p className="text-sm text-destructive">{errors.forgotEmail}</p>
+                      )}
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        "Send Reset Link"
+                      )}
+                    </Button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setForgotEmail("");
+                        setErrors({});
+                      }}
+                      className="w-full text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      ← Back to Sign In
+                    </button>
+                  </form>
+                )}
+              </div>
+            ) : (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Sign In</TabsTrigger>
@@ -266,6 +378,17 @@ const VIPMemberLogin = () => {
                       "Sign In"
                     )}
                   </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(true);
+                      setForgotEmail(loginForm.email);
+                    }}
+                    className="w-full text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    Forgot your password?
+                  </button>
                 </form>
               </TabsContent>
 
@@ -354,6 +477,7 @@ const VIPMemberLogin = () => {
                 </form>
               </TabsContent>
             </Tabs>
+            )}
           </div>
 
           {/* Back link */}

@@ -64,3 +64,6 @@ verify_jwt = false
 
 [functions.verify-renewal-payment]
 verify_jwt = false
+
+[functions.send-expiration-reminders]
+verify_jwt = false

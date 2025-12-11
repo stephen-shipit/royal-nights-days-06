@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Check, ArrowLeft, Users, Clock, Shield } from "lucide-react";
+import { Crown, Check, ArrowLeft, Users, Clock, Shield, CreditCard } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 
 interface MembershipLevel {
@@ -19,6 +19,7 @@ interface MembershipLevel {
   duration_months: number;
   multi_user_enabled: boolean;
   max_daily_scans: number;
+  card_image_url: string | null;
 }
 
 const VIPMembershipDetails = () => {
@@ -105,16 +106,38 @@ const VIPMembershipDetails = () => {
 
           <div className="max-w-4xl mx-auto">
             <Card className="overflow-hidden">
-              <div className="bg-primary text-primary-foreground p-8 text-center">
-                <Crown className="h-12 w-12 mx-auto mb-4 text-secondary" />
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">{level.name}</h1>
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  <span className="text-5xl font-bold">{formatPrice(level.price)}</span>
-                  <span className="text-primary-foreground/70 text-lg">
-                    / {getDurationText(level.duration_months)}
-                  </span>
+              {/* Card Image Preview */}
+              {level.card_image_url ? (
+                <div className="relative w-full aspect-[2/1] md:aspect-[3/1] overflow-hidden">
+                  <img 
+                    src={level.card_image_url} 
+                    alt={`${level.name} VIP Card`}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-8 text-center text-primary-foreground">
+                    <Crown className="h-10 w-10 mx-auto mb-3 text-secondary" />
+                    <h1 className="text-3xl md:text-4xl font-bold mb-2">{level.name}</h1>
+                    <div className="flex items-center justify-center gap-2 mt-3">
+                      <span className="text-4xl md:text-5xl font-bold">{formatPrice(level.price)}</span>
+                      <span className="text-primary-foreground/70 text-lg">
+                        / {getDurationText(level.duration_months)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-primary text-primary-foreground p-8 text-center">
+                  <Crown className="h-12 w-12 mx-auto mb-4 text-secondary" />
+                  <h1 className="text-3xl md:text-4xl font-bold mb-2">{level.name}</h1>
+                  <div className="flex items-center justify-center gap-2 mt-4">
+                    <span className="text-5xl font-bold">{formatPrice(level.price)}</span>
+                    <span className="text-primary-foreground/70 text-lg">
+                      / {getDurationText(level.duration_months)}
+                    </span>
+                  </div>
+                </div>
+              )}
               
               <CardContent className="p-8 space-y-8">
                 {/* Description */}

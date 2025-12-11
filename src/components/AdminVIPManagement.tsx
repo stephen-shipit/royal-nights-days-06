@@ -29,6 +29,9 @@ interface MembershipLevel {
   sort_order: number;
   created_at: string;
   card_image_url: string | null;
+  premium_1_month: number;
+  premium_2_months: number;
+  premium_3_months: number;
 }
 
 interface Membership {
@@ -80,6 +83,9 @@ const AdminVIPManagement = () => {
     status: "active",
     sort_order: 0,
     card_image_url: "" as string | null,
+    premium_1_month: 20,
+    premium_2_months: 15,
+    premium_3_months: 10,
   });
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -174,6 +180,9 @@ const AdminVIPManagement = () => {
         status: data.status,
         sort_order: data.sort_order,
         card_image_url: data.card_image_url || null,
+        premium_1_month: data.premium_1_month,
+        premium_2_months: data.premium_2_months,
+        premium_3_months: data.premium_3_months,
       };
 
       if (data.id) {
@@ -284,6 +293,9 @@ const AdminVIPManagement = () => {
       status: "active",
       sort_order: 0,
       card_image_url: null,
+      premium_1_month: 20,
+      premium_2_months: 15,
+      premium_3_months: 10,
     });
     setEditingLevel(null);
   };
@@ -301,6 +313,9 @@ const AdminVIPManagement = () => {
       status: level.status,
       sort_order: level.sort_order,
       card_image_url: level.card_image_url,
+      premium_1_month: level.premium_1_month ?? 20,
+      premium_2_months: level.premium_2_months ?? 15,
+      premium_3_months: level.premium_3_months ?? 10,
     });
     setLevelDialogOpen(true);
   };
@@ -609,6 +624,49 @@ const AdminVIPManagement = () => {
                         />
                       </div>
                     )}
+                  </div>
+
+                  {/* Pricing Premiums Section */}
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="font-medium">Short-Term Pricing Premiums</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Set percentage premiums added to shorter-term memberships (calculated from yearly rate)
+                    </p>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="premium_1">1 Month Premium (%)</Label>
+                        <Input
+                          id="premium_1"
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={levelForm.premium_1_month}
+                          onChange={(e) => setLevelForm({ ...levelForm, premium_1_month: parseInt(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="premium_2">2 Months Premium (%)</Label>
+                        <Input
+                          id="premium_2"
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={levelForm.premium_2_months}
+                          onChange={(e) => setLevelForm({ ...levelForm, premium_2_months: parseInt(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="premium_3">3 Months Premium (%)</Label>
+                        <Input
+                          id="premium_3"
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={levelForm.premium_3_months}
+                          onChange={(e) => setLevelForm({ ...levelForm, premium_3_months: parseInt(e.target.value) || 0 })}
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex justify-end gap-2 pt-4">

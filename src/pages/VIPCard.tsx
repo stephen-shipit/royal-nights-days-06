@@ -345,9 +345,9 @@ const VIPCard = () => {
                 <img 
                   src={membership.membership_levels.card_image_url} 
                   alt={`${membership.membership_levels.name} Card`}
-                  className="w-full h-full object-cover opacity-30"
+                  className="w-full h-full object-cover opacity-60"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-gray-900/70 via-gray-900/50 to-gray-900/90" />
+                <div className="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/30 to-gray-900/60" />
               </div>
             )}
             

@@ -59,14 +59,60 @@ serve(async (req) => {
       );
     }
 
-    // Update membership to active
+    // Generate temporary password
+    const tempPassword = 'Royal' + Math.floor(Math.random() * 900000 + 100000);
+    
+    // Create or get auth user
+    let userId: string | null = null;
+    let isNewUser = false;
+    
+    try {
+      // Check if user already exists
+      const { data: existingUsers } = await supabase.auth.admin.listUsers();
+      const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === membership.email.toLowerCase());
+      
+      if (existingUser) {
+        userId = existingUser.id;
+        console.log("User already exists:", userId);
+        
+        // Update password for existing user
+        await supabase.auth.admin.updateUserById(userId, {
+          password: tempPassword,
+        });
+      } else {
+        // Create new auth user
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          email: membership.email.toLowerCase(),
+          password: tempPassword,
+          email_confirm: true,
+        });
+        
+        if (authError) {
+          console.error("Failed to create auth user:", authError);
+        } else {
+          userId = authData.user?.id || null;
+          isNewUser = true;
+          console.log("Created new auth user:", userId);
+        }
+      }
+    } catch (authErr) {
+      console.error("Auth user creation error:", authErr);
+    }
+
+    // Update membership to active and link user
+    const updateData: Record<string, any> = {
+      active: true,
+      payment_status: "completed",
+      purchase_date: new Date().toISOString(),
+    };
+    
+    if (userId) {
+      updateData.user_id = userId;
+    }
+    
     const { error: updateError } = await supabase
       .from("memberships")
-      .update({
-        active: true,
-        payment_status: "completed",
-        purchase_date: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq("id", membership.id);
 
     if (updateError) {
@@ -74,11 +120,12 @@ serve(async (req) => {
       throw new Error("Failed to activate membership");
     }
 
-    // Send confirmation email
+    // Send confirmation email with login credentials
     try {
       const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
       const origin = req.headers.get("origin") || "https://royalpalacedtx.com";
       const cardUrl = `${origin}/vip-card/${membership.qr_code_token}`;
+      const loginUrl = `${origin}/vip-login`;
 
       await resend.emails.send({
         from: "Royal Palace DTX <noreply@royalpalacedtx.com>",
@@ -100,20 +147,33 @@ serve(async (req) => {
                 <p style="margin: 5px 0; color: #ccc;"><strong style="color: #D4AF37;">Valid Until:</strong> ${new Date(membership.expiration_date).toLocaleDateString()}</p>
               </div>
               
+              <div style="background: #2a2a2a; border: 1px solid #D4AF37; border-radius: 8px; padding: 20px; margin: 25px 0;">
+                <h3 style="color: #D4AF37; margin-top: 0; text-align: center;">Your VIP Login Credentials</h3>
+                <p style="margin: 10px 0; color: #ccc;"><strong style="color: #fff;">Email:</strong> ${membership.email}</p>
+                <p style="margin: 10px 0; color: #ccc;"><strong style="color: #fff;">Temporary Password:</strong> <code style="background: #333; padding: 4px 8px; border-radius: 4px; color: #D4AF37;">${tempPassword}</code></p>
+                <p style="color: #999; font-size: 12px; margin-top: 15px; text-align: center;">We recommend changing your password after logging in.</p>
+              </div>
+              
               <div style="text-align: center; margin-top: 30px;">
-                <a href="${cardUrl}" style="display: inline-block; background: #D4AF37; color: #000; padding: 15px 30px; text-decoration: none; font-weight: bold; border-radius: 5px;">
+                <a href="${cardUrl}" style="display: inline-block; background: #D4AF37; color: #000; padding: 15px 30px; text-decoration: none; font-weight: bold; border-radius: 5px; margin-right: 10px;">
                   VIEW YOUR VIP CARD
+                </a>
+              </div>
+              
+              <div style="text-align: center; margin-top: 15px;">
+                <a href="${loginUrl}" style="display: inline-block; background: transparent; border: 1px solid #D4AF37; color: #D4AF37; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 5px;">
+                  SIGN IN TO YOUR ACCOUNT
                 </a>
               </div>
             </div>
             
             <p style="color: #888; font-size: 12px; text-align: center;">
-              Save this email! Your VIP card link: ${cardUrl}
+              Save this email! Use your login credentials to access your VIP card anytime at ${loginUrl}
             </p>
           </div>
         `,
       });
-      console.log("Confirmation email sent to:", membership.email);
+      console.log("Welcome email with credentials sent to:", membership.email);
     } catch (emailError) {
       console.error("Failed to send email:", emailError);
       // Don't fail the whole request if email fails

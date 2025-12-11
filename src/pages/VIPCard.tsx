@@ -1,13 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Crown, Download, Calendar, Users, Clock, Key, Eye, EyeOff, Check, LogOut, RefreshCw } from "lucide-react";
+import { Crown, Download, Calendar, Users, Clock, Key, Eye, EyeOff, Check, LogOut, RefreshCw, CreditCard, MapPin } from "lucide-react";
 import { differenceInDays } from "date-fns";
 import { format } from "date-fns";
 import { Helmet } from "react-helmet-async";
@@ -34,6 +34,14 @@ interface Membership {
   };
 }
 
+interface PhysicalCardRequest {
+  id: string;
+  status: string;
+  requested_at: string;
+  ready_at: string | null;
+  picked_up_at: string | null;
+}
+
 interface ScanLog {
   id: string;
   scanned_at: string;
@@ -44,7 +52,9 @@ interface ScanLog {
 const VIPCard = () => {
   const { token } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -59,11 +69,13 @@ const VIPCard = () => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsLoggedIn(!!session);
+      setCurrentUserId(session?.user?.id ?? null);
     };
     checkAuth();
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setIsLoggedIn(!!session);
+      setCurrentUserId(session?.user?.id ?? null);
     });
 
     return () => subscription.unsubscribe();
@@ -184,6 +196,45 @@ const VIPCard = () => {
       return data as ScanLog[];
     },
     enabled: !!membership?.id,
+  });
+
+  // Physical card request query
+  const { data: physicalCardRequest } = useQuery({
+    queryKey: ["physical-card-request", membership?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("physical_card_requests")
+        .select("*")
+        .eq("membership_id", membership!.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data as PhysicalCardRequest | null;
+    },
+    enabled: !!membership?.id && isLoggedIn,
+  });
+
+  // Physical card request mutation
+  const requestPhysicalCardMutation = useMutation({
+    mutationFn: async () => {
+      if (!membership || !currentUserId) throw new Error("Not authenticated");
+      const { error } = await supabase
+        .from("physical_card_requests")
+        .insert({
+          membership_id: membership.id,
+          user_id: currentUserId,
+          status: "pending",
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Physical card request submitted! Pick it up at Royal Palace.");
+      queryClient.invalidateQueries({ queryKey: ["physical-card-request", membership?.id] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to request physical card");
+    },
   });
 
   const downloadCard = () => {
@@ -397,6 +448,81 @@ const VIPCard = () => {
                     </>
                   )}
                 </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Physical Card Request - Only for logged in users */}
+          {isLoggedIn && membership.payment_status === "completed" && (
+            <Card className="border-secondary/30">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <CreditCard className="h-5 w-5 text-secondary" />
+                  <h3 className="font-semibold">Physical VIP Card</h3>
+                </div>
+                
+                {!physicalCardRequest ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Request a physical VIP card to pick up at Royal Palace.
+                    </p>
+                    <Button 
+                      className="w-full"
+                      onClick={() => requestPhysicalCardMutation.mutate()}
+                      disabled={requestPhysicalCardMutation.isPending}
+                    >
+                      {requestPhysicalCardMutation.isPending ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                      ) : (
+                        <>
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          Request Physical Card
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Status:</span>
+                      <Badge 
+                        className={
+                          physicalCardRequest.status === "ready" 
+                            ? "bg-green-600" 
+                            : physicalCardRequest.status === "picked_up"
+                              ? "bg-blue-600"
+                              : "bg-secondary text-secondary-foreground"
+                        }
+                      >
+                        {physicalCardRequest.status === "ready" 
+                          ? "Ready for Pickup" 
+                          : physicalCardRequest.status === "picked_up"
+                            ? "Picked Up"
+                            : "Processing"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Requested:</span>
+                      <span>{format(new Date(physicalCardRequest.requested_at), "MMM d, yyyy")}</span>
+                    </div>
+                    {physicalCardRequest.status === "ready" && (
+                      <div className="p-3 bg-green-600/10 border border-green-600/30 rounded-lg">
+                        <div className="flex items-center gap-2 text-green-500">
+                          <MapPin className="h-4 w-4" />
+                          <span className="text-sm font-medium">Ready at Royal Palace!</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Visit us to pick up your physical VIP card.
+                        </p>
+                      </div>
+                    )}
+                    {physicalCardRequest.status === "picked_up" && physicalCardRequest.picked_up_at && (
+                      <p className="text-xs text-muted-foreground">
+                        Picked up on {format(new Date(physicalCardRequest.picked_up_at), "MMM d, yyyy")}
+                      </p>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

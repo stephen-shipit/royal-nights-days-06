@@ -634,6 +634,53 @@ export type Database = {
           },
         ]
       }
+      physical_card_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          membership_id: string
+          picked_up_at: string | null
+          ready_at: string | null
+          requested_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          membership_id: string
+          picked_up_at?: string | null
+          ready_at?: string | null
+          requested_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          membership_id?: string
+          picked_up_at?: string | null
+          ready_at?: string | null
+          requested_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "physical_card_requests_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "memberships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       table_reservations: {
         Row: {
           birthday_package: boolean | null

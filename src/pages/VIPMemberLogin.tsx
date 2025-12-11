@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Crown, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -26,6 +26,14 @@ const signupSchema = z.object({
   path: ["confirmPassword"],
 });
 
+const newPasswordSchema = z.object({
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
 const VIPMemberLogin = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -35,10 +43,91 @@ const VIPMemberLogin = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [newPasswordForm, setNewPasswordForm] = useState({ password: "", confirmPassword: "" });
   
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({ email: "", password: "", confirmPassword: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Check for recovery token in URL on mount
+  useEffect(() => {
+    const handleRecovery = async () => {
+      // Check URL hash for recovery tokens (Supabase adds them as hash fragments)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const type = hashParams.get('type');
+      
+      if (accessToken && type === 'recovery') {
+        setIsRecoveryMode(true);
+        // Clear the hash from URL for cleaner UX
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    };
+
+    // Also listen for auth state changes to detect recovery
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecoveryMode(true);
+      }
+    });
+
+    handleRecovery();
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+
+    const result = newPasswordSchema.safeParse(newPasswordForm);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) fieldErrors[err.path[0].toString()] = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPasswordForm.password,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      toast.success("Password updated successfully!");
+      setIsRecoveryMode(false);
+      setNewPasswordForm({ password: "", confirmPassword: "" });
+      
+      // Check if user has a membership and redirect
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: membership } = await supabase
+          .from("memberships")
+          .select("qr_code_token")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (membership) {
+          navigate(`/vip-card/${membership.qr_code_token}`);
+        } else {
+          navigate("/vip-memberships");
+        }
+      }
+    } catch (err) {
+      console.error("Password update error:", err);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,16 +323,79 @@ const VIPMemberLogin = () => {
               <Crown className="w-8 h-8 text-primary" />
             </div>
             <h1 className="text-3xl font-display font-bold text-foreground mb-2">
-              VIP Member Access
+              {isRecoveryMode ? "Set New Password" : "VIP Member Access"}
             </h1>
             <p className="text-muted-foreground">
-              Sign in to access your digital membership card
+              {isRecoveryMode ? "Enter your new password below" : "Sign in to access your digital membership card"}
             </p>
           </div>
 
           {/* Auth Card */}
           <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
-            {showForgotPassword ? (
+            {isRecoveryMode ? (
+              <form onSubmit={handleSetNewPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="new-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={newPasswordForm.password}
+                      onChange={(e) => setNewPasswordForm({ ...newPasswordForm, password: e.target.value })}
+                      disabled={isLoading}
+                      className={errors.password ? "border-destructive pr-10" : "pr-10"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="text-sm text-destructive">{errors.password}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirm-new-password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={newPasswordForm.confirmPassword}
+                      onChange={(e) => setNewPasswordForm({ ...newPasswordForm, confirmPassword: e.target.value })}
+                      disabled={isLoading}
+                      className={errors.confirmPassword ? "border-destructive pr-10" : "pr-10"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="text-sm text-destructive">{errors.confirmPassword}</p>
+                  )}
+                </div>
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating Password...
+                    </>
+                  ) : (
+                    "Update Password"
+                  )}
+                </Button>
+              </form>
+            ) : showForgotPassword ? (
               <div className="space-y-4">
                 <div className="text-center mb-4">
                   <h2 className="text-xl font-semibold text-foreground">Reset Password</h2>

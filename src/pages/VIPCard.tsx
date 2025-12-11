@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Crown, Download, Calendar, Users, Clock, Key, Eye, EyeOff, Check } from "lucide-react";
+import { Crown, Download, Calendar, Users, Clock, Key, Eye, EyeOff, Check, LogOut } from "lucide-react";
 import { format } from "date-fns";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
@@ -42,6 +42,7 @@ interface ScanLog {
 
 const VIPCard = () => {
   const { token } = useParams();
+  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -64,6 +65,12 @@ const VIPCard = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Signed out successfully");
+    navigate("/vip-memberships");
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -420,6 +427,18 @@ const VIPCard = () => {
                 )}
               </CardContent>
             </Card>
+          )}
+
+          {/* Sign Out Button - Only for logged in users */}
+          {isLoggedIn && (
+            <Button 
+              variant="outline" 
+              className="w-full text-muted-foreground hover:text-destructive hover:border-destructive"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
           )}
 
           {/* Scan History */}

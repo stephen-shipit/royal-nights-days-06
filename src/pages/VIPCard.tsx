@@ -438,7 +438,7 @@ const VIPCard = () => {
               Download Card
             </Button>
             
-            {isLoggedIn && (
+            {isLoggedIn ? (
               <Button 
                 variant="outline"
                 onClick={handleSignOut}
@@ -446,6 +446,15 @@ const VIPCard = () => {
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
+              </Button>
+            ) : authChecked && (
+              <Button 
+                variant="outline"
+                onClick={() => navigate("/vip-login")}
+                className="border-secondary/50 text-secondary hover:bg-secondary/10"
+              >
+                <Key className="h-4 w-4 mr-2" />
+                Login
               </Button>
             )}
           </div>
@@ -496,6 +505,28 @@ const VIPCard = () => {
                     </>
                   )}
                 </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Login Prompt for non-logged-in users */}
+          {!isLoggedIn && authChecked && membership.payment_status === "completed" && (
+            <Card className="border-secondary/30 bg-gradient-to-br from-gray-900/50 to-gray-800/50">
+              <CardContent className="p-4">
+                <div className="text-center space-y-3">
+                  <Key className="h-6 w-6 mx-auto text-secondary" />
+                  <h3 className="font-semibold text-foreground">Manage Your Membership</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Log in to request a physical card, change your password, and more.
+                  </p>
+                  <Button 
+                    className="w-full"
+                    onClick={() => navigate("/vip-login")}
+                  >
+                    <Key className="h-4 w-4 mr-2" />
+                    Login to Your Account
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}

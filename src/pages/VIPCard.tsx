@@ -405,15 +405,28 @@ const VIPCard = () => {
             </div>
           </div>
 
-          {/* Download Button */}
-          <Button 
-            className="w-full" 
-            variant="outline"
-            onClick={downloadCard}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Download Card Image
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Button 
+              className="flex-1" 
+              variant="outline"
+              onClick={downloadCard}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download Card
+            </Button>
+            
+            {isLoggedIn && (
+              <Button 
+                variant="outline"
+                onClick={handleSignOut}
+                className="border-destructive/50 text-destructive hover:bg-destructive/10"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            )}
+          </div>
 
           {/* Renewal Section */}
           {showRenewal && membership.payment_status === "completed" && (

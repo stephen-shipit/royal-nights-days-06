@@ -104,40 +104,36 @@ const VIPMembershipDetails = () => {
             Back to Memberships
           </Button>
 
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto space-y-8">
+            {/* VIP Card Preview - Full Standalone Card */}
+            {level.card_image_url && (
+              <div className="flex justify-center">
+                <div className="relative w-full max-w-md">
+                  <div className="aspect-[1.586/1] rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+                    <img 
+                      src={level.card_image_url} 
+                      alt={`${level.name} VIP Card`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  {/* Card Shine Effect */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
+                </div>
+              </div>
+            )}
+
             <Card className="overflow-hidden">
-              {/* Card Image Preview */}
-              {level.card_image_url ? (
-                <div className="relative w-full aspect-[2/1] md:aspect-[3/1] overflow-hidden">
-                  <img 
-                    src={level.card_image_url} 
-                    alt={`${level.name} VIP Card`}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-8 text-center text-primary-foreground">
-                    <Crown className="h-10 w-10 mx-auto mb-3 text-secondary" />
-                    <h1 className="text-3xl md:text-4xl font-bold mb-2">{level.name}</h1>
-                    <div className="flex items-center justify-center gap-2 mt-3">
-                      <span className="text-4xl md:text-5xl font-bold">{formatPrice(level.price)}</span>
-                      <span className="text-primary-foreground/70 text-lg">
-                        / {getDurationText(level.duration_months)}
-                      </span>
-                    </div>
-                  </div>
+              {/* Header with Pricing */}
+              <div className="bg-primary text-primary-foreground p-8 text-center">
+                <Crown className="h-12 w-12 mx-auto mb-4 text-secondary" />
+                <h1 className="text-3xl md:text-4xl font-bold mb-2">{level.name}</h1>
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <span className="text-5xl font-bold">{formatPrice(level.price)}</span>
+                  <span className="text-primary-foreground/70 text-lg">
+                    / {getDurationText(level.duration_months)}
+                  </span>
                 </div>
-              ) : (
-                <div className="bg-primary text-primary-foreground p-8 text-center">
-                  <Crown className="h-12 w-12 mx-auto mb-4 text-secondary" />
-                  <h1 className="text-3xl md:text-4xl font-bold mb-2">{level.name}</h1>
-                  <div className="flex items-center justify-center gap-2 mt-4">
-                    <span className="text-5xl font-bold">{formatPrice(level.price)}</span>
-                    <span className="text-primary-foreground/70 text-lg">
-                      / {getDurationText(level.duration_months)}
-                    </span>
-                  </div>
-                </div>
-              )}
+              </div>
               
               <CardContent className="p-8 space-y-8">
                 {/* Description */}

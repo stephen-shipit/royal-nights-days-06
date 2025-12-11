@@ -337,50 +337,67 @@ const VIPCard = () => {
       
       <div className="min-h-screen bg-primary py-8 px-4">
         <div className="max-w-md mx-auto space-y-6">
-          {/* VIP Card */}
-          <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl overflow-hidden shadow-2xl border-2 border-secondary/30">
-            {/* Card Background Image */}
-            {membership.membership_levels?.card_image_url && (
-              <div className="absolute inset-0">
-                <img 
-                  src={membership.membership_levels.card_image_url} 
-                  alt={`${membership.membership_levels.name} Card`}
-                  className="w-full h-full object-cover opacity-60"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/30 to-gray-900/60" />
-              </div>
-            )}
-            
-            {/* Decorative elements */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
-            
-            <div className="relative p-8 text-center">
-              {/* Header */}
-              <Crown className="h-10 w-10 mx-auto mb-2 text-secondary" />
-              <h1 className="text-secondary font-bold text-xl tracking-wider">ROYAL PALACE DTX</h1>
-              <p className="text-secondary/70 text-sm tracking-widest">VIP MEMBERSHIP</p>
+          {/* VIP Card Image */}
+          {membership.membership_levels?.card_image_url && (
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-secondary/30">
+              <img 
+                src={membership.membership_levels.card_image_url} 
+                alt={`${membership.membership_levels.name} VIP Card`}
+                className="w-full h-auto"
+              />
+              {/* Status Badge Overlay */}
+              {(isExpired || isPending || isInactive) && (
+                <div className="absolute top-4 right-4">
+                  <Badge 
+                    variant="destructive" 
+                    className="text-sm"
+                  >
+                    {isPending ? "Payment Pending" : isInactive ? "Inactive" : "Expired"}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Fallback Card Design (when no image) */}
+          {!membership.membership_levels?.card_image_url && (
+            <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl overflow-hidden shadow-2xl border-2 border-secondary/30">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+              <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
               
-              {/* Member Name */}
-              <div className="mt-6 mb-4">
-                <p className="text-white text-2xl font-bold">{membership.full_name}</p>
+              <div className="relative p-8 text-center">
+                <Crown className="h-10 w-10 mx-auto mb-2 text-secondary" />
+                <h1 className="text-secondary font-bold text-xl tracking-wider">ROYAL PALACE DTX</h1>
+                <p className="text-secondary/70 text-sm tracking-widest">VIP MEMBERSHIP</p>
+                
+                <div className="mt-6 mb-4">
+                  <p className="text-white text-2xl font-bold">{membership.full_name}</p>
+                  <Badge className="mt-2 bg-secondary text-secondary-foreground">
+                    {membership.membership_levels?.name}
+                  </Badge>
+                </div>
+
+                {(isExpired || isPending || isInactive) && (
+                  <Badge variant="destructive" className="mb-4">
+                    {isPending ? "Payment Pending" : isInactive ? "Inactive" : "Expired"}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Member Info Card */}
+          <Card className="border-secondary/30 bg-gradient-to-br from-gray-900/80 to-gray-800/80">
+            <CardContent className="p-6 text-center space-y-4">
+              <div>
+                <p className="text-white text-xl font-bold">{membership.full_name}</p>
                 <Badge className="mt-2 bg-secondary text-secondary-foreground">
                   {membership.membership_levels?.name}
                 </Badge>
               </div>
 
-              {/* Status Badge */}
-              {(isExpired || isPending || isInactive) && (
-                <Badge 
-                  variant="destructive" 
-                  className="mb-4"
-                >
-                  {isPending ? "Payment Pending" : isInactive ? "Inactive" : "Expired"}
-                </Badge>
-              )}
-
               {/* QR Code */}
-              <div className="bg-white rounded-xl p-4 inline-block my-4">
+              <div className="bg-white rounded-xl p-4 inline-block">
                 <QRCode
                   id="qr-code-svg"
                   value={`https://twbqokjjdopxcgiiuluz.supabase.co/functions/v1/scan-membership?token=${membership.qr_code_token}`}
@@ -390,7 +407,7 @@ const VIPCard = () => {
               </div>
 
               {/* Info Grid */}
-              <div className="grid grid-cols-2 gap-4 mt-6 text-white/80 text-sm">
+              <div className="grid grid-cols-2 gap-4 text-white/80 text-sm">
                 <div className="flex items-center justify-center gap-2">
                   <Calendar className="h-4 w-4 text-secondary" />
                   <span>Expires: {format(new Date(membership.expiration_date), "MMM d, yyyy")}</span>
@@ -402,8 +419,8 @@ const VIPCard = () => {
                   </span>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Action Buttons */}
           <div className="flex gap-3">

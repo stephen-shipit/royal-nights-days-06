@@ -31,6 +31,7 @@ interface Membership {
     name: string;
     max_daily_scans: number;
     multi_user_enabled: boolean;
+    card_image_url: string | null;
   };
 }
 
@@ -338,11 +339,23 @@ const VIPCard = () => {
         <div className="max-w-md mx-auto space-y-6">
           {/* VIP Card */}
           <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl overflow-hidden shadow-2xl border-2 border-secondary/30">
+            {/* Card Background Image */}
+            {membership.membership_levels?.card_image_url && (
+              <div className="absolute inset-0">
+                <img 
+                  src={membership.membership_levels.card_image_url} 
+                  alt={`${membership.membership_levels.name} Card`}
+                  className="w-full h-full object-cover opacity-30"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-gray-900/70 via-gray-900/50 to-gray-900/90" />
+              </div>
+            )}
+            
             {/* Decorative elements */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
             <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
             
-            <div className="p-8 text-center">
+            <div className="relative p-8 text-center">
               {/* Header */}
               <Crown className="h-10 w-10 mx-auto mb-2 text-secondary" />
               <h1 className="text-secondary font-bold text-xl tracking-wider">ROYAL PALACE DTX</h1>
